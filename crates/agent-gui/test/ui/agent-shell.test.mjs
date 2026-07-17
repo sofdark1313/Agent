@@ -93,6 +93,17 @@ test("assistant answers use compact Codex document flow with collapsed thinking"
   assert.doesNotMatch(css, /content: "STREAMING"/);
 });
 
+test("assistant answers render without first-line indentation", () => {
+  const round = read("src/pages/chat/components/assistant-bubble/RoundContent.tsx");
+  const utils = read("src/pages/chat/components/assistant-bubble/assistantBubbleUtils.ts");
+  const css = read("src/index.css");
+
+  assert.match(round, /normalizeAssistantLeadingIndent\(block\.text\)/);
+  assert.match(utils, /export function normalizeAssistantLeadingIndent/);
+  assert.match(utils, /[\\u3000\\u00a0]/i);
+  assert.doesNotMatch(css, /\.agent-answer-markdown[\s\S]{0,180}text-indent/);
+});
+
 test("chat composer follows the Codex input surface and action hierarchy", () => {
   const composer = read("src/pages/chat/components/ChatComposerBar.tsx");
   const header = read("src/pages/chat/components/ChatHeader.tsx");
@@ -203,6 +214,21 @@ test("ordinary tool activity is summarized and collapsed by default", () => {
   assert.doesNotMatch(utils, /if \(pendingTools\.length === 1\)/);
 });
 
+test("thinking disappears as soon as the active thinking phase completes", () => {
+  const round = read("src/pages/chat/components/assistant-bubble/RoundContent.tsx");
+
+  assert.match(round, /const activeThinkingBlockId/);
+  assert.match(round, /isLive && isActive/);
+  assert.match(
+    round,
+    /block\.kind === "thinking"[\s\S]*?block\.key !== activeThinkingBlockId[\s\S]*?return null/,
+  );
+  assert.match(
+    round,
+    /block\.kind === "thinking"[\s\S]*?block\.id === activeThinkingBlockId/,
+  );
+});
+
 test("context tools and editor overlays share Agent workspace chrome", () => {
   assert.match(read("src/components/project-tools/RightDockPanel.tsx"), /data-agent-context-dock/);
   assert.match(read("src/components/project-tools/RightDockTabStrip.tsx"), /data-agent-dock-tabs/);
@@ -290,6 +316,14 @@ test("settings follows the flat Codex document and neutral control model", () =>
   assert.doesNotMatch(system, /rounded-2xl|shadow-primary/);
   assert.doesNotMatch(shared, /sky-500/);
   assert.match(css, /\.agent-settings-option-list/);
+});
+
+test("maximized settings sections fill the available content width", () => {
+  const settings = read("src/pages/SettingsPage.tsx");
+
+  assert.match(settings, /settings-section-shell w-full/);
+  assert.doesNotMatch(settings, /max-w-\[780px\]/);
+  assert.doesNotMatch(settings, /max-w-\[1040px\]/);
 });
 
 test("Skills and MCP share the restrained Agent management chrome", () => {

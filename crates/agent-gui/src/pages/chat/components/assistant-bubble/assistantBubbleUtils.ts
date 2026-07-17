@@ -86,6 +86,10 @@ export function displayString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+export function normalizeAssistantLeadingIndent(value: string) {
+  return value.replace(/^([\r\n]*)(?:[\u3000\u00a0])+/u, "$1");
+}
+
 export function compactInlineText(value: unknown, maxChars = 120) {
   const text = displayString(value).replace(/\s+/g, " ");
   if (text.length <= maxChars) return text;

@@ -270,10 +270,10 @@ export function SettingsPage(props: SettingsPageProps) {
             }`}
           >
             <div
-              className={`settings-section-shell ${
+              className={`settings-section-shell w-full ${
                 section === "hooks" || section === "providers" || section === "memory"
                   ? "flex min-h-0 flex-1 flex-col"
-                  : `min-h-full ${section === "system" ? "max-w-[780px]" : "max-w-[1040px]"}`
+                  : "min-h-full"
               }`}
             >
               {sectionContent}

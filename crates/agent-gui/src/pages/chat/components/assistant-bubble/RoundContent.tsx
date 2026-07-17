@@ -6,7 +6,7 @@ import { useLocale } from "../../../../i18n";
 import type { UiRound } from "../../../../lib/chat/messages/uiMessages";
 import { normalizeLiveToolStatus, VIBING_STATUS } from "../../../../lib/chat/page/chatPageHelpers";
 import { useScrollFollow } from "../../../../lib/chat-scroll/useScrollFollow";
-import { groupRoundBlocks } from "./assistantBubbleUtils";
+import { groupRoundBlocks, normalizeAssistantLeadingIndent } from "./assistantBubbleUtils";
 import { HostedSearchGroupView } from "./HostedSearchGroupView";
 import { CompactingText, VibingText } from "./StatusText";
 import { MemoToolCallItem } from "./ToolCallItem";
@@ -84,6 +84,21 @@ export const RoundContent = memo(function RoundContent(props: {
     toolStatusVariant,
     runningToolCallIds,
   } = props;
+  const activeThinkingBlockId = useMemo(() => {
+    if (!isLive || !isActive) return null;
+
+    for (let index = round.blocks.length - 1; index >= 0; index -= 1) {
+      const block = round.blocks[index];
+      if (!block) continue;
+      if (block.kind === "thinking") {
+        return block.text.trim() ? block.id : null;
+      }
+      if (block.kind === "text" && !block.text.trim()) continue;
+      return null;
+    }
+
+    return null;
+  }, [isActive, isLive, round.blocks]);
   const hasContent =
     round.blocks.some((block) => {
       if (block.kind === "tool") {
@@ -93,6 +108,9 @@ export const RoundContent = memo(function RoundContent(props: {
         return true;
       }
       if (block.kind === "hostedSearch") return true;
+      if (block.kind === "thinking") {
+        return block.id === activeThinkingBlockId && block.text.trim().length > 0;
+      }
       return block.text.trim().length > 0;
     }) ||
     (isActive && isLive);
@@ -123,6 +141,7 @@ export const RoundContent = memo(function RoundContent(props: {
 
       {groupedBlocks.map((block) => {
         if (block.kind === "thinking") {
+          if (block.key !== activeThinkingBlockId) return null;
           return <ThinkingBlock key={block.key} text={block.text} />;
         }
 
@@ -179,7 +198,7 @@ export const RoundContent = memo(function RoundContent(props: {
         return (
           <Markdown
             key={block.key}
-            content={block.text}
+            content={normalizeAssistantLeadingIndent(block.text)}
             className="agent-answer-markdown"
             renderMode={renderMode ?? (isLive ? "streaming" : "static")}
             showCaret={Boolean(isLive && isActive)}

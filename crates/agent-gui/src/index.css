@@ -612,6 +612,11 @@
     @apply my-2 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6] text-foreground;
   }
 
+  .agent-answer-markdown > p,
+  .agent-answer-markdown > div[dir] > p {
+    text-indent: 0.1em;
+  }
+
   .chat-markdown strong,
   .chat-markdown [data-streamdown="strong"] {
     @apply font-semibold text-foreground;

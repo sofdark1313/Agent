@@ -146,7 +146,7 @@ export function RightDockTabStrip(props: RightDockTabStripProps) {
   );
 
   return (
-    <>
+    <div data-agent-dock-tabs className="contents">
       {tabs.map((tab) => {
         if (tab.kind === "backgroundTasks") {
           // Derived tab; closing only hides it (a newly started task or the
@@ -204,6 +204,6 @@ export function RightDockTabStrip(props: RightDockTabStripProps) {
           onClose: () => onCloseTerminalRequest(session),
         });
       })}
-    </>
+    </div>
   );
 }

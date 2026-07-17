@@ -44,3 +44,12 @@ test("task workspace uses compact topbar, document transcript, and floating comp
   assert.match(read("src/pages/chat/components/ChatComposerBar.tsx"), /data-agent-composer/);
   assert.match(read("src/pages/chat/transcript/ChatEmptyState.tsx"), /data-agent-empty-state/);
 });
+
+test("context tools and editor overlays share Agent workspace chrome", () => {
+  assert.match(read("src/components/project-tools/RightDockPanel.tsx"), /data-agent-context-dock/);
+  assert.match(read("src/components/project-tools/RightDockTabStrip.tsx"), /data-agent-dock-tabs/);
+  assert.match(
+    read("src/components/workspace-editor/WorkspaceCodeEditorOverlay.tsx"),
+    /data-agent-editor-workspace/,
+  );
+});

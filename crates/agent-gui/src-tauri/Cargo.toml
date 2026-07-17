@@ -1,0 +1,69 @@
+[package]
+name = "liveagent"
+# Release builds override this dev placeholder from the Git tag workflow.
+version = "0.0.0-dev"
+description = "LiveAgent desktop application"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "liveagent_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+serde_json = "1.0.150"
+tauri-build = { version = "2.6.3", features = [] }
+tonic-prost-build = "0.14.6"
+
+[dependencies]
+tauri = { version = "2.11.5", features = ["tray-icon", "image-png"] }
+tauri-plugin-opener = "2.5.4"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+reqwest = { version = "0.13.4", features = ["blocking", "json", "stream"] }
+axum = "0.8.9"
+tokio = { version = "1.52.3", features = ["macros", "net", "sync", "time", "io-util"] }
+tokio-stream = "0.1.18"
+tokio-tungstenite = "0.29.0"
+futures-util = "0.3.32"
+uuid = { version = "1.23.4", features = ["v4"] }
+base64 = "0.22.1"
+globset = "0.4.18"
+lopdf = "0.43.0"
+regex = "1.12.4"
+thiserror = "2.0.18"
+walkdir = "2.5.0"
+notify = "8.2.0"
+rfd = "0.17.2"
+tauri-plugin-mcp-bridge = "0.12.0"
+dirs = "6.0.0"
+ignore = "0.4.27"
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+leveldb-core = "0.1.0"
+chrono = "0.4.45"
+tokio-cron-scheduler = "0.15.1"
+tonic = { version = "0.14.6", features = ["transport", "tls-ring", "tls-webpki-roots"] }
+tonic-prost = "0.14.6"
+rustls = { version = "0.23.41", default-features = false, features = ["ring", "std"] }
+prost = "0.14.4"
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+sha2 = "0.11.0"
+tempfile = "3.27.0"
+tauri-plugin-updater = "2.10.1"
+semver = "1.0.28"
+quick-xml = "0.41.0"
+portable-pty = "0.9.0"
+wait-timeout = "0.2.1"
+russh = "0.62.2"
+russh-sftp = "2.3.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSButton", "NSControl", "NSView", "NSWindow"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Threading"] }

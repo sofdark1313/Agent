@@ -1,0 +1,38 @@
+import type { MutableRefObject } from "react";
+
+import type {
+  HistoryMessageRef,
+  RenderTimelineItem,
+} from "../../../lib/chat/conversation/conversationState";
+import type { LiveTranscriptStore } from "../../../lib/chat/conversation/liveTranscriptStore";
+import type { PendingUploadedFile } from "../../../lib/chat/messages/uploadedFiles";
+import type { ScrollFollowHandle } from "../../../lib/chat-scroll/useScrollFollow";
+import type { GitClient } from "../../../lib/git/types";
+import type { SectionId } from "../../settings/types";
+
+export type ChatTranscriptProps = {
+  conversationId: string;
+  workspaceRoot?: string;
+  gitClient?: GitClient | null;
+  // ChatPage reaches the transcript's scroll-follow engine through this
+  // handle (force-follow on conversation reset / run start).
+  followRef: MutableRefObject<ScrollFollowHandle | null>;
+  hasModels: boolean;
+  historyItems: RenderTimelineItem[];
+  isHistorySwitching: boolean;
+  isSending: boolean;
+  isAgentMode: boolean;
+  showUsage: boolean;
+  usageContextWindow?: number;
+  liveTranscriptStore: LiveTranscriptStore;
+  isCompactionRunning: boolean;
+  bottomReservePx?: number;
+  onResendFromEdit: (
+    messageRef: HistoryMessageRef,
+    text: string,
+    attachments: PendingUploadedFile[],
+  ) => void;
+  onOpenSettings: (section?: SectionId) => void;
+  onSuggestionSelect?: (text: string) => void;
+  suggestionsDisabled?: boolean;
+};

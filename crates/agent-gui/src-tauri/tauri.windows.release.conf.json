@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "title": "LiveAgent",
+        "width": 1400,
+        "height": 800,
+        "minWidth": 1200,
+        "minHeight": 720,
+        "backgroundThrottling": "disabled",
+        "decorations": false
+      }
+    ]
+  },
+  "bundle": {
+    "createUpdaterArtifacts": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "icon": [
+      "icons/32x32-windows.png",
+      "icons/128x128-windows.png",
+      "icons/128x128@2x-windows.png",
+      "icons/icon-windows.png",
+      "icons/icon-windows.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon-windows.ico"
+      }
+    }
+  }
+}

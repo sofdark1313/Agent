@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# AI
+.codex
+.claude
+.codex-artifacts
+.liveagent
+workspace
+!crates/agent-gui/src-tauri/src/commands/workspace/
+!crates/agent-gui/src-tauri/src/commands/workspace/**
+cert/
+node_modules
+dist
+dist-ssr
+target
+*.local
+.vscode
+target
+bin
+.serena
+chatroom
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.pnpm-store
+workspace.zip
+docs/

@@ -1,0 +1,175 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { createTsModuleLoader } from "../helpers/load-ts-module.mjs";
+
+const loader = createTsModuleLoader();
+const ledgerModule = loader.loadModule("src/lib/chat/compaction/tokenLedger.ts");
+
+const {
+  TokenLedger,
+  estimateTextTokens,
+  estimateMessageTokens,
+  getUsageTotalTokens,
+  getMessageObservedTokens,
+} = ledgerModule;
+
+function usage(totalTokens, extra = {}) {
+  return {
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cacheWrite: 0,
+    totalTokens,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    ...extra,
+  };
+}
+
+function user(content) {
+  return { role: "user", content, timestamp: 1 };
+}
+
+function assistant(text, messageUsage, extra = {}) {
+  return {
+    role: "assistant",
+    content: [{ type: "text", text }],
+    stopReason: "stop",
+    timestamp: 2,
+    usage: messageUsage,
+    ...extra,
+  };
+}
+
+function toolResult(text) {
+  return {
+    role: "toolResult",
+    toolCallId: "tc-1",
+    toolName: "Read",
+    content: [{ type: "text", text }],
+    isError: false,
+    timestamp: 3,
+  };
+}
+
+test("estimateTextTokens is ceil(chars/4) of trimmed text", () => {
+  assert.equal(estimateTextTokens(""), 0);
+  assert.equal(estimateTextTokens("   "), 0);
+  assert.equal(estimateTextTokens("a".repeat(400)), 100);
+  assert.equal(estimateTextTokens("a".repeat(401)), 101);
+});
+
+test("estimateMessageTokens covers text, tool calls, tool results and details", () => {
+  assert.equal(estimateMessageTokens(user("a".repeat(400))), 100 + 8);
+
+  const withToolCall = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "a".repeat(40) },
+      { type: "toolCall", id: "t1", name: "Read", arguments: { path: "b".repeat(30) } },
+    ],
+    stopReason: "toolUse",
+    timestamp: 2,
+  };
+  const argsChars = JSON.stringify({ path: "b".repeat(30) }).length;
+  assert.equal(
+    estimateMessageTokens(withToolCall),
+    Math.ceil((40 + "Read".length + argsChars) / 4) + 8,
+  );
+
+  const resultWithDetails = { ...toolResult("c".repeat(80)), details: { lines: 12 } };
+  const detailsChars = JSON.stringify({ lines: 12 }).length;
+  assert.equal(estimateMessageTokens(resultWithDetails), Math.ceil((80 + detailsChars) / 4) + 8);
+});
+
+test("estimateMessageTokens memoizes by object identity", () => {
+  const message = user("a".repeat(4000));
+  const first = estimateMessageTokens(message);
+  message.content = "";
+  // 同一对象命中缓存（消息按不可变值对象使用）；内容被原地篡改也不重算。
+  assert.equal(estimateMessageTokens(message), first);
+});
+
+test("getUsageTotalTokens derives from parts without double-counting reasoning", () => {
+  assert.equal(getUsageTotalTokens(usage(5000)), 5000);
+  // reasoning 是 output 的子集：从分项推导时不得单独累加。
+  assert.equal(
+    getUsageTotalTokens(usage(0, { input: 100, output: 50, reasoning: 30 })),
+    150,
+  );
+  assert.equal(getUsageTotalTokens(usage(0)), undefined);
+  assert.equal(getUsageTotalTokens(undefined), undefined);
+});
+
+test("compaction checkpoint messages are never observed-usage anchors", () => {
+  const checkpoint = assistant("summary body", usage(99_999), { api: "liveagent-compaction" });
+  assert.equal(getMessageObservedTokens(checkpoint), undefined);
+
+  const legacyCheckpoint = assistant("summary body", usage(99_999), {
+    provider: "liveagent",
+    model: "summary",
+  });
+  assert.equal(getMessageObservedTokens(legacyCheckpoint), undefined);
+
+  assert.equal(getMessageObservedTokens(assistant("hi", usage(1234))), 1234);
+});
+
+test("rebase anchors on the latest real usage and estimates the trailing messages", () => {
+  const ledger = new TokenLedger();
+  const trailing = toolResult("d".repeat(4000));
+  ledger.rebase({
+    systemPrompt: "s".repeat(4000),
+    messages: [user("hello"), assistant("world", usage(5000)), trailing],
+  });
+
+  const expectedTrailing = estimateMessageTokens(trailing);
+  assert.equal(ledger.total(), 5000 + expectedTrailing);
+  const snapshot = ledger.snapshot();
+  assert.equal(snapshot.hasObservedUsage, true);
+  assert.equal(snapshot.observedTokens, 5000);
+  assert.equal(snapshot.trailingTokens, expectedTrailing);
+  // observed usage 已含 system prompt，fixed 不再叠加。
+  assert.equal(snapshot.totalTokens, snapshot.observedTokens + snapshot.trailingTokens);
+});
+
+test("rebase without any usage falls back to fixed + estimates", () => {
+  const ledger = new TokenLedger();
+  const message = user("a".repeat(400));
+  ledger.rebase({ systemPrompt: "s".repeat(4000), messages: [message] });
+
+  assert.equal(ledger.snapshot().hasObservedUsage, false);
+  assert.equal(ledger.total(), 1000 + estimateMessageTokens(message));
+});
+
+test("addMessages accumulates estimates and a fresh usage resets the trailing sum", () => {
+  const ledger = new TokenLedger();
+  ledger.rebase({ systemPrompt: "", messages: [assistant("w", usage(5000))] });
+
+  const extra = toolResult("e".repeat(800));
+  ledger.addMessages([extra]);
+  assert.equal(ledger.total(), 5000 + estimateMessageTokens(extra));
+
+  ledger.addMessages([assistant("next", usage(6100))]);
+  assert.equal(ledger.total(), 6100);
+  assert.equal(ledger.snapshot().trailingTokens, 0);
+});
+
+test("post-checkpoint rebase shrinks the total to the fresh segment size", () => {
+  const ledger = new TokenLedger();
+  ledger.rebase({
+    systemPrompt: "base",
+    messages: [assistant("big history", usage(150_000)), toolResult("f".repeat(20_000))],
+  });
+  assert.ok(ledger.total() > 150_000);
+
+  const resume = user("Continue.");
+  ledger.rebase({ systemPrompt: `base\n## Previous Conversation Summary\n${"g".repeat(2000)}`, messages: [resume] });
+  assert.equal(ledger.snapshot().hasObservedUsage, false);
+  assert.ok(ledger.total() < 1000);
+});
+
+test("totalWithPendingText adds the streamed-char estimate in O(1)", () => {
+  const ledger = new TokenLedger();
+  ledger.rebase({ systemPrompt: "", messages: [assistant("w", usage(4000))] });
+  assert.equal(ledger.totalWithPendingText(0), 4000);
+  assert.equal(ledger.totalWithPendingText(401), 4000 + 101);
+});

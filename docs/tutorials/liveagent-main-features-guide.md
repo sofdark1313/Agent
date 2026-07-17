@@ -844,10 +844,362 @@ sequenceDiagram
 
 ## 10. 源码阅读路线
 
+新手阅读大型项目最容易犯的错误，是从某个复杂实现文件第一行开始逐字读。更有效的方式是按“入口 → TypeScript 主干 → Rust/Go 落地”追踪一条真实数据流。
+
+### 10.1 总体三级路线
+
+| 层级 | 要回答的问题 | 阅读方法 |
+|---|---|---|
+| 入口层 | 用户动作从哪里进入？传入了什么参数？ | 先看页面、Hook、Turn Runner 或 Tool schema |
+| 主干层 | 数据如何转换、分派和进入状态？ | 跟踪 Context Builder、Agent Runner、Registry、Controller |
+| 落地层 | 谁访问 OS、SQLite、MCP Server 或远程协议？ | 查看 Tauri command、Rust service、Gateway handler |
+
+### 10.2 Chat Runtime 路线
+
+```text
+crates/agent-gui/src/pages/ChatPage.tsx
+  → src/pages/chat/components/ChatComposerBar.tsx
+  → src/pages/chat/turns/runAgentConversationTurn.ts
+  → src/pages/chat/runtime/conversationContextBuilders.ts
+  → src/lib/chat/runner/agentRunner.ts
+  → src/lib/providers/llm.ts
+```
+
+阅读目标：找出 execution mode、model、workdir、history、tools 如何进入请求，以及每个 round 如何开始和结束。
+
+### 10.3 Tool 路线
+
+```text
+runAgentConversationTurn.ts
+  → src/lib/tools/builtinRegistry.ts
+  → src/lib/tools/fsTools.ts / shellTools.ts / memoryTools.ts / mcpTools.ts
+  → Tauri invoke
+  → src-tauri/src/commands/*
+  → src-tauri/src/services/* 或 runtime/*
+```
+
+阅读目标：同时跟踪 schema 和 executor，不要只看工具名称。观察成功与失败如何统一变成 `toolResult`。
+
+### 10.4 Skills 与 MCP 路线
+
+```text
+Skills:
+src/pages/chat/hooks/useChatSkills.ts
+  → src/lib/skills/index.ts
+  → src/lib/tools/skillTools.ts
+  → src-tauri/src/services/skills/*
+
+MCP:
+src/lib/tools/mcpTools.ts
+  → invoke(mcp_list_tools / mcp_call_tool)
+  → src-tauri/src/commands/integration/mcp.rs
+  → external MCP server
+```
+
+阅读目标：Skill 跟踪 Prompt 注入和按需读取；MCP 跟踪动态 schema 和外部执行。
+
+### 10.5 Memory 路线
+
+```text
+Recall:
+src/lib/memory/prompts/injection.ts
+  → src/lib/memory/api.ts
+  → Rust MemoryStore search/index
+
+Extraction:
+src/lib/chat/memory/extractionController.ts
+  → extractionEngine.ts
+  → src/lib/memory/extraction/planTool.ts
+  → memory_apply_batch
+  → src-tauri/src/services/memory/mutations/*
+
+Organizer:
+src/lib/memory/organizer/service.ts
+  → pipeline.ts / quota.ts / runRecord.ts
+  → Rust organize run storage
+```
+
+阅读目标：区分“模型提出计划”和“应用真正执行 mutation”；最终证据契约在 Rust。
+
+### 10.6 History 与 Compaction 路线
+
+```text
+Conversation State:
+src/lib/chat/conversation/conversationState.ts
+  → src/lib/chat/compaction/controller.ts
+  → engine.ts / payload.ts / summarizer.ts / fileLedger.ts
+
+Persistence:
+src/lib/chat/history/chatHistory.ts
+  → Tauri history commands
+  → src-tauri/src/commands/history/chat_history/segments.rs
+  → fts.rs / search.rs / share.rs
+```
+
+阅读目标：画出压缩前后的 segment index、summary 覆盖范围和 tail messages，避免只盯着摘要文本。
+
+### 10.7 WebUI 远程链路
+
+```text
+crates/agent-gateway/web/src/lib/gatewaySocket.ts
+  → WebSocket chat command
+  → crates/agent-gateway/internal/server/websocket_chat_handlers.go
+  → internal/server/chat_commands.go
+  → Desktop gRPC AgentConnect
+  → Desktop Gateway Bridge
+  → Desktop Chat Runtime
+```
+
+阅读目标：确认命令是否被接受、是否关联到正确桌面会话、事件 seq 是否继续推进。Gateway 只中继，真正的 Chat Runtime 仍在桌面端。
+
 ## 11. 动手练习
+
+以下练习按风险从低到高排列。前五个主要观察现有行为，第六个只设计改动清单，不要求直接修改生产逻辑。
+
+### 练习 1：识别四个运行单元
+
+**目标**：把目录结构和实际进程对应起来。
+
+**步骤**：
+
+1. 阅读根目录 `Makefile` 中的 `dev`、`dev-gateway` 和 `dev-webui`。
+2. 使用 `make dev` 启动桌面端；如需远程链路，再分别运行 `make dev-gateway` 和 `make dev-webui`。
+3. 在任务管理器或日志中辨认 Vite/Tauri、Go Gateway 和 Browser WebUI。
+4. 关闭 Gateway，观察桌面 GUI 是否仍可本地工作；再观察 WebUI 的连接状态。
+
+**成功判据**：你能解释为什么 Gateway 离线不会把本地文件工具“迁移到浏览器”，以及为什么 WebUI 会失去远程控制。
+
+**延伸问题**：如果桌面端退出但 Gateway 仍在，Gateway 能否继续执行新的 Agent 请求？答案应为不能。
+
+### 练习 2：追踪一次纯文本请求
+
+**目标**：理解 `text` 模式不构建本地工具循环。
+
+**步骤**：
+
+1. 在 UI 选择 `text` 模式，发送一个无需工具的问题。
+2. 从 `runTextConversationTurn.ts` 找到 provider 调用。
+3. 观察 token delta 如何更新 Transcript。
+4. 找到回合结束后的历史持久化入口。
+
+**成功判据**：能画出 `ChatPage → runTextConversationTurn → llm → transcript → history`，并指出流程中没有 `buildBuiltinToolRegistry()`。
+
+**延伸问题**：如果 text 模式上传本地文件，应由哪一层限制能力与呈现？
+
+### 练习 3：追踪一次 Read 工具调用
+
+**目标**：连接 schema、executor、Tauri 和 Tool Trace。
+
+**步骤**：
+
+1. 在 `tools` 模式要求 Agent 读取一个小文件并总结。
+2. 在 `builtinRegistry.ts` 找到 `createFsTools()` 的合并位置。
+3. 在 `fsTools.ts` 找到 `Read` schema 与 executor。
+4. 观察 `agentRunner.ts` 如何发出 tool call、执行、接收 toolResult。
+5. 在 UI 中确认工具参数、状态和结果可见。
+
+**成功判据**：能解释 tool name 如何从模型输出匹配到 executor，以及读取失败为什么应返回 `isError`。
+
+**延伸问题**：为什么 `Glob` 不会被 File Ledger 当成已读文件？
+
+### 练习 4：观察 Memory 提取与下一轮召回
+
+**目标**：区分回合后提取和下一轮 Overview 注入。
+
+**步骤**：
+
+1. 明确告诉 Agent：“记住，本项目统一使用中文注释。”
+2. 为满足 project scope，确保消息是明确 project pin；无需依赖一次只读工具调用。
+3. 在 `agent-dev` 模式观察 Memory extraction 状态。
+4. 在 Memory Settings 检查新条目的 scope、type、confidence 和 reviewed 状态。
+5. 开启新对话，询问本项目注释约定，观察 Overview 或 MemoryManager 召回。
+
+**成功判据**：能说明提取计划由模型生成，但 canonical frontmatter 和 applied confidence 由 Rust 决定。
+
+**延伸问题**：如果 source quote 为空，提交的 `medium` confidence 最终会发生什么？
+
+### 练习 5：观察 Summary Checkpoint 与 File Ledger
+
+**目标**：理解压缩后旧历史仍然存在。
+
+**步骤**：
+
+1. 使用 context window 较小的测试模型或构造较长对话，并穿插 `Read`、`Edit` 工具调用。
+2. 观察 pre-send、post-tool 或 mid-stream compaction 状态。
+3. 在 Transcript 中找到 checkpoint。
+4. 查看后续请求 system prompt 构造，确认 summary 和 `Files touched` 块存在。
+5. 在历史界面搜索压缩前的旧消息。
+
+**成功判据**：旧消息仍能从 History/FTS 找到，而下一轮模型上下文只携带 summary 与未覆盖 tail。
+
+**延伸问题**：为什么 File Ledger 不应直接相信 Summarizer 输出？
+
+### 练习 6：设计一个 `ProjectInfo` Builtin Tool
+
+**目标**：在不写生产代码前，完成跨层影响面分析。
+
+**要求**：设计一个无参数或接收可选 `path` 的只读工具，返回项目语言、主要 manifest 和当前 workdir。
+
+**步骤**：
+
+1. 写出 JSON schema 和稳定工具名。
+2. 决定哪些信息可在 TypeScript 获得，哪些需要 Tauri command。
+3. 定义成功 `toolResult` 与路径错误、取消错误的返回形状。
+4. 说明如何在 `builtinRegistry.ts` 注册 bundle。
+5. 说明 `metadataByName` 如何让 UI 展示标题和 details。
+6. 列出 chat、cron、subagent readonly/worktree 中的可用性策略。
+7. 列出 schema、executor、registry、UI trace、Tauri command 和权限测试。
+
+**成功判据**：设计没有遗漏 History/Compaction、GUI/WebUI 降级渲染和 agent-dev 可观测性。
+
+**延伸问题**：如果工具只读取 manifest 文件，它的文件访问是否应该进入 File Ledger？
 
 ## 12. 常见故障排查
 
+排障时先判断问题在哪个边界，再看日志和状态。不要从最底层数据库开始随机搜索。
+
+### 12.1 模型能回答，但不调用工具
+
+| 检查顺序 | 内容 |
+|---:|---|
+| 1 | execution mode 是否为 `tools` 或 `agent-dev` |
+| 2 | 最终 Registry 的 `tools` 中是否存在目标工具 |
+| 3 | runtime scope、Settings 选择和权限策略是否过滤工具 |
+| 4 | Provider 是否正确收到 tools schema，tool choice 是否受限 |
+| 5 | 用户请求是否真的需要工具；模型可能合理选择直接回答 |
+| 6 | 工具描述是否清晰，参数 schema 是否让模型能够构造调用 |
+
+关键源码：`runAgentConversationTurn.ts`、`builtinRegistry.ts`、`llm.ts`。
+
+### 12.2 工具执行了，但 UI 没有 Tool Trace
+
+| 检查顺序 | 内容 |
+|---:|---|
+| 1 | Agent Runner 是否触发 `onToolCall`、`onToolExecutionStart`、`onToolResult` |
+| 2 | Live Transcript 中是否存在 toolCall/toolResult block |
+| 3 | `metadataByName` 是否包含工具，details kind 是否有效 |
+| 4 | `AssistantBubble`、`ToolCallItem`、`ToolResultDisplay` 是否支持该 details |
+| 5 | 历史恢复后才消失时，检查序列化/解析而非实时执行 |
+| 6 | 仅 WebUI 异常时，检查 Gateway event 和两端协议/组件镜像 |
+
+### 12.3 Memory 没有写入或无法召回
+
+| 现象 | 优先检查 |
+|---|---|
+| 完全没有提取运行 | 空消息、过短、问候、致谢、30 秒节流、重复消息门控 |
+| 运行但 noop | 提取模型判断没有持久价值，或 `SubmitMemoryPlan` 未提交后重试仍为空 |
+| 部分条目失败 | `planTool` 的逐项拒绝码、project scope gate、重复 slug、长度限制 |
+| 写入后 confidence 降低 | Rust evidence contract 与 source quote |
+| Markdown 存在但 search 无结果 | SQLite reconcile、FTS/trigram 行、scope/workdir |
+| 新对话没自动提及 | Overview 上限、相关性、project shadow；必要时用 MemoryManager 精确读取 |
+
+### 12.4 MCP Server 已配置但工具没有出现
+
+1. 确认 Server enabled 且在 selected 列表。
+2. 用 McpManager 查看 normalized config 和 runtime status。
+3. 执行 test/tools，检查 transport、环境变量、headers 和 Server stderr。
+4. 确认 tools/list 返回非空。
+5. 检查动态工具规范化后的名称。
+6. 检查 `createMcpTools()` 是否被 Registry 调用，以及当前 scope 是否允许。
+7. 若配置刚修改，确认写入通过 `McpSettingsOp`，并在 `await` 后重新读取实时 settings。
+
+### 12.5 压缩后似乎丢失早期信息
+
+| 检查顺序 | 内容 |
+|---:|---|
+| 1 | 旧消息是否仍在 History Segment；如果在，问题属于请求上下文而非持久化丢失 |
+| 2 | Checkpoint 的 covered range 是否正确 |
+| 3 | Summary 是否漏掉关键决策 |
+| 4 | Resume Context 是否包含 summary 和未覆盖 tail |
+| 5 | 关键文件是否进入 File Ledger；Shell 修改不会被确定性记录 |
+| 6 | Compaction payload 是否因自身预算再次裁剪了重要内容 |
+| 7 | Tool output 是否先被 prune，摘要看到的是否只是裁剪标记 |
+
+### 12.6 GUI 正常但 WebUI 异常
+
+按链路检查：
+
+```text
+WebUI command
+  → Gateway WebSocket handler
+  → chat.prepare / chat.command accepted
+  → Desktop gRPC stream
+  → Desktop Chat Runtime
+  → ChatEvent seq
+  → Gateway subscription
+  → WebUI transcript reducer
+```
+
+常见原因包括桌面会话离线、token/认证错误、workdir 未透传、事件 seq 窗口 reset、WebUI mirror 类型落后和浏览器 shim 参数不一致。
+
+### 12.7 修改历史字段后旧数据库启动失败
+
+1. 检查是否只改了 fresh `CREATE TABLE`，却没改增量列迁移。
+2. 新 `NOT NULL` 列是否有 `DEFAULT`。
+3. 索引是否在列创建前执行。
+4. Rust row mapping、TypeScript type、Gateway payload 和 WebUI type 是否同步。
+5. FTS virtual table 结构变化是否显式重建。
+6. 运行旧库迁移与 fresh schema 对比测试。
+
+这类问题通常在开发者的新数据库上无法复现，因此迁移测试比手工启动更重要。
+
 ## 13. 功能修改检查表
 
+| 修改类型 | 必查范围 |
+|---|---|
+| Chat 新消息/block | Provider adapter、Agent Runner、Transcript Store、History serializer、Compaction sanitizer、GUI/WebUI renderer |
+| 新 Builtin Tool | schema、executor、Registry、metadata、runtime scope、Tauri command、错误、trace、测试 |
+| Skills 行为 | Rust services/skills、write guard、stage-then-swap、`lib/skills`、Skills Hub、WebUI/i18n |
+| MCP 配置或生命周期 | `mcpOps.ts` 唯一写路径、实时 getter、McpManager、Rust runtime、Hub、Gateway settings redaction |
+| Memory 行为 | Rust MemoryStore、schema/config、Prompt、MemoryManager、extraction/organizer、Settings、Gateway `memory.manage` |
+| History Schema | fresh schema、ensure columns、row mapping、FTS、proto/Gateway、GUI/WebUI、旧库迁移测试 |
+| Compaction 格式 | summary JSON、payload、checkpoint UI、resume context、File Ledger、旧数据兼容 |
+| GUI/WebUI 共用功能 | mirror manifest、平台适配层、Tauri shim、Gateway handler、两端 i18n 和测试 |
+
+### 13.1 修改前的五个问题
+
+1. 这份数据的真相源在哪里？React state、Rust service、SQLite、Markdown 还是 Gateway 内存？
+2. 这个动作在 GUI 和 WebUI 中分别从哪里进入？
+3. 是否跨越 provider、tool、history 或 compaction 格式？
+4. 旧数据库、旧历史或旧 settings 如何兼容？
+5. 成功、失败、取消和断线分别如何被用户看见？
+
+### 13.2 最小验证矩阵
+
+| 触达模块 | 建议验证 |
+|---|---|
+| GUI TypeScript | `pnpm -C crates/agent-gui test:frontend`，必要时 `pnpm -C crates/agent-gui build` |
+| Tauri/Rust | 对应 Rust 单测，必要时 `cargo test --manifest-path crates/agent-gui/src-tauri/Cargo.toml` |
+| Gateway | `go -C crates/agent-gateway test ./...` |
+| WebUI | `pnpm -C crates/agent-gateway/web test` 和 build |
+| Mirror 文件 | 检查 `scripts/mirror-manifest.json` 及相关镜像测试 |
+| 文档 | 路径存在性、Mermaid/Markdown、`git diff --check` |
+
 ## 14. 后续阅读与总结
+
+### 14.1 推荐文档
+
+| 目标 | 文档 |
+|---|---|
+| 理解完整系统边界 | [`../architecture/overview.md`](../architecture/overview.md) |
+| 深入桌面端 | [`../architecture/gui.md`](../architecture/gui.md) |
+| 深入 Gateway/WebUI 协议 | [`../architecture/gateway.md`](../architecture/gateway.md)、[`../architecture/protocols.md`](../architecture/protocols.md)、[`../architecture/webui.md`](../architecture/webui.md) |
+| 查 Chat Runtime | [`../features/chat-runtime.md`](../features/chat-runtime.md) |
+| 查 Tools | [`../features/tools.md`](../features/tools.md) |
+| 查 Skills/MCP | [`../features/skills-and-mcp.md`](../features/skills-and-mcp.md) |
+| 查 Memory | [`../features/memory.md`](../features/memory.md) |
+| 查 History/Compaction | [`../features/history-compaction.md`](../features/history-compaction.md) |
+| 启动、构建和测试 | [`../operations/development.md`](../operations/development.md) |
+| 快速定位源码 | [`../reference/source-map.md`](../reference/source-map.md) |
+
+### 14.2 最终心智模型
+
+可以用下面五句话记住 LiveAgent：
+
+1. **Chat Runtime 编排请求**：构造上下文、调用模型、推进 Tool Loop、更新 Transcript。
+2. **Tools 执行真实动作**：Builtin Tools 由项目直接实现，MCP Tools 由外部 Server 提供。
+3. **Skills 提供方法知识**：它们进入 Prompt，并在适用时由模型按需读取和遵循。
+4. **Memory 保存未来仍有用的知识**：Markdown 是事实源，SQLite 是索引，写入由计划和 Rust 契约共同约束。
+5. **History 保存完整事实，Compaction 控制模型上下文**：旧历史不会因压缩消失，后续请求使用 Summary、Tail 和机器维护的 File Ledger 继续工作。
+
+当你准备修改功能时，先确定数据真相源与进程边界，再沿“入口 → Runtime 主干 → Rust/Go 落地 → 持久化/远程同步”追踪。掌握这条路线后，LiveAgent 看起来不再是一组分散的 Chat、Tool、Memory 和 Gateway 文件，而是一条有明确职责与数据所有权的 Agent 执行链。

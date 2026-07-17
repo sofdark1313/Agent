@@ -61,3 +61,11 @@ test("settings uses Agent management navigation and content regions", () => {
   assert.match(settings, /data-agent-settings-nav/);
   assert.match(settings, /data-agent-settings-content/);
 });
+
+test("Skills and MCP share the restrained Agent management chrome", () => {
+  const hub = read("src/components/hub/HubChrome.tsx");
+
+  assert.match(hub, /data-agent-management/);
+  assert.doesNotMatch(hub, /radial-gradient/);
+  assert.match(hub, /rounded-xl border/);
+});

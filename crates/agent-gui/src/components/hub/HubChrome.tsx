@@ -6,33 +6,8 @@ import { isMacOsTauri, MacOsTitleBarSpacer } from "../MacOsTitleBarSpacer";
 import { Button } from "../ui/button";
 
 export function HubBackdrop(props: { tone?: "amber" | "violet" | "neutral" }) {
-  const { tone = "neutral" } = props;
-  // macOS frosted-glass: subtle monochrome wash; tone provides only the faintest temperature shift.
-  // Dark: the canvas drops below --background (--hub-canvas) so background-tinted glass reads
-  // elevated, and the halos stay a whisper above the canvas instead of a gray fog.
-  const haloClass =
-    tone === "amber"
-      ? "bg-[radial-gradient(circle_at_top_left,hsl(0_0%_100%/0.85),transparent_60%)] dark:bg-[radial-gradient(circle_at_top_left,hsl(222_18%_14%/0.55),transparent_60%)]"
-      : tone === "violet"
-        ? "bg-[radial-gradient(circle_at_top_left,hsl(220_18%_98%/0.85),transparent_60%)] dark:bg-[radial-gradient(circle_at_top_left,hsl(224_20%_14%/0.55),transparent_60%)]"
-        : "bg-[radial-gradient(circle_at_top_left,hsl(0_0%_100%/0.8),transparent_60%)] dark:bg-[radial-gradient(circle_at_top_left,hsl(224_18%_14%/0.5),transparent_60%)]";
-  return (
-    <>
-      <div className="pointer-events-none absolute inset-0 bg-[hsl(var(--hub-canvas))]" />
-      <div
-        className={cn(
-          "pointer-events-none absolute -left-32 -top-24 h-[420px] w-[420px] rounded-full opacity-90 blur-3xl",
-          haloClass,
-        )}
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute -right-24 bottom-0 h-[360px] w-[360px] rounded-full opacity-60 blur-3xl",
-          haloClass,
-        )}
-      />
-    </>
-  );
+  void props;
+  return <div className="pointer-events-none absolute inset-0 bg-[hsl(var(--agent-canvas))]" />;
 }
 
 export function HubHeader(props: {
@@ -51,7 +26,10 @@ export function HubHeader(props: {
   return (
     <>
       <MacOsTitleBarSpacer />
-      <div className="hub-header relative z-10 px-5 pt-6 pb-3 sm:px-6 lg:px-8 xl:px-10">
+      <div
+        data-agent-management
+        className="hub-header relative z-10 border-b border-border/55 px-5 py-3 sm:px-6 lg:px-8"
+      >
         {showSidebarButton ? (
           <Button
             type="button"
@@ -59,7 +37,7 @@ export function HubHeader(props: {
             size="icon"
             onClick={onOpenSidebar}
             title={t("tooltip.openSidebar")}
-            className="absolute left-3 top-5 h-9 w-9 rounded-lg text-muted-foreground hover:bg-background/70 hover:text-foreground"
+            className="absolute left-3 top-2.5 h-8 w-8 rounded-lg text-muted-foreground hover:bg-foreground/[0.055] hover:text-foreground"
           >
             <PanelLeft className="h-4.5 w-4.5" />
           </Button>
@@ -70,7 +48,7 @@ export function HubHeader(props: {
             showSidebarButton && "pl-11 lg:pl-0",
           )}
         >
-          <div className="hub-header-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/40 bg-background/70 text-foreground/80 shadow-[0_1px_0_rgba(255,255,255,0.55)_inset] dark:border-white/[0.08] dark:bg-white/[0.05] dark:shadow-[0_1px_0_rgba(255,255,255,0.05)_inset] backdrop-blur-xl">
+          <div className="hub-header-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background text-foreground/80">
             {icon}
           </div>
           <div className="min-w-0 flex-1">
@@ -114,13 +92,7 @@ export function GlassPanel(props: {
     }
   })();
   return (
-    <div
-      className={cn(
-        "hub-glass-panel rounded-2xl border px-4 py-3.5 backdrop-blur-xl",
-        toneClass,
-        className,
-      )}
-    >
+    <div className={cn("hub-glass-panel rounded-xl border px-4 py-3.5", toneClass, className)}>
       {children}
     </div>
   );

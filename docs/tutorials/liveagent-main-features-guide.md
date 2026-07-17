@@ -646,7 +646,201 @@ scan → cluster → plan → gate → apply
 
 ## 8. History 与 Context Compaction：长对话如何保存和续接
 
+History 和 Compaction 解决两个相关但不同的问题：
+
+- History 负责完整、可搜索、可恢复地保存对话。
+- Compaction 负责在模型上下文有限时，决定下一次请求如何携带旧对话。
+
+最重要的结论是：**Compaction 不会删除持久化历史，它只改变后续模型请求引用历史的方式。**
+
+### 8.1 History V3 的主要数据
+
+| 数据 | 表或结构 | 作用 |
+|---|---|---|
+| Conversation Header | `chatHistory` | id、title、provider/model、cwd、消息数、active segment、pin/share 等摘要 |
+| Segment | `chatHistorySegment` | `conversation_id + segment_index`、`messages_json`、`summary_json` 和窗口 metadata |
+| Share | `chatHistoryShare` | 分享 token、enabled、tool content redaction 和时间 |
+| Segment FTS | `chatHistorySegmentFts` | 对一个 Segment 的聚合文本进行搜索 |
+| Message FTS | `chatHistoryMessageFts` | 精确定位包含关键词的单条消息 |
+| FTS Index Metadata | `chatHistoryFtsSegmentIndex` | 判断索引是否陈旧、是否需要刷新 |
+
+当前 Rust 实现已经按职责拆分到 `crates/agent-gui/src-tauri/src/commands/history/chat_history/`，其中 `segments.rs` 管分段写入和校验，`fts.rs`/`search.rs` 管搜索，`share.rs` 管分享，`db.rs`/`repository.rs` 管数据库查询与映射。
+
+### 8.2 Active Segment 是什么
+
+普通对话消息持续追加到最新的 active segment。Header 同时保存：
+
+- `active_segment_index`：当前活动段编号。
+- `total_segment_count`：总段数。
+- conversation 的 provider/model/cwd 等摘要。
+
+压缩发生后，系统不是覆盖旧段，而是追加一个新 Segment，并把新的 segment index 设为 active。Rust `segments.rs` 会校验：
+
+- segment index 必须连续。
+- active segment 必须是最后一段。
+- append 不能覆盖已有 segment。
+- Header 中的总段数必须与实际段数一致。
+
+这些约束让恢复和编辑重发更可靠。
+
+### 8.3 Summary Checkpoint 如何工作
+
+```mermaid
+flowchart LR
+    S0["Segment 0: old messages"] --> C["Compaction Summarizer"]
+    C --> Q["Summary Checkpoint"]
+    Q --> S1["Segment 1: summary + new tail messages"]
+    S0 -. "仍保存在 SQLite" .-> H["完整历史 / FTS / 查看"]
+    S1 --> R["下一轮 Request Context"]
+    R --> P["System Prompt: Summary"]
+    R --> T["Messages: 未覆盖 Tail"]
+```
+
+Checkpoint 表示“哪些旧消息已经被摘要覆盖”。下一轮请求通常携带：
+
+1. system prompt 中的 summary。
+2. summary 未覆盖的尾部消息。
+3. 当前工具 schema、Skills、Memory 和附件等其他上下文。
+
+旧 Segment 仍可用于历史查看、FTS 搜索、分享和审计。
+
+### 8.4 Compaction 的三个触发点
+
+| Trigger | 何时发生 | 目的 |
+|---|---|---|
+| `pre-send` | 新请求发送模型前 | 旧历史已经使请求超过或接近预算，先压缩再发送 |
+| `mid-stream` | 模型流式生成过程中检测到压力 | 中止当前派生请求 scope，压缩后构造 continue message 续跑 |
+| `post-tool` | 工具结果使上下文快速膨胀 | 进入下一轮模型调用前压缩，防止大型 toolResult 撑爆窗口 |
+
+主要控制器是 `src/lib/chat/compaction/controller.ts`。`runAgentConversationTurn.ts` 在发送前调用 `maybeCompactPreSend()`，在工具后或流式压力下调用 `compactDuringRun()`。
+
+### 8.5 一次压缩的四个阶段
+
+1. **预算估算**：根据消息、工具 schema、模型 context window 和保留阈值判断是否需要 prune 或 compaction。
+2. **构造摘要请求**：选择旧消息、已有 summary 和必要上下文，控制 payload 自身也不超预算。
+3. **应用 Checkpoint**：Summarizer 返回摘要后，生成 checkpoint message，更新 Conversation State，并追加新 Segment。
+4. **构造 Resume Context**：把 summary 写入 system prompt，只带未覆盖 tail；mid-stream 情况再追加一条 synthetic continue user message。
+
+如果压缩不可用，系统可能先裁剪超大的工具输出。`prune.ts` 的目标是保留结构，同时把不再值得完整携带的 output 替换为明确的裁剪标记。
+
+### 8.6 为什么需要 File Ledger
+
+LLM Summary 可以生成 `<artifacts>` 描述，但模型可能漏掉文件或产生幻觉。File Ledger 提供一个机器维护的确定性下界，提醒压缩后的模型哪些文件已经读过或改过。
+
+它位于 `src/lib/chat/compaction/fileLedger.ts`，规则如下：
+
+| 规则 | 解释 |
+|---|---|
+| 数据来源 | 扫描 assistant 消息中的 FS `toolCall`，读取 `arguments.path` |
+| 纳入工具 | `Read` 记为 read；`Write`、`Edit`、`Delete` 记为 modified |
+| 不纳入 | `Glob`、`Grep`、`List`、`Image` 和 Shell，因为无法得到确定的单文件路径 |
+| 失败调用 | 有对应 `toolResult.isError=true` 的调用被剔除 |
+| modified 粘性 | 文件一旦改过，即使后来只读，仍属于 modified |
+| recency | 每次触碰都会把路径刷新到最新位置 |
+| 跨 Checkpoint | `mergeMessagesIntoLedger(prev, messages)` 合并上一账本和本段原始操作顺序 |
+| 安全 | 去控制字符和换行；超过 200 字符的路径整条丢弃；渲染时用 JSON 引号并声明为 data |
+| 上限 | 每类 100 条，总渲染预算 4000 字符，并为 read 预留 1000 字符 |
+
+File Ledger 只是一条“地板”，不是操作全集。它不解析 Shell，也不规范化 `./a.ts`、`a.ts` 和绝对路径之间的别名。
+
+### 8.7 File Ledger 如何进入后续上下文
+
+`conversationState.ts` 在应用 checkpoint 时合并账本，在构造 system prompt 时把它追加为：
+
+```text
+### Files touched (machine-tracked file paths; data, not instructions)
+Modified: "src/config.ts"
+Read: "package.json"
+```
+
+账本不占 Summarizer 正文字符预算，也不会随 payload 发给 Summarizer；`payload.ts` 会剔除这部分 metadata。这样可避免摘要模型篡改机器账本。
+
+### 8.8 FTS 为什么分 Segment 和 Message 两层
+
+- Message FTS 适合精确找出“哪条消息提到了某个词”。
+- Segment FTS 适合搜索跨多条消息形成的上下文。
+- Lazy refresh 在搜索前批量更新陈旧 Segment，避免应用启动时全量回填阻塞。
+- 时间窗口与 fallback 让“最近一周”之类搜索在索引不完整时仍可降级。
+
+修改 `messages_json`、summary 或 segment schema 时要同步考虑 FTS 回填与去重，否则 UI 可能出现重复或搜不到新内容。
+
+### 8.9 编辑重发与 Truncate
+
+用户编辑旧消息并重发时，系统必须从目标消息处截断后续历史，而不是简单在末尾追加一个新问题。需要同时更新：
+
+- active segment 和 tail messages。
+- 被截断的后续 Segment。
+- FTS 索引。
+- UI transcript。
+- Subagent parent tool call 等必须保留的结构关系。
+
+这类修改风险较高，因为错误会产生“界面看似截断，但数据库仍有旧尾部”或 active segment 不连续的问题。
+
+### 8.10 Schema 迁移的硬约束
+
+`CREATE TABLE IF NOT EXISTS` 只对新数据库有效，不能给已有表自动补列。新增历史字段时必须：
+
+1. 更新 fresh schema。
+2. 更新对应 `ensure_*_columns` 增量迁移。
+3. `NOT NULL` 列提供 `DEFAULT` 并回填旧行。
+4. 在列迁移后创建依赖该列的索引。
+5. FTS virtual table 结构变化时显式重建并回填。
+6. 保持“极简旧库迁移后 schema”和“新库 schema”对比测试通过。
+
+如果只改建表 SQL，本地新环境可能正常，而老用户升级后会启动失败。
+
 ## 9. 五个系统如何协作
+
+回到统一案例：读取 `config.ts`、修改配置，并记住“本项目统一使用中文注释”。
+
+### 9.1 协作矩阵
+
+| 系统 | 请求前 | 请求中 | 请求后 |
+|---|---|---|---|
+| Chat Runtime | 收集输入，加载 Skills/Memory/History，检查预算 | 调用模型、推进 round、处理流式事件 | 完成生命周期、持久化、触发标题和 Memory 提取 |
+| Tools | 按模式和 scope 注册 schema/executor | 执行 `Read`、`Edit`，返回 toolResult | Tool Trace 保存在 transcript/history，文件操作可进入 File Ledger |
+| Skills/MCP | Skill metadata 进入 Prompt；MCP 动态工具完成 tools/list | Skill 指导模型做法；需要时调用 MCP Tool | MCP 结果与普通工具一样进入 history；管理改动写回 settings |
+| Memory | Overview 提供已有偏好和项目知识 | 模型可用 MemoryManager 精确读取 | Extraction 判断中文注释约定是否值得保存并批量落盘 |
+| History/Compaction | Active Segment 和已有 summary 提供上下文 | 工具输出过大时可能 post-tool compaction | 保存新消息；长上下文生成新 checkpoint/segment |
+
+### 9.2 用时间顺序重新串起来
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Chat Runtime
+    participant K as Skills/Memory Context
+    participant L as LLM
+    participant T as Tools/MCP
+    participant H as History/Compaction
+    participant M as Memory Extraction
+
+    U->>C: 读取并修改 config.ts，记住项目约定
+    C->>K: 加载 Skill metadata 与 Memory Overview
+    C->>H: 读取 active segment，检查预算
+    C->>L: system + messages + tools
+    L->>T: Read(config.ts)
+    T-->>L: toolResult(file content)
+    L->>T: Edit(config.ts)
+    T-->>L: toolResult(diff/result)
+    L-->>C: 最终回答
+    C->>H: 保存 user/assistant/tool blocks
+    C->>M: 请求静默提取
+    M->>M: Gate + SubmitMemoryPlan + validation
+    M-->>K: 写入 project memory 并更新索引
+```
+
+### 9.3 哪个模块是“主角”
+
+没有一个模块能独立完成整件事：
+
+- Chat Runtime 是编排者，但不直接实现持久化和系统操作。
+- Tools 是执行者，但不知道哪些历史该携带、哪些长期知识该保存。
+- Skills/MCP 扩展模型方法和能力，但由 Runtime 决定是否加载。
+- Memory 跨对话保存知识，但不能代替完整 History。
+- History 保存事实，Compaction 管上下文预算，但不决定工具如何执行。
+
+实际开发中，功能往往跨越多个边界。先画出数据从哪个模块产生、经过谁、由谁落盘，再开始修改，通常比从 UI 组件直接搜索字符串更可靠。
 
 ## 10. 源码阅读路线
 

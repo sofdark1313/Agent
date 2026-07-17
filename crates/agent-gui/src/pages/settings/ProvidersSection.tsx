@@ -1775,8 +1775,8 @@ export function ProvidersSection(props: SettingsSectionProps) {
           .map((entry) => `${entry.count} 个 ${getProviderLabel(entry.type)}`)
           .join("、")} 供应商`,
         fetchedCount > 0 && refreshedModelCount > 0
-          ? `LiveAgent 获取并激活 ${refreshedModelCount} 个模型`
-          : "LiveAgent API 未返回可用模型",
+          ? `Agent 获取并激活 ${refreshedModelCount} 个模型`
+          : "Agent API 未返回可用模型",
         failedCount > 0 ? `${failedCount} 个供应商模型获取失败` : "",
       ].filter(Boolean);
       setCherryMessage(details.join("，"));

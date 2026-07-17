@@ -1,22 +1,22 @@
 ---
 name: skills-installer
-description: Install, list enabled, validate, or package LiveAgent skills. Use when you need to inspect the skills enabled in the current conversation, import a local skill directory or package, search/install from ClawHub, install from a GitHub repo/tree URL, or reconcile conflicts during an upgrade.
+description: Install, list enabled, validate, or package Agent skills. Use when you need to inspect the skills enabled in the current conversation, import a local skill directory or package, search/install from ClawHub, install from a GitHub repo/tree URL, or reconcile conflicts during an upgrade.
 ---
 
 # Skills Installer
 
-Install LiveAgent skills into the fixed runtime root while preserving existing user data.
+Install Agent skills into the fixed runtime root while preserving existing user data.
 
 ## Workflow
 
 1. Determine the source type: ClawHub slug/search result, local skill directory, `.zip` or `.skill` archive, HTTP(S) download, or GitHub URL.
-2. Determine the target destination. Runtime installs always go through `SkillsManager` into LiveAgent's fixed user Skills root.
-3. For local workspace sources, pass workspace-relative paths such as `./my-skill` or `./dist/my-skill.skill`; LiveAgent resolves them against the current chat workspace before installing into the fixed skills root.
+2. Determine the target destination. Runtime installs always go through `SkillsManager` into Agent's fixed user Skills root.
+3. For local workspace sources, pass workspace-relative paths such as `./my-skill` or `./dist/my-skill.skill`; Agent resolves them against the current chat workspace before installing into the fixed skills root.
 4. Read `references/install-sources.md` and `references/safety-and-conflicts.md` through file tools before replacing anything. Use `path="skill://skills-installer/references/install-sources.md"` and `path="skill://skills-installer/references/safety-and-conflicts.md"`, or use the exact `pathRef` returned by a prior tool.
 5. Use `SkillsManager` with `action=list` to inspect the skills enabled in the current conversation when conflict or inventory context matters.
 6. Use `SkillsManager` with `action=clawhub_search` to find ClawHub skills when the user asks to search the public store, then use `action=clawhub_install` with the returned `slug` to install from ClawHub.
 7. Use `SkillsManager` with `action=install` to import a direct local, archive, HTTP(S), or GitHub source. Prefer `conflict=backup` unless the user explicitly accepts replacement.
-8. After installation, the new skill is enabled for the current conversation automatically; ask LiveAgent to rescan skills or reopen the Skills menu only if the new skill does not appear immediately.
+8. After installation, the new skill is enabled for the current conversation automatically; ask Agent to rescan skills or reopen the Skills menu only if the new skill does not appear immediately.
 
 ## Commands
 

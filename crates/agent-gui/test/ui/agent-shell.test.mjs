@@ -5,6 +5,12 @@ import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+const readTree = (directory) =>
+  fs
+    .readdirSync(path.join(root, directory), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => fs.readFileSync(path.join(entry.parentPath, entry.name), "utf8"))
+    .join("\n");
 
 test("Agent brand primitives are stable and independent from compatibility identifiers", () => {
   const brand = read("src/components/brand/brand.ts");
@@ -80,4 +86,31 @@ test("visible desktop branding uses Agent while compatibility identifiers stay o
   assert.match(tauri, /"productName": "Agent"/);
   assert.doesNotMatch(titleBar, /LiveAgent|Live Agent/);
   assert.doesNotMatch(locale, /"app\.name": "LiveAgent"/);
+});
+
+test("user-facing settings, tray, icons, and built-in Skills do not leak the legacy brand", () => {
+  const settingsCopy = [
+    read("src/pages/settings/CherryStudioImportModal.tsx"),
+    read("src/pages/settings/ProvidersSection.tsx"),
+  ].join("\n");
+  const visibleDocuments = [
+    "src-tauri/icons/liveagent-logo.svg",
+  ];
+
+  assert.doesNotMatch(
+    settingsCopy,
+    /模型由 LiveAgent|LiveAgent 会自动|LiveAgent 获取并激活|LiveAgent API/,
+  );
+  for (const file of visibleDocuments) {
+    assert.doesNotMatch(read(file), /LiveAgent|Live Agent/, file);
+  }
+  assert.doesNotMatch(
+    [
+      readTree("src-tauri/prompt/skills/skills-creator"),
+      readTree("src-tauri/prompt/skills/skills-installer"),
+    ].join("\n"),
+    /LiveAgent|Live Agent/,
+  );
+
+  assert.doesNotMatch(read("src-tauri/src/lib.rs"), /\.tooltip\("LiveAgent"\)/);
 });

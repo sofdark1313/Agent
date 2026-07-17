@@ -164,7 +164,7 @@ export function CherryStudioImportModal(props: CherryStudioImportModalProps) {
           <div>
             <div className="text-base font-semibold">从 Cherry Studio 同步</div>
             <div className="mt-1 text-xs text-muted-foreground">
-              仅同步 Base URL 和 API Key，模型由 LiveAgent 获取并激活；左侧切换供应商类型
+              仅同步 Base URL 和 API Key，模型由 Agent 获取并激活；左侧切换供应商类型
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -384,7 +384,7 @@ export function CherryStudioImportModal(props: CherryStudioImportModalProps) {
                 <div className="mt-1 text-xs text-muted-foreground">
                   {dataPath
                     ? "正在使用手动指定的目录"
-                    : "LiveAgent 会自动读取 Cherry Studio 的数据目录设置"}
+                    : "Agent 会自动读取 Cherry Studio 的数据目录设置"}
                 </div>
               </div>
               <Button

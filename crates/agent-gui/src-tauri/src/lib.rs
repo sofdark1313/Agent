@@ -288,7 +288,7 @@ fn configure_system_tray(
     let last_left_click_at = Arc::new(Mutex::new(None));
 
     let mut tray_builder = TrayIconBuilder::new()
-        .tooltip("LiveAgent")
+        .tooltip("Agent")
         .menu(&menu)
         .show_menu_on_left_click(TRAY_SHOW_MENU_ON_LEFT_CLICK)
         .on_menu_event(move |app, event| match event.id().as_ref() {

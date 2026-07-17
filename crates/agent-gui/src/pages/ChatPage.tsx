@@ -599,6 +599,8 @@ function createWorkspaceProjectFromPath(path: string, kind: WorkspaceProject["ki
   } satisfies WorkspaceProject;
 }
 
+const PROJECTLESS_WORKSPACE_PROJECT_ID = "projectless";
+
 export function ChatPage(props: ChatPageProps) {
   const {
     settings,
@@ -705,10 +707,16 @@ export function ChatPage(props: ChatPageProps) {
     [settings.system.missingWorkspaceProjectPaths],
   );
   const activeWorkspaceProject = useMemo(
-    () => findWorkspaceProject(workspaceProjects, activeWorkspaceProjectId),
+    () =>
+      activeWorkspaceProjectId === PROJECTLESS_WORKSPACE_PROJECT_ID
+        ? undefined
+        : findWorkspaceProject(workspaceProjects, activeWorkspaceProjectId),
     [activeWorkspaceProjectId, workspaceProjects],
   );
   useEffect(() => {
+    if (activeWorkspaceProjectId === PROJECTLESS_WORKSPACE_PROJECT_ID) {
+      return;
+    }
     if (activeWorkspaceProject?.id && activeWorkspaceProject.id !== activeWorkspaceProjectId) {
       setActiveWorkspaceProjectId(activeWorkspaceProject.id);
     }
@@ -1050,18 +1058,23 @@ export function ChatPage(props: ChatPageProps) {
     [checkWorkspaceProjectDirectory, setErrorMessage, t],
   );
 
-  const handleOpenCreateWorkspaceProject = useCallback(async () => {
-    try {
-      const picked = await invoke<string | null>("system_pick_folder", {
-        initialWorkdir: activeWorkspaceProjectPath || workdir,
-      });
-      const path = picked?.trim();
-      if (!path) return;
-      activateWorkspaceProject(createWorkspaceProjectFromPath(path, "managed"));
-    } catch (error) {
-      setErrorMessage(asErrorMessage(error, "选择项目目录失败"));
-    }
-  }, [activateWorkspaceProject, activeWorkspaceProjectPath, workdir]);
+  const handleOpenCreateWorkspaceProject = useCallback(
+    async (options?: { startConversation?: boolean }) => {
+      try {
+        const picked = await invoke<string | null>("system_pick_folder", {
+          initialWorkdir: activeWorkspaceProjectPath || workdir,
+        });
+        const path = picked?.trim();
+        if (!path) return;
+        activateWorkspaceProject(createWorkspaceProjectFromPath(path, "managed"), {
+          startConversation: options?.startConversation,
+        });
+      } catch (error) {
+        setErrorMessage(asErrorMessage(error, "选择项目目录失败"));
+      }
+    },
+    [activateWorkspaceProject, activeWorkspaceProjectPath, workdir],
+  );
 
   const commitWorkspaceProjectRename = useCallback(
     (project: WorkspaceProject, nextNameInput: string) => {
@@ -4482,6 +4495,13 @@ export function ChatPage(props: ChatPageProps) {
     });
   }, [activeWorkspaceProjectPath, isAgentMode, openController]);
 
+  const handleNewProjectlessConversation = useCallback(() => {
+    openController.cancel();
+    clearCachedComposerDraft();
+    setActiveWorkspaceProjectId(PROJECTLESS_WORKSPACE_PROJECT_ID);
+    startNewConversationActionRef.current();
+  }, [openController]);
+
   useEffect(
     () =>
       subscribeAppCommand((command) => {
@@ -4489,6 +4509,14 @@ export function ChatPage(props: ChatPageProps) {
           case "newChat":
             setActiveView("chat");
             handleNewConversation();
+            break;
+          case "newProjectlessChat":
+            setActiveView("chat");
+            handleNewProjectlessConversation();
+            break;
+          case "openFolder":
+            setActiveView("chat");
+            void handleOpenCreateWorkspaceProject({ startConversation: true });
             break;
           case "focusComposer":
             setActiveView("chat");
@@ -4503,7 +4531,12 @@ export function ChatPage(props: ChatPageProps) {
             break;
         }
       }),
-    [handleNewConversation, handleToggleSidebar],
+    [
+      handleNewConversation,
+      handleNewProjectlessConversation,
+      handleOpenCreateWorkspaceProject,
+      handleToggleSidebar,
+    ],
   );
 
   const handleSelectConversation = useCallback(
@@ -5090,6 +5123,9 @@ export function ChatPage(props: ChatPageProps) {
           store={sidebarStore}
           currentConversationId={currentConversationId}
           isOpen={sidebarOpen}
+          executionMode={settings.system.executionMode}
+          approvalPolicy={settings.system.approvalPolicy}
+          setSettings={setSettings}
           fontScale={settings.customSettings.fontScale.sidebar}
           activeView={activeView}
           showProjects={isAgentMode}
@@ -5130,8 +5166,6 @@ export function ChatPage(props: ChatPageProps) {
           onShareConversation={handleOpenShareModal}
           onOpenSharedConversations={handleOpenSharedHistoryManager}
           onCloseSidebar={handleCloseSidebar}
-          theme={effectiveTheme}
-          onToggleTheme={onToggleTheme}
           onOpenSettings={onOpenSettings}
           appUpdate={appUpdate}
           onOpenSkillsHub={() => {

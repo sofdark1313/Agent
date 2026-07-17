@@ -30,8 +30,12 @@ test("Agent shell defines neutral themes and responsive panel contracts", () => 
 
 test("global sidebar exposes task, project, management, and app-menu regions", () => {
   const sidebar = read("src/components/chat/ChatHistorySidebar.tsx");
+  const sidebarContainer = read("src/pages/chat/sidebar/ChatSidebarContainer.tsx");
 
   assert.match(sidebar, /data-agent-sidebar/);
+  assert.match(sidebar, /headerModeSelector/);
+  assert.match(sidebarContainer, /<ChatModeSelector/);
+  assert.match(sidebarContainer, /headerModeSelector=/);
   assert.match(sidebar, /data-agent-nav="new-task"/);
   assert.match(sidebar, /data-agent-nav="skills"/);
   assert.match(sidebar, /data-agent-nav="mcp"/);
@@ -44,6 +48,21 @@ test("sidebar app menu does not render the bottom update button", () => {
 
   assert.doesNotMatch(appMenu, /AppUpdateButton/);
   assert.doesNotMatch(appMenu, /showUpdateButton/);
+  assert.doesNotMatch(appMenu, /settings\.appearance/);
+  assert.doesNotMatch(appMenu, /onToggleTheme/);
+  assert.doesNotMatch(appMenu, /\bMoon\b|\bSun\b/);
+});
+
+test("top-right theme control only offers explicit light and dark targets", () => {
+  const header = read("src/pages/chat/components/ChatHeader.tsx");
+
+  assert.match(header, /resolveEffectiveTheme\(settings\.theme\)/);
+  assert.match(header, /getNextTheme\(settings\.theme\)/);
+  assert.match(header, /<ThemeToggleIcon theme=\{effectiveTheme\}/);
+  assert.match(header, /tooltip\.switchToLight/);
+  assert.match(header, /tooltip\.switchToDark/);
+  assert.doesNotMatch(header, /MonitorSmartphone/);
+  assert.doesNotMatch(header, /tooltip\.switchToAuto/);
 });
 
 test("task workspace uses compact topbar, document transcript, and floating composer", () => {
@@ -53,12 +72,36 @@ test("task workspace uses compact topbar, document transcript, and floating comp
   assert.match(read("src/pages/chat/transcript/ChatEmptyState.tsx"), /data-agent-empty-state/);
 });
 
+test("assistant answers use compact Codex document flow with collapsed thinking", () => {
+  const bubble = read("src/pages/chat/components/AssistantBubble.tsx");
+  const assistantRow = read("src/pages/chat/transcript/AssistantRow.tsx");
+  const round = read("src/pages/chat/components/assistant-bubble/RoundContent.tsx");
+  const transcript = read("src/pages/chat/transcript/TranscriptList.tsx");
+  const css = read("src/index.css");
+
+  assert.match(bubble, /data-agent-assistant-answer/);
+  assert.doesNotMatch(bubble, /<AssistantAvatar\s*\/>/);
+  assert.doesNotMatch(assistantRow, /<AssistantAvatar\s*\/>/);
+  assert.match(round, /data-agent-thinking-block/);
+  assert.match(round, /useState\(false\)/);
+  assert.doesNotMatch(round, /autoOpenThinking|open=\{autoOpenThinking/);
+  assert.match(round, /className="agent-answer-markdown"/);
+  assert.match(transcript, /const TRANSCRIPT_ROW_GAP = 16/);
+  assert.match(css, /\.chat-markdown \{[\s\S]*?leading-\[1\.6\]/);
+  assert.match(css, /data-streamdown="code-block-body"[\s\S]*?border-0/);
+  assert.match(css, /data-streamdown="code-block-actions"[\s\S]*?border: 0/);
+  assert.doesNotMatch(css, /content: "STREAMING"/);
+});
+
 test("chat composer follows the Codex input surface and action hierarchy", () => {
   const composer = read("src/pages/chat/components/ChatComposerBar.tsx");
   const header = read("src/pages/chat/components/ChatHeader.tsx");
   const accessSelectorPath = path.join(root, "src/pages/chat/components/ChatAccessSelector.tsx");
   assert.equal(fs.existsSync(accessSelectorPath), true, "composer access selector is required");
   const accessSelector = read("src/pages/chat/components/ChatAccessSelector.tsx");
+  const modeSelectorPath = path.join(root, "src/pages/chat/components/ChatModeSelector.tsx");
+  assert.equal(fs.existsSync(modeSelectorPath), true, "sidebar mode selector is required");
+  const modeSelector = read("src/pages/chat/components/ChatModeSelector.tsx");
   const modelSelectorPath = path.join(root, "src/pages/chat/components/ChatModelSelector.tsx");
   assert.equal(fs.existsSync(modelSelectorPath), true, "composer model selector component is required");
   const modelSelector = read("src/pages/chat/components/ChatModelSelector.tsx");
@@ -68,6 +111,10 @@ test("chat composer follows the Codex input surface and action hierarchy", () =>
   assert.match(composer, /data-agent-composer-attachments/);
   assert.match(composer, /data-agent-composer-add/);
   assert.match(composer, /<ChatAccessSelector/);
+  assert.doesNotMatch(composer, /<ChatModeSelector/);
+  assert.match(modeSelector, /data-agent-sidebar-mode/);
+  assert.match(modeSelector, /chat\.mode\.chatTitle/);
+  assert.match(modeSelector, /chat\.mode\.agentTitle/);
   assert.match(accessSelector, /data-agent-composer-access/);
   assert.match(accessSelector, /DropdownMenuItem/);
   assert.match(accessSelector, /updateSystem/);
@@ -120,14 +167,44 @@ test("settings uses Agent management navigation and content regions", () => {
 
 test("Windows title bar exposes functional Codex-style application menus", () => {
   const titleBar = read("src/components/WindowsTitleBar.tsx");
+  const appCommands = read("src/lib/appCommands.ts");
+  const chatPage = read("src/pages/ChatPage.tsx");
+  const capability = read("src-tauri/capabilities/default.json");
   const appMenu = read("src/components/app-shell/AgentAppMenu.tsx");
 
   assert.match(titleBar, /data-agent-window-menu=\{props\.id\}/);
-  assert.match(titleBar, /<TitleBarMenu id="file"/);
-  assert.match(titleBar, /<TitleBarMenu id="edit"/);
+  assert.match(titleBar, /data-agent-window-menu-region/);
+  assert.match(titleBar, /data-agent-window-drag-region/);
+  assert.match(
+    titleBar,
+    /data-agent-window-drag-region[\s\S]*?onDoubleClick=\{handleTitleDoubleClick\}[\s\S]*?onMouseDown=\{startDragging\}/,
+  );
+  assert.doesNotMatch(titleBar, /data-agent-window-menu-region[\s\S]*?stopPropagation/);
+  assert.doesNotMatch(titleBar, /event\.target[\s\S]*?closest\("button"\)/);
+  assert.match(titleBar, /<TitleBarMenu\s+id="file"/);
+  assert.match(titleBar, /<TitleBarMenu\s+id="edit"/);
   assert.match(titleBar, /<TitleBarMenu id="view"/);
   assert.match(titleBar, /<TitleBarMenu id="help"/);
   assert.match(titleBar, /dispatchAppCommand/);
+  assert.match(titleBar, /new WebviewWindow/);
+  assert.match(titleBar, /window\.menu\.newWindow/);
+  assert.match(titleBar, /window\.menu\.newTask/);
+  assert.match(titleBar, /window\.menu\.newProjectlessTask/);
+  assert.match(titleBar, /window\.menu\.openFolder/);
+  assert.match(titleBar, /window\.menu\.close/);
+  assert.match(titleBar, /window\.menu\.undo/);
+  assert.match(titleBar, /window\.menu\.redo/);
+  assert.match(titleBar, /window\.menu\.cut/);
+  assert.match(titleBar, /window\.menu\.copy/);
+  assert.match(titleBar, /window\.menu\.paste/);
+  assert.match(titleBar, /window\.menu\.delete/);
+  assert.match(titleBar, /window\.menu\.selectAll/);
+  assert.match(titleBar, /runEditCommand/);
+  assert.match(appCommands, /"newProjectlessChat"/);
+  assert.match(appCommands, /"openFolder"/);
+  assert.match(chatPage, /case "newProjectlessChat"/);
+  assert.match(chatPage, /case "openFolder"/);
+  assert.match(capability, /core:webview:allow-create-webview-window/);
   assert.match(titleBar, /onOpenSettings.*"about"/);
   assert.doesNotMatch(appMenu, /onOpenSettings\("about"\)/);
 });
@@ -143,6 +220,7 @@ test("settings follows the flat Codex document and neutral control model", () =>
   assert.match(system, /data-agent-settings-document/);
   assert.match(system, /data-agent-setting-row/);
   assert.match(system, /data-agent-segmented-control/);
+  assert.doesNotMatch(system, /settings\.executionMode/);
   assert.doesNotMatch(system, /rounded-2xl|shadow-primary/);
   assert.doesNotMatch(shared, /sky-500/);
   assert.match(css, /\.agent-settings-option-list/);

@@ -6,12 +6,7 @@ import { useLocale } from "../../../i18n";
 import type { HistoryMessageRef } from "../../../lib/chat/conversation/conversationState";
 import type { PendingUploadedFile } from "../../../lib/chat/messages/uploadedFiles";
 import { VIBING_STATUS } from "../../../lib/chat/page/chatPageHelpers";
-import {
-  AssistantAvatar,
-  AssistantBubble,
-  CompactingText,
-  VibingText,
-} from "../components/AssistantBubble";
+import { AssistantBubble, CompactingText, VibingText } from "../components/AssistantBubble";
 import type { AssistantRow as AssistantRowData } from "./rowModel";
 import { TypingDots } from "./TranscriptLoadingStates";
 import { formatMessageTimestamp } from "./transcriptUtils";
@@ -70,8 +65,7 @@ export const AssistantRow = memo(function AssistantRow(props: AssistantRowProps)
           toolStatusVariant={row.live && isCompactionRunning ? "compaction" : "default"}
         />
       ) : row.live ? (
-        <div className="flex w-full max-w-full items-start gap-3">
-          <AssistantAvatar />
+        <div data-agent-assistant-answer className="w-full max-w-full">
           <div className={`min-w-0 flex-1 ${isAgentMode ? "pt-1" : "pt-0.5"}`}>
             {isCompactionRunning ? (
               <div className="flex items-center py-1">
@@ -90,7 +84,7 @@ export const AssistantRow = memo(function AssistantRow(props: AssistantRowProps)
         </div>
       ) : null}
       {row.live ? null : (
-        <div className="mt-1 flex items-center justify-start gap-1.5 pl-10">
+        <div className="mt-1 flex items-center justify-start gap-1.5">
           <span className="select-none text-[calc(11px*var(--zone-font-scale,1))] tabular-nums text-muted-foreground/70">
             {formatMessageTimestamp(row.timestamp ?? 0)}
           </span>

@@ -1,15 +1,19 @@
 import { memo, type ReactNode } from "react";
-import { MonitorSmartphone, Moon, PanelLeft, Settings, Sun } from "../../../components/icons";
+import { Moon, PanelLeft, Settings, Sun } from "../../../components/icons";
 import { isMacOsTauri } from "../../../components/MacOsTitleBarSpacer";
 import { Button } from "../../../components/ui/button";
 import { useLocale } from "../../../i18n";
-import { type AppSettings, getNextTheme, type Theme } from "../../../lib/settings";
+import {
+  type AppSettings,
+  type EffectiveTheme,
+  getNextTheme,
+  resolveEffectiveTheme,
+} from "../../../lib/settings";
 import type { SectionId } from "../../settings/types";
 
-function ThemeToggleIcon(props: { theme: Theme }) {
+function ThemeToggleIcon(props: { theme: EffectiveTheme }) {
   if (props.theme === "light") return <Sun className="h-4.5 w-4.5" />;
-  if (props.theme === "dark") return <Moon className="h-4.5 w-4.5" />;
-  return <MonitorSmartphone className="h-4.5 w-4.5" />;
+  return <Moon className="h-4.5 w-4.5" />;
 }
 
 export const ChatHeader = memo(function ChatHeader(props: {
@@ -31,13 +35,10 @@ export const ChatHeader = memo(function ChatHeader(props: {
     trailingActions,
   } = props;
   const { t } = useLocale();
+  const effectiveTheme = resolveEffectiveTheme(settings.theme);
   const nextTheme = getNextTheme(settings.theme);
   const themeToggleTitle =
-    nextTheme === "light"
-      ? t("tooltip.switchToLight")
-      : nextTheme === "dark"
-        ? t("tooltip.switchToDark")
-        : t("tooltip.switchToAuto");
+    nextTheme === "light" ? t("tooltip.switchToLight") : t("tooltip.switchToDark");
 
   return (
     <header
@@ -69,7 +70,7 @@ export const ChatHeader = memo(function ChatHeader(props: {
           aria-label={themeToggleTitle}
           className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
         >
-          <ThemeToggleIcon theme={nextTheme} />
+          <ThemeToggleIcon theme={effectiveTheme} />
         </Button>
         {!sidebarOpen && !isMacOsTauri() ? (
           <Button

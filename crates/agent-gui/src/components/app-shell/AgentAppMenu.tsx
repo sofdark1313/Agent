@@ -2,7 +2,7 @@ import { useLocale } from "../../i18n";
 import type { SectionId } from "../../pages/settings/types";
 import { AgentMark } from "../brand/AgentMark";
 import { APP_NAME } from "../brand/brand";
-import { Moon, MoreHorizontal, Settings, Sun } from "../icons";
+import { MoreHorizontal, Settings } from "../icons";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -12,14 +12,11 @@ import {
 } from "../ui/dropdown-menu";
 
 type AgentAppMenuProps = {
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onOpenSettings: (section?: SectionId) => void;
 };
 
-export function AgentAppMenu({ theme, onToggleTheme, onOpenSettings }: AgentAppMenuProps) {
+export function AgentAppMenu({ onOpenSettings }: AgentAppMenuProps) {
   const { t } = useLocale();
-  const ThemeIcon = theme === "dark" ? Moon : Sun;
 
   return (
     <div className="w-full">
@@ -51,10 +48,6 @@ export function AgentAppMenu({ theme, onToggleTheme, onOpenSettings }: AgentAppM
           >
             <Settings className="h-4 w-4" />
             {t("tooltip.settings")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onToggleTheme} className="gap-2 rounded-lg px-2.5 py-2">
-            <ThemeIcon className="h-4 w-4" />
-            {t("settings.appearance")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

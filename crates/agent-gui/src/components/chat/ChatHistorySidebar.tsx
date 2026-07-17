@@ -1,6 +1,15 @@
 import { Tooltip } from "@base-ui/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { type CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocale } from "../../i18n";
 import type { AppUpdateController } from "../../lib/appUpdates";
 import {
@@ -16,8 +25,6 @@ import type {
 } from "../../lib/sidebar/types";
 import type { SectionId } from "../../pages/settings/types";
 import { AgentAppMenu } from "../app-shell/AgentAppMenu";
-import { AgentMark } from "../brand/AgentMark";
-import { APP_NAME } from "../brand/brand";
 import {
   Blend,
   Cable,
@@ -69,6 +76,7 @@ type ChatHistorySidebarProps = {
   renamingId: string | null;
   renameDraft: string;
   isOpen: boolean;
+  headerModeSelector: ReactNode;
   fontScale?: number;
   activeView?: "chat" | "skills-hub" | "mcp-hub" | "cron-hub";
   showProjects?: boolean;
@@ -108,8 +116,6 @@ type ChatHistorySidebarProps = {
   onDeleteConversation: (id: string) => void;
   onLoadMore: () => void;
   onCloseSidebar: () => void;
-  theme: "light" | "dark";
-  onToggleTheme: () => void;
   onOpenSettings: (section?: SectionId) => void;
   appUpdate?: AppUpdateController;
   onOpenSkillsHub?: () => void;
@@ -873,6 +879,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     renamingId,
     renameDraft,
     isOpen,
+    headerModeSelector,
     fontScale = 1,
     activeView = "chat",
     showProjects = false,
@@ -910,8 +917,6 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     onDeleteConversation,
     onLoadMore,
     onCloseSidebar,
-    theme,
-    onToggleTheme,
     onOpenSettings,
     onOpenSkillsHub,
     onOpenMcpHub,
@@ -1339,12 +1344,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
         <MacOsTitleBarSpacer className="bg-[hsl(var(--sidebar-bg))]" />
         <div className="shrink-0 px-2 pb-2 pt-2.5">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2 px-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                <AgentMark className="h-[18px] w-[18px]" />
-              </span>
-              <div className="truncate text-[13px] font-semibold tracking-tight">{APP_NAME}</div>
-            </div>
+            <div className="min-w-0 flex-1">{headerModeSelector}</div>
 
             {!isMacOsTauri() && (
               <Button
@@ -1699,11 +1699,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
           </div>
         </div>
         <div className="shrink-0 border-t border-border/50 bg-[hsl(var(--sidebar-bg))] px-2 py-2">
-          <AgentAppMenu
-            theme={theme}
-            onToggleTheme={onToggleTheme}
-            onOpenSettings={onOpenSettings}
-          />
+          <AgentAppMenu onOpenSettings={onOpenSettings} />
         </div>
       </div>
     </aside>

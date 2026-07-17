@@ -1,23 +1,11 @@
-import {
-  CheckCircle2,
-  Cpu,
-  MessageSquare,
-  MonitorSmartphone,
-  Moon,
-  ScanText,
-  Sun,
-  Terminal,
-  Wrench,
-} from "../../components/icons";
+import { MonitorSmartphone, Moon, ScanText, Sun } from "../../components/icons";
 
 import { SUPPORTED_LOCALES, useLocale } from "../../i18n";
 import {
-  type ExecutionMode,
   type FontScaleSettings,
   THEME_OPTIONS,
   type Theme,
   updateCustomSettings,
-  updateSystem,
 } from "../../lib/settings";
 import type { SettingsSectionProps } from "./types";
 
@@ -26,34 +14,7 @@ const FONT_SCALE_OPTIONS = [0.9, 1, 1.1, 1.2] as const;
 export function SystemSettingsForm(props: SettingsSectionProps) {
   const { settings, setSettings } = props;
   const { t } = useLocale();
-  const executionMode = settings.system.executionMode;
   const fontScale = settings.customSettings.fontScale;
-
-  const executionOptions: Array<{
-    mode: ExecutionMode;
-    title: string;
-    description: string;
-    icon: typeof MessageSquare;
-  }> = [
-    {
-      mode: "text",
-      title: t("settings.chatMode"),
-      description: t("settings.chatModeDesc"),
-      icon: MessageSquare,
-    },
-    {
-      mode: "tools",
-      title: t("settings.agentMode"),
-      description: t("settings.agentModeDesc"),
-      icon: Wrench,
-    },
-    {
-      mode: "agent-dev",
-      title: t("settings.agentDevMode"),
-      description: t("settings.agentDevModeDesc"),
-      icon: Cpu,
-    },
-  ];
 
   const fontScaleZones: Array<{ key: keyof FontScaleSettings; label: string }> = [
     { key: "sidebar", label: t("settings.fontSizeSidebar") },
@@ -90,52 +51,6 @@ export function SystemSettingsForm(props: SettingsSectionProps) {
 
   return (
     <div data-agent-settings-document className="agent-settings-document">
-      <section className="agent-settings-group">
-        <div className="agent-settings-group-header">
-          <div>
-            <div className="agent-settings-group-title">
-              <Terminal className="h-4 w-4" />
-              {t("settings.executionMode")}
-            </div>
-            <p className="agent-settings-group-description">{t("settings.executionModeDesc")}</p>
-          </div>
-        </div>
-
-        <div className="agent-settings-option-list">
-          {executionOptions.map((option) => {
-            const selected = executionMode === option.mode;
-            const Icon = option.icon;
-            return (
-              <button
-                data-agent-setting-row
-                data-selected={selected}
-                key={option.mode}
-                type="button"
-                onClick={() =>
-                  setSettings((prev) => updateSystem(prev, { executionMode: option.mode }))
-                }
-                className="agent-settings-option"
-              >
-                <span className="agent-settings-option-icon">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-medium text-foreground">
-                    {option.title}
-                  </span>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {option.description}
-                  </span>
-                </span>
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-                  {selected ? <CheckCircle2 className="h-4 w-4 text-foreground" /> : null}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
       <section className="agent-settings-group">
         <div className="agent-settings-group-header">
           <div className="agent-settings-group-title">

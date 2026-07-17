@@ -2,7 +2,6 @@ import { memo } from "react";
 
 import type { UiRound } from "../../../lib/chat/messages/uiMessages";
 
-import { AssistantAvatar } from "./assistant-bubble/AssistantAvatar";
 import { RoundContent } from "./assistant-bubble/RoundContent";
 
 export { AssistantAvatar } from "./assistant-bubble/AssistantAvatar";
@@ -13,7 +12,6 @@ const EMPTY_RUNNING_TOOL_CALL_IDS: string[] = [];
 export const AssistantBubble = memo(function AssistantBubble(props: {
   rounds: (UiRound & {
     runningToolCallIds?: string[];
-    thinkingOpen?: boolean;
   })[];
   showUsage?: boolean;
   usageContextWindow?: number;
@@ -36,9 +34,8 @@ export const AssistantBubble = memo(function AssistantBubble(props: {
   const showLabels = rounds.length > 1;
 
   return (
-    <div className="flex w-full max-w-full items-start gap-3">
-      <AssistantAvatar />
-      <div className="min-w-0 flex-1 space-y-3 pt-0.5">
+    <div data-agent-assistant-answer className="w-full max-w-full">
+      <div className="min-w-0 space-y-2">
         {rounds.map((round, idx) => (
           <RoundContent
             key={round.key}
@@ -52,7 +49,6 @@ export const AssistantBubble = memo(function AssistantBubble(props: {
             toolStatus={idx === rounds.length - 1 ? toolStatus : null}
             toolStatusVariant={idx === rounds.length - 1 ? toolStatusVariant : "default"}
             runningToolCallIds={round.runningToolCallIds ?? EMPTY_RUNNING_TOOL_CALL_IDS}
-            thinkingOpen={round.thinkingOpen}
           />
         ))}
       </div>

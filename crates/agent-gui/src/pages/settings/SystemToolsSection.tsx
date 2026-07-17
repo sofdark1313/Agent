@@ -280,7 +280,12 @@ export function SystemToolsSection(props: SettingsSectionProps) {
     setSettings((prev) =>
       updateSystem(prev, {
         approvalPolicy,
-        executionMode: approvalPolicy === "full" ? "agent-dev" : "tools",
+        executionMode:
+          prev.system.executionMode === "text"
+            ? "text"
+            : approvalPolicy === "full"
+              ? "agent-dev"
+              : "tools",
       }),
     );
   }
@@ -289,7 +294,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
     setSettings((prev) =>
       updateSystem(prev, {
         approvalPolicy: "custom",
-        executionMode: "tools",
+        executionMode: prev.system.executionMode === "text" ? "text" : "tools",
         customApprovalRules: {
           ...prev.system.customApprovalRules,
           [rule]: !prev.system.customApprovalRules[rule],

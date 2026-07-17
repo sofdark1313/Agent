@@ -1,4 +1,10 @@
-export type AppCommand = "newChat" | "focusComposer" | "toggleSidebar" | "toggleProjectTools";
+export type AppCommand =
+  | "newChat"
+  | "newProjectlessChat"
+  | "openFolder"
+  | "focusComposer"
+  | "toggleSidebar"
+  | "toggleProjectTools";
 
 const APP_COMMAND_EVENT = "agent:app-command";
 

@@ -13,6 +13,12 @@ test("system approval settings normalize custom rules and migrate legacy executi
   assert.equal(legacyAsk.approvalPolicy, "ask");
   assert.equal(legacyAsk.executionMode, "tools");
 
+  const explicitChat = settings.normalizeSystemSettings({
+    executionMode: "text",
+    approvalPolicy: "agent",
+  });
+  assert.equal(explicitChat.executionMode, "text");
+
   const normalized = settings.normalizeSystemSettings({
     executionMode: "tools",
     approvalPolicy: "custom",
@@ -2092,4 +2098,10 @@ test("font scale settings normalize invalid values to 1 and clamp out-of-range v
 
   const custom = settings.normalizeCustomSettings({ fontScale: { chat: 1.2 } }, []);
   assert.deepEqual(custom.fontScale, { sidebar: 1, chat: 1.2, rightDock: 1 });
+});
+
+test("theme toggle only alternates between light and dark", () => {
+  assert.equal(settings.getNextTheme("light"), "dark");
+  assert.equal(settings.getNextTheme("dark"), "light");
+  assert.equal(settings.getNextTheme("system"), "dark");
 });

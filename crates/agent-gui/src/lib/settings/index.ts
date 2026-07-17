@@ -1293,7 +1293,15 @@ function normalizeSshProjectHostAssociations(
 export function normalizeSystemSettings(input: unknown): SystemSettings {
   const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const legacyExecutionMode = normalizeExecutionMode(obj.executionMode);
-  const executionMode = legacyExecutionMode === "text" ? "tools" : legacyExecutionMode;
+  const hasExplicitApprovalPolicy =
+    obj.approvalPolicy === "ask" ||
+    obj.approvalPolicy === "agent" ||
+    obj.approvalPolicy === "full" ||
+    obj.approvalPolicy === "custom";
+  const executionMode =
+    legacyExecutionMode === "text" && !hasExplicitApprovalPolicy
+      ? "tools"
+      : legacyExecutionMode;
   return {
     executionMode,
     approvalPolicy: normalizeApprovalPolicy(obj.approvalPolicy, legacyExecutionMode),
@@ -1389,10 +1397,8 @@ export function resolveEffectiveTheme(theme: Theme): EffectiveTheme {
   return window.matchMedia(SYSTEM_THEME_MEDIA_QUERY).matches ? "dark" : "light";
 }
 
-export function getNextTheme(theme: Theme): Theme {
-  if (theme === "light") return "dark";
-  if (theme === "dark") return "system";
-  return "light";
+export function getNextTheme(theme: Theme): EffectiveTheme {
+  return resolveEffectiveTheme(theme) === "dark" ? "light" : "dark";
 }
 
 export function subscribeToSystemThemePreference(listener: () => void): () => void {

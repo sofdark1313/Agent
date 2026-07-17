@@ -840,12 +840,14 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <ChatAccessSelector
-                executionMode={executionMode}
-                approvalPolicy={approvalPolicy}
-                setSettings={setSettings}
-                onOpenSettings={onOpenSettings}
-              />
+              {isAgentMode ? (
+                <ChatAccessSelector
+                  executionMode={executionMode}
+                  approvalPolicy={approvalPolicy}
+                  setSettings={setSettings}
+                  onOpenSettings={onOpenSettings}
+                />
+              ) : null}
             </div>
 
             <div className="flex min-w-0 shrink-0 items-center justify-end gap-1">

@@ -69,7 +69,7 @@
     --agent-surface-subtle: 30 6% 97%;
     --agent-sidebar-width: 260px;
     --agent-topbar-height: 44px;
-    --agent-content-width: 780px;
+    --agent-content-width: 860px;
     --agent-dock-width: 420px;
     --agent-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.05);
     --agent-shadow-menu: 0 16px 40px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -605,11 +605,11 @@
   }
 
   .chat-markdown {
-    @apply text-[calc(15px*var(--zone-font-scale,1))] leading-[1.7] text-foreground;
+    @apply text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6] text-foreground;
   }
 
   .chat-markdown p {
-    @apply my-3 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.7] text-foreground;
+    @apply my-2 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6] text-foreground;
   }
 
   .chat-markdown strong,
@@ -628,13 +628,13 @@
 
   /* Headings */
   .chat-markdown [data-streamdown="heading-1"] {
-    @apply mb-4 mt-8 text-xl font-semibold tracking-tight text-foreground;
+    @apply mb-3 mt-5 text-xl font-semibold tracking-tight text-foreground;
   }
   .chat-markdown [data-streamdown="heading-2"] {
-    @apply mb-3 mt-6 text-lg font-semibold text-foreground;
+    @apply mb-2 mt-4 text-lg font-semibold text-foreground;
   }
   .chat-markdown [data-streamdown="heading-3"] {
-    @apply mb-2 mt-5 text-base font-semibold text-foreground;
+    @apply mb-1.5 mt-3 text-base font-semibold text-foreground;
   }
 
   /* Links */
@@ -644,57 +644,37 @@
 
   /* Inline code */
   .chat-markdown [data-streamdown="inline-code"] {
-    @apply rounded-md border border-border/50 bg-muted/70 px-1.5 py-0.5 font-mono text-[calc(13px*var(--zone-font-scale,1))] font-medium text-foreground/90;
+    @apply rounded-[5px] bg-muted/70 px-1 py-0.5 font-mono text-[calc(13px*var(--zone-font-scale,1))] font-normal text-foreground/90;
   }
 
   /* Code blocks — container, header, body (safe in components layer) */
   .chat-markdown [data-streamdown="code-block"] {
-    @apply relative my-4 overflow-hidden rounded-xl border border-border/50 bg-muted/20;
-    box-shadow:
-      0 1px 3px 0 rgba(0, 0, 0, 0.04),
-      0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    @apply relative my-3 overflow-hidden rounded-lg border border-border/55 bg-muted/15 shadow-none;
   }
   .chat-markdown [data-streamdown="code-block-header"] {
-    @apply h-auto border-b border-border/60 bg-muted/55 px-3 py-2 text-[calc(11px*var(--zone-font-scale,1))] uppercase tracking-[0.22em] text-muted-foreground;
+    @apply h-auto border-b border-border/45 bg-muted/35 px-3 py-1.5 text-[calc(11px*var(--zone-font-scale,1))] normal-case tracking-normal text-muted-foreground;
   }
   .chat-markdown [data-streamdown="code-block-header"] > span {
-    @apply ml-0 font-mono tracking-[0.18em];
+    @apply ml-0 font-mono tracking-normal;
   }
   .chat-markdown [data-streamdown="code-block-body"] {
-    @apply overflow-x-auto rounded-lg border border-border/40 bg-background/90 p-4 text-[calc(13px*var(--zone-font-scale,1))] shadow-inner;
+    @apply overflow-x-auto rounded-none border-0 bg-background/70 p-3 text-[calc(13px*var(--zone-font-scale,1))] shadow-none;
   }
   .chat-markdown [data-streamdown="code-block-body"] pre {
-    @apply leading-6;
+    @apply leading-[1.6];
   }
   .chat-markdown--streaming [data-streamdown="code-block"][data-incomplete="true"] {
-    @apply relative border-amber-400/40;
-    background:
-      linear-gradient(180deg, hsl(var(--chat-running) / 0.08), transparent 46%),
-      hsl(var(--background));
-  }
-  .chat-markdown--streaming [data-streamdown="code-block"][data-incomplete="true"]::after {
-    content: "STREAMING";
-    position: absolute;
-    top: 0.7rem;
-    right: 3.15rem;
-    border-radius: 9999px;
-    background: hsl(var(--chat-running) / 0.14);
-    color: hsl(var(--chat-running));
-    padding: 0.15rem 0.5rem;
-    font-size: calc(10px * var(--zone-font-scale, 1));
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    z-index: 20;
+    @apply relative border-border/55;
   }
   .chat-markdown--streaming
     [data-streamdown="code-block"][data-incomplete="true"]
     [data-streamdown="code-block-header"] {
-    @apply border-amber-400/30 bg-amber-100/70 text-amber-700 dark:bg-amber-950/30 dark:text-amber-200;
+    @apply border-border/45 bg-muted/35 text-muted-foreground;
   }
 
   /* Blockquotes */
   .chat-markdown [data-streamdown="blockquote"] {
-    @apply my-3 border-l-[3px] border-border/60 pl-4 italic text-muted-foreground;
+    @apply my-2 border-l-2 border-border/60 pl-3 italic text-muted-foreground;
   }
   .chat-markdown [data-streamdown="blockquote"] p {
     @apply my-0;
@@ -702,13 +682,13 @@
 
   /* Lists */
   .chat-markdown [data-streamdown="unordered-list"] {
-    @apply my-3 ml-1 list-disc space-y-1 pl-5;
+    @apply my-2 ml-1 list-disc space-y-0.5 pl-5;
   }
   .chat-markdown [data-streamdown="ordered-list"] {
-    @apply my-3 ml-1 list-decimal space-y-1 pl-5;
+    @apply my-2 ml-1 list-decimal space-y-0.5 pl-5;
   }
   .chat-markdown [data-streamdown="list-item"] {
-    @apply pl-1 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.7];
+    @apply pl-1 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6];
   }
   .chat-markdown .contains-task-list {
     @apply list-none pl-0;
@@ -722,7 +702,7 @@
 
   /* Tables */
   .chat-markdown [data-streamdown="table-wrapper"] {
-    @apply my-3 gap-3 rounded-2xl border border-border/60 bg-muted/20 p-2 shadow-xs;
+    @apply my-3 gap-2 rounded-lg border border-border/55 bg-transparent p-1 shadow-none;
   }
   .chat-markdown [data-streamdown="table-wrapper"] > div:first-child {
     @apply justify-end gap-1 px-1 pt-0.5;
@@ -737,10 +717,10 @@
     @apply bg-muted/70;
   }
   .chat-markdown [data-streamdown="table-header-cell"] {
-    @apply border-b border-border/50 px-4 py-2.5 text-left text-[calc(11px*var(--zone-font-scale,1))] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+    @apply border-b border-border/50 px-3 py-2 text-left text-[calc(11px*var(--zone-font-scale,1))] font-semibold text-muted-foreground;
   }
   .chat-markdown [data-streamdown="table-cell"] {
-    @apply border-b border-border/30 px-4 py-2.5 text-left align-top;
+    @apply border-b border-border/30 px-3 py-2 text-left align-top;
   }
   .chat-markdown [data-streamdown="table-body"] [data-streamdown="table-row"]:nth-child(even) {
     @apply bg-muted/20;
@@ -751,7 +731,7 @@
 
   /* Images */
   .chat-markdown [data-streamdown="image-wrapper"] {
-    @apply my-4 overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-xs;
+    @apply my-3 overflow-hidden rounded-lg border border-border/50 bg-muted/15 shadow-none;
   }
   .chat-markdown [data-streamdown="image"] {
     @apply block max-h-[28rem] max-w-full rounded-none;
@@ -759,7 +739,7 @@
 
   /* Horizontal rule */
   .chat-markdown [data-streamdown="horizontal-rule"] {
-    @apply my-5 border-border/45;
+    @apply my-4 border-border/45;
   }
 
   /* First/last child margin reset */
@@ -2692,13 +2672,11 @@
   align-items: center;
   gap: 0;
   margin: 0;
-  padding: 0.125rem;
+  padding: 0;
   border-radius: 0.375rem;
-  border: 1px solid hsl(var(--border) / 0.5);
-  background: hsl(var(--background) / 0.85);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .chat-markdown [data-streamdown="code-block-copy-button"],
 .chat-markdown [data-streamdown="code-block-download-button"] {

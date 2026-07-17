@@ -392,7 +392,257 @@ Registry 会根据运行上下文决定工具集合：
 
 ## 6. Skills 与 MCP：方法知识和外部能力如何接入
 
+Skills、Tools 和 MCP 经常一起出现在模型上下文中，但它们解决的是不同问题。
+
+### 6.1 先分清三个概念
+
+| 维度 | Skills | Builtin Tools | MCP |
+|---|---|---|---|
+| 提供什么 | 工作方法、领域知识、流程说明 | LiveAgent 自带的可执行操作 | 外部 Server 暴露的可执行操作 |
+| 何时加载 | 扫描已安装 Skill，选择后生成 Prompt | 构建 Builtin Registry 时按 runtime 条件组合 | 对 enabled 且 selected 的 Server 调用 tools/list 后动态生成 |
+| 是否直接执行代码 | Skill 文本本身不执行；模型阅读后遵循流程 | 是，由 TypeScript executor 或 Tauri/Rust 执行 | 是，由 Rust MCP Runtime 调用外部 Server |
+| 典型例子 | “如何创建规范 Skill”“项目发布流程” | `Read`、`Shell`、`MemoryManager` | GitHub、数据库、浏览器或企业系统的 MCP Tool |
+| 主要源码 | `src/lib/skills/*`、`services/skills/*` | `src/lib/tools/*` | `mcpTools.ts`、`mcpManagerTools.ts`、Rust `mcp.rs` |
+
+一句话记忆：**Skill 告诉模型怎样做，Tool 让模型真的去做，MCP 让外部系统的 Tool 也能被调用。**
+
+### 6.2 Skill 从安装到进入对话
+
+```mermaid
+flowchart LR
+    S["Builtin / Local / GitHub / Archive / ClawHub"] --> I["Rust Skills Service 安装"]
+    I --> R["~/.liveagent/skills"]
+    R --> D["discoverSkills"]
+    D --> C["selected + always-on"]
+    C --> P["buildSkillsSystemPrompt"]
+    P --> X["Chat System Prompt"]
+    X --> M["模型按需使用 SkillsManager 读取完整文件"]
+```
+
+关键步骤如下：
+
+1. Rust Skills Service 负责 seed builtin、安装、创建、校验、打包和读取 metadata。
+2. 所有运行时 Skill 最终位于 `~/.liveagent/skills`。
+3. `src/lib/skills/index.ts` 中的 `discoverSkills()` 获取当前受管理的 Skill 列表。
+4. Settings 中的 `settings.skills.selected` 决定普通 Skill 是否启用；builtin always-on 名称会自动合并。
+5. `buildSkillsSystemPrompt()` 只把当前会话可见 Skill 的必要 metadata 注入 system prompt。
+6. 模型判断某个 Skill 确实适用后，再调用 `SkillsManager(action="read")` 读取 `SKILL.md` 等入口文件。
+
+这种“先 metadata、后按需读取全文”的方式可以避免所有 Skill 内容同时占满上下文。
+
+### 6.3 SkillsManager 与文件工具的分工
+
+- Skill 的 create/install/validate/package/delete/ClawHub 操作通过 `SkillsManager` 完成。
+- 已启用 Skill 内部文件可通过 Skills Root 文件访问策略读取或维护。
+- Builtin Skill 受保护，模型不能直接覆盖；需要扩展时应创建独立用户 Skill。
+- `SkillAccessPolicy` 决定当前对话是否能查看或修改 Skills Root。
+
+### 6.4 为什么 Skills 写入要串行化和原子替换
+
+Skills Root 可能同时被 Agent 工具、Gateway 转发、UI 后台安装线程和 builtin seeding 写入。如果多路写者直接向活动目录逐文件覆盖，读取者可能看到半个新版本或互相删除文件。
+
+因此 Rust 侧采用两层保护：
+
+1. `skills_write_guard()` 把写操作串行化。
+2. 安装内容先在 `<root>/.staging/` 完整构建，再通过 rename 原子替换活动目录。
+
+修改 Skills 安装逻辑时，不能绕过这两个约束。
+
+### 6.5 MCP 从配置到动态工具
+
+MCP Server 配置存放在 `settings.mcp.servers`，选择状态在 `settings.mcp.selected`。完整生命周期是：
+
+1. 用户在 MCP Hub 或 Settings 添加 stdio、HTTP 或 SSE Server。
+2. Runtime 只选择 enabled 且 selected 的 Server。
+3. `createMcpTools()` 调用 Tauri `mcp_list_tools`。
+4. Rust MCP Runtime 启动或复用连接，并向 Server 发出 tools/list。
+5. 前端把 Server Tool 规范化为 `mcp_<server>_<tool>`；过长名称截断并附加 hash，避免冲突。
+6. 模型调用动态工具后，executor 通过 `mcp_call_tool` 让 Rust Runtime 调用对应 Server。
+7. 结果作为普通 `toolResult` 回到 Agent Runner 和 Tool Trace。
+
+### 6.6 McpManager 管什么
+
+`McpManager` 是管理工具，不是某个业务 MCP Tool。它负责：
+
+- add/update/delete Server 配置。
+- enable/disable Server。
+- 查看 runtime status。
+- test/restart/stop Server。
+- 查看某个 Server 的 tools/list。
+- 诊断配置和连接问题。
+
+配置修改必须通过 `src/lib/settings/mcpOps.ts` 的 `McpSettingsOp` 和 `applyMcpOps()` 按 Server id 合并。工具读取配置时使用实时 `getMcpSettings()`，不能持有一份 turn 开始时的旧快照，否则 UI 与工具并发修改会互相覆盖。
+
+### 6.7 MCP Runtime 的并发边界
+
+Rust 的 `McpRuntimeManager` 维护进程级 clients map：
+
+- map 锁只用于短暂 get/insert，不能持锁等待 Server 初始化或调用。
+- 同一 Server 的调用在单个 client 锁上串行。
+- 不同 Server 可以并行，互不阻塞。
+- 配置写入先提交为真相，再 best-effort 停止旧 runtime；停止失败只产生 warning，下次使用时通过配置判等自愈。
+- 非 chat scope 禁止有共享副作用的写、restart 或 stop；test/tools/diagnose 使用瞬时连接时不污染共享连接池。
+
+### 6.8 MCP 工具没有出现时检查什么
+
+按以下顺序检查比反复重启更有效：
+
+1. Server 是否同时 enabled 和 selected。
+2. transport、command/url、env、headers 是否完整。
+3. `mcp_list_tools` 是否成功，Rust runtime status 是否包含 last error。
+4. tools/list 是否真的返回工具。
+5. 动态名称是否被规范化成另一个名字。
+6. 当前 runtime scope 是否允许该能力。
+7. Registry 构造是否把动态 MCP bundle 合并进最终 `tools`。
+
 ## 7. Memory：系统如何跨对话记住信息
+
+Memory 不是把全部聊天记录再次保存一遍，而是从对话中提炼未来仍有价值的信息，例如用户偏好、长期反馈和项目约定。
+
+### 7.1 总体模型：Markdown 是事实源，SQLite 是索引
+
+| 层 | 主要路径或位置 | 职责 |
+|---|---|---|
+| Markdown 事实源 | `~/.liveagent/memory/...` | 保存记忆正文和 canonical frontmatter |
+| SQLite Index | `~/.liveagent/memory/memory-index.sqlite3` | metadata、FTS、trigram、audit log 和 organize runs |
+| Rust MemoryStore | `src-tauri/src/services/memory/*` | 读写、搜索、配额、daily、组织记录、证据契约和索引 reconcile |
+| TypeScript Schema | `src/lib/memory/schema.ts` | scope/type/action/confidence 等前端统一类型 |
+| Prompt 与提取 | `src/lib/memory/prompts/*`、`src/lib/chat/memory/*` | Overview 注入、静默提取和计划校验 |
+| Model Tool | `src/lib/tools/memoryTools.ts` | 对模型暴露 `MemoryManager` |
+| Settings UI | `src/pages/settings/memory/*` | 查看、审核、组织和配额展示 |
+
+SQLite 可以重建，Markdown 才是 canonical source。遇到“文件存在但搜索不到”时，应检查索引 reconcile，而不是直接认为记忆丢失。
+
+### 7.2 Scope 与 Type
+
+| 维度 | 值 | 用途 |
+|---|---|---|
+| scope | `global` | 跨项目适用的身份、偏好和反馈 |
+| scope | `project` | 只与当前 workdir 绑定的项目知识 |
+| type | `user` | 用户身份、偏好和习惯 |
+| type | `feedback` | 用户对 Agent 行为的长期反馈 |
+| type | `project` | 项目架构、约定和工作流 |
+| type | `reference` | 可长期引用的资料 |
+| type | `daily` | 按日期追加的 Journal；scope 固定 global，不计普通配额 |
+
+Project Memory 有严格域闸门：本轮必须产生合格的 workspace mutation，或者用户明确说“记住本项目……”。仅仅读文件、讨论代码或运行不改文件的检查，不足以把信息写成 project scope。
+
+### 7.3 两条召回路径
+
+```mermaid
+flowchart LR
+    S["Rust MemoryStore"] --> O["memory_index_overview"]
+    O --> P["紧凑 Memory Index"]
+    P --> C["Chat System Prompt"]
+    C --> L["模型先看到标题/摘要"]
+    L --> Q{"需要完整信息?"}
+    Q -- "是" --> M["MemoryManager list/read/search"]
+    M --> S
+    Q -- "否" --> A["直接继续回答"]
+```
+
+第一条是每轮自动 Overview 注入：它有每桶数量和总字符上限，只提供足够模型判断相关性的紧凑索引。第二条是模型按需调用 `MemoryManager` 读取或搜索完整内容。
+
+这是一种“粗召回 → 精读取”结构，避免每次请求都塞入全部 Memory。
+
+### 7.4 一条记忆如何在回合后写入
+
+统一案例中的“本项目统一使用中文注释”可能经过以下路径：
+
+```mermaid
+flowchart TD
+    U["用户消息 + 本轮 workspace mutations"] --> G{"Extraction Gate"}
+    G -- "问候/过短/节流/重复" --> N["Skip / Noop"]
+    G -- "值得提取" --> C["构造独立紧凑上下文"]
+    C --> L["提取模型"]
+    L --> S["SubmitMemoryPlan"]
+    S --> V["planTool 逐项校验"]
+    V --> B["单次 memory_apply_batch"]
+    B --> R["Rust MemoryStore"]
+    R --> F["写 canonical Markdown/frontmatter"]
+    R --> I["更新 SQLite index + audit"]
+```
+
+关键点如下：
+
+1. 提取使用独立的紧凑上下文，不复用庞大的聊天 system prompt。
+2. 上下文包含末尾用户轮、workspace mutation 摘要、候选记忆、近期拒绝和本轮已写条目。
+3. 模型必须通过一次 `SubmitMemoryPlan` 提交 write/update/accept/delete/append_daily 计划。
+4. `planTool.ts` 逐项校验；一条坏计划不会让整批丢失。
+5. 所有合法项目合并成一次 `memory_apply_batch`，与 Organizer 和手动应用共享持久化路径。
+6. Rust 负责最终 frontmatter 序列化，TypeScript 不自行拼写 canonical Markdown metadata。
+
+### 7.5 提取控制器为什么重要
+
+`src/lib/chat/memory/extractionController.ts` 管理会话级生命周期：
+
+- 在第一个 `await` 之前同步完成门控与原子认领，避免同一消息重复启动。
+- 每个提取 run 使用独立 AbortController，不会因为用户马上发下一条消息而被聊天取消信号误杀。
+- 运行中新请求进入 coalesce 队列，避免无限并发。
+- 删除会话时通过 `dispose` 清理。
+- 常见跳过原因包括空消息、过短、问候、致谢、30 秒节流和同消息去重。
+
+所以“Memory 没写入”不一定是模型失败，也可能是控制器按策略跳过。
+
+### 7.6 Evidence 与置信度契约
+
+记忆写入可携带 confidence、source_quote、reasoning、aliases、supersedes 和 conflicts_with 等结构化证据。最终契约只由 Rust `src-tauri/src/services/memory/mutations/evidence.rs` 执行：
+
+- `high` 至少需要 5 个字符的逐字引用，否则降为 `medium`。
+- `medium` 需要非空引用，否则降为 `low`。
+- 自动降级写入 `auto_downgraded: true`，并在 mutation 响应中返回 applied confidence。
+
+模型给自己打高分不是最终事实；Rust 用可审计证据决定真正存储的置信度。
+
+### 7.7 Reviewed 与 Unreviewed
+
+- `reviewed`：已确认的普通高可信记忆，可直接参与正常召回排序。
+- `unreviewed`：仍可使用的工作记忆，Overview 会标出置信度状态。
+- `accept`：把 unreviewed 转为 reviewed。
+- recent rejections：短期内阻止提取器反复写回用户刚拒绝的 slug，除非明确带 override。
+
+### 7.8 Organizer：整理而不是无限累积
+
+当记忆数量增加后，Organizer 按以下流水线工作：
+
+```text
+scan → cluster → plan → gate → apply
+```
+
+| 阶段 | 做什么 |
+|---|---|
+| scan | 读取 quota summary 和全量记忆，记录整理前数量与余量 |
+| cluster | 记忆较多时由模型主题聚类；失败则按结构规则回退 |
+| plan | 每个簇生成 keep、merge_into、delete、mark_review 或 rewrite_hint 决策 |
+| gate | TypeScript 独立重算风险，不能盲信模型给出的 risk/confidence |
+| apply | scheduled 模式只自动应用允许的低风险项；manual 模式进入面板复核 |
+
+合并操作通过 groupId 保证“先写目标、再删来源”的顺序，避免中途失败造成信息整体丢失。
+
+### 7.9 Quota 阶梯
+
+每个 global/project scope 的普通记忆上限为 500，daily 不计入普通配额。系统按最紧张 scope 的 headroom 分级：
+
+| 等级 | 条件 | 含义 |
+|---|---:|---|
+| normal | `> 100` | 余量充足 |
+| notice | `≤ 100` | 开始提醒 |
+| degraded | `≤ 50` | 整理提示增加压缩目标 |
+| critical | `≤ 20` | 接近上限 |
+| exhausted | `≤ 5` | 几乎无余量 |
+
+非 normal 状态会在设置面板提示，并影响 Organizer 的压缩目标，但**不会静默自动归档用户记忆**。
+
+### 7.10 Memory 问题的第一检查点
+
+| 现象 | 首先检查 |
+|---|---|
+| 回合后没有新记忆 | extraction skip reason、`SubmitMemoryPlan` 是否提交、逐项拒绝码 |
+| project memory 没写入 | 是否有 workspace mutation 或明确 project pin |
+| confidence 比模型提交的低 | source_quote 是否满足 Rust evidence 契约 |
+| 有 Markdown 但搜不到 | SQLite index 是否 reconcile、FTS 行和 scope/workdir 是否正确 |
+| WebUI 项目记忆错位 | `memory.manage` payload 是否携带 workdir，并被 Gateway Bridge 透传 |
+| Organizer 没有合并 | run report 的 rejection buckets、mode 和 risk gate 决策 |
 
 ## 8. History 与 Context Compaction：长对话如何保存和续接
 

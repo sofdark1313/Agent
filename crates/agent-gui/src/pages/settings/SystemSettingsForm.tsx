@@ -26,18 +26,40 @@ const FONT_SCALE_OPTIONS = [0.9, 1, 1.1, 1.2] as const;
 export function SystemSettingsForm(props: SettingsSectionProps) {
   const { settings, setSettings } = props;
   const { t } = useLocale();
-
   const executionMode = settings.system.executionMode;
-  const isClassicAgentMode = executionMode === "tools";
-  const isAgentDevMode = executionMode === "agent-dev";
-  const appearanceIcon =
-    settings.theme === "system" ? (
-      <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />
-    ) : settings.theme === "dark" ? (
-      <Moon className="h-4 w-4 text-muted-foreground" />
-    ) : (
-      <Sun className="h-4 w-4 text-muted-foreground" />
-    );
+  const fontScale = settings.customSettings.fontScale;
+
+  const executionOptions: Array<{
+    mode: ExecutionMode;
+    title: string;
+    description: string;
+    icon: typeof MessageSquare;
+  }> = [
+    {
+      mode: "text",
+      title: t("settings.chatMode"),
+      description: t("settings.chatModeDesc"),
+      icon: MessageSquare,
+    },
+    {
+      mode: "tools",
+      title: t("settings.agentMode"),
+      description: t("settings.agentModeDesc"),
+      icon: Wrench,
+    },
+    {
+      mode: "agent-dev",
+      title: t("settings.agentDevMode"),
+      description: t("settings.agentDevModeDesc"),
+      icon: Cpu,
+    },
+  ];
+
+  const fontScaleZones: Array<{ key: keyof FontScaleSettings; label: string }> = [
+    { key: "sidebar", label: t("settings.fontSizeSidebar") },
+    { key: "chat", label: t("settings.fontSizeChat") },
+    { key: "rightDock", label: t("settings.fontSizeRightDock") },
+  ];
 
   function getThemeLabel(theme: Theme) {
     if (theme === "light") return t("settings.light");
@@ -46,17 +68,10 @@ export function SystemSettingsForm(props: SettingsSectionProps) {
   }
 
   function renderThemeIcon(theme: Theme) {
-    if (theme === "light") return <Sun className="h-4.5 w-4.5" />;
-    if (theme === "dark") return <Moon className="h-4.5 w-4.5" />;
-    return <MonitorSmartphone className="h-4.5 w-4.5" />;
+    if (theme === "light") return <Sun className="h-3.5 w-3.5" />;
+    if (theme === "dark") return <Moon className="h-3.5 w-3.5" />;
+    return <MonitorSmartphone className="h-3.5 w-3.5" />;
   }
-
-  const fontScale = settings.customSettings.fontScale;
-  const fontScaleZones: Array<{ key: keyof FontScaleSettings; label: string }> = [
-    { key: "sidebar", label: t("settings.fontSizeSidebar") },
-    { key: "chat", label: t("settings.fontSizeChat") },
-    { key: "rightDock", label: t("settings.fontSizeRightDock") },
-  ];
 
   function getFontScaleLabel(value: number) {
     if (value === 0.9) return t("settings.fontSizeSmall");
@@ -74,268 +89,157 @@ export function SystemSettingsForm(props: SettingsSectionProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Terminal className="h-4 w-4 text-muted-foreground" />
-          {t("settings.executionMode")}
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {t("settings.executionModeDesc")}
-        </p>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <button
-            type="button"
-            onClick={() =>
-              setSettings((prev) => updateSystem(prev, { executionMode: "text" as ExecutionMode }))
-            }
-            className={`group relative flex flex-col items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-              executionMode === "text"
-                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                : "border-transparent bg-muted/40 hover:border-border hover:bg-muted/60"
-            }`}
-          >
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                executionMode === "text"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground group-hover:bg-accent"
-              }`}
-            >
-              <MessageSquare className="h-5 w-5" />
+    <div data-agent-settings-document className="agent-settings-document">
+      <section className="agent-settings-group">
+        <div className="agent-settings-group-header">
+          <div>
+            <div className="agent-settings-group-title">
+              <Terminal className="h-4 w-4" />
+              {t("settings.executionMode")}
             </div>
-            <div>
-              <div className="text-sm font-semibold">{t("settings.chatMode")}</div>
-              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                {t("settings.chatModeDesc")}
-              </div>
-            </div>
-            {executionMode === "text" ? (
-              <div className="absolute right-3 top-3">
-                <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-              </div>
-            ) : null}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setSettings((prev) => updateSystem(prev, { executionMode: "tools" as ExecutionMode }))
-            }
-            className={`group relative flex flex-col items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-              isClassicAgentMode
-                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                : "border-transparent bg-muted/40 hover:border-border hover:bg-muted/60"
-            }`}
-          >
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                isClassicAgentMode
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground group-hover:bg-accent"
-              }`}
-            >
-              <Wrench className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">{t("settings.agentMode")}</div>
-              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                {t("settings.agentModeDesc")}
-              </div>
-            </div>
-            {isClassicAgentMode ? (
-              <div className="absolute right-3 top-3">
-                <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-              </div>
-            ) : null}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setSettings((prev) =>
-                updateSystem(prev, { executionMode: "agent-dev" as ExecutionMode }),
-              )
-            }
-            className={`group relative flex flex-col items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-              isAgentDevMode
-                ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                : "border-transparent bg-muted/40 hover:border-border hover:bg-muted/60"
-            }`}
-          >
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
-                isAgentDevMode
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground group-hover:bg-accent"
-              }`}
-            >
-              <Cpu className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">{t("settings.agentDevMode")}</div>
-              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                {t("settings.agentDevModeDesc")}
-              </div>
-            </div>
-            {isAgentDevMode ? (
-              <div className="absolute right-3 top-3">
-                <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-              </div>
-            ) : null}
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t" />
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <section className="space-y-3 rounded-2xl border border-border/60 bg-card p-4">
-          <div className="flex items-start gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                {appearanceIcon}
-                {t("settings.appearance")}
-              </div>
-            </div>
+            <p className="agent-settings-group-description">{t("settings.executionModeDesc")}</p>
           </div>
+        </div>
 
-          <div className="grid gap-2 sm:grid-cols-3">
-            {THEME_OPTIONS.map((theme) => {
-              const selected = settings.theme === theme;
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => setSettings((prev) => ({ ...prev, theme }))}
-                  className={`group relative flex h-full items-start gap-3 rounded-xl border px-3.5 py-3.5 text-left transition-all ${
-                    selected
-                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                      : "border-border/60 bg-background/80 hover:border-border hover:bg-muted/35"
-                  }`}
-                >
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      selected
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground group-hover:bg-accent/80"
-                    }`}
+        <div className="agent-settings-option-list">
+          {executionOptions.map((option) => {
+            const selected = executionMode === option.mode;
+            const Icon = option.icon;
+            return (
+              <button
+                data-agent-setting-row
+                data-selected={selected}
+                key={option.mode}
+                type="button"
+                onClick={() =>
+                  setSettings((prev) => updateSystem(prev, { executionMode: option.mode }))
+                }
+                className="agent-settings-option"
+              >
+                <span className="agent-settings-option-icon">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium text-foreground">
+                    {option.title}
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                    {option.description}
+                  </span>
+                </span>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                  {selected ? <CheckCircle2 className="h-4 w-4 text-foreground" /> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="agent-settings-group">
+        <div className="agent-settings-group-header">
+          <div className="agent-settings-group-title">
+            <Sun className="h-4 w-4" />
+            {t("settings.appearance")}
+          </div>
+        </div>
+
+        <div className="agent-settings-control-list">
+          <div data-agent-setting-row className="agent-settings-control-row">
+            <div className="agent-settings-control-copy">
+              <div className="agent-settings-control-label">{t("settings.appearance")}</div>
+              <div className="agent-settings-control-hint">{getThemeLabel(settings.theme)}</div>
+            </div>
+            <div data-agent-segmented-control className="agent-settings-segmented">
+              {THEME_OPTIONS.map((theme) => {
+                const selected = settings.theme === theme;
+                return (
+                  <button
+                    key={theme}
+                    type="button"
+                    data-selected={selected}
+                    onClick={() => setSettings((prev) => ({ ...prev, theme }))}
                   >
                     {renderThemeIcon(theme)}
-                  </div>
-                  <div className="min-w-0 pr-6">
-                    <div className="text-sm font-semibold">{getThemeLabel(theme)}</div>
-                  </div>
-                  {selected ? (
-                    <div className="absolute right-3 top-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-                    </div>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="space-y-3 rounded-2xl border border-border/60 bg-card p-4">
-          <div className="flex items-start gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                {t("settings.language")}
-              </div>
+                    <span>{getThemeLabel(theme)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {SUPPORTED_LOCALES.map((locale) => {
-              const selected = settings.locale === locale;
-              const localeLabel =
-                locale === "zh-CN"
-                  ? t("settings.chinese")
-                  : locale === "en-US"
-                    ? t("settings.english")
-                    : locale;
-              return (
-                <button
-                  key={locale}
-                  type="button"
-                  onClick={() => setSettings((prev) => ({ ...prev, locale }))}
-                  className={`group relative flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all ${
-                    selected
-                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
-                      : "border-border/60 bg-background/80 hover:border-border hover:bg-muted/35"
-                  }`}
-                >
-                  <span className="text-base leading-none">{locale === "zh-CN" ? "🇨🇳" : "🇺🇸"}</span>
-                  <div className="min-w-0 flex-1 pr-5">
-                    <div className="truncate text-sm font-semibold">{localeLabel}</div>
-                    <div className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                      {locale}
-                    </div>
-                  </div>
-                  {selected ? (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-                    </div>
-                  ) : null}
-                </button>
-              );
-            })}
+          <div data-agent-setting-row className="agent-settings-control-row">
+            <div className="agent-settings-control-copy">
+              <div className="agent-settings-control-label">{t("settings.language")}</div>
+              <div className="agent-settings-control-hint">{settings.locale}</div>
+            </div>
+            <div data-agent-segmented-control className="agent-settings-segmented">
+              {SUPPORTED_LOCALES.map((locale) => {
+                const selected = settings.locale === locale;
+                const label = locale === "zh-CN" ? t("settings.chinese") : t("settings.english");
+                return (
+                  <button
+                    key={locale}
+                    type="button"
+                    data-selected={selected}
+                    onClick={() => setSettings((prev) => ({ ...prev, locale }))}
+                  >
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {locale === "zh-CN" ? "ZH" : "EN"}
+                    </span>
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <section className="space-y-3 rounded-2xl border border-border/60 bg-card p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <ScanText className="h-4 w-4 text-muted-foreground" />
+      <section className="agent-settings-group">
+        <div className="agent-settings-group-header">
+          <div>
+            <div className="agent-settings-group-title">
+              <ScanText className="h-4 w-4" />
               {t("settings.fontSize")}
             </div>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {t("settings.fontSizeDesc")}
-            </p>
+            <p className="agent-settings-group-description">{t("settings.fontSizeDesc")}</p>
           </div>
           <button
             type="button"
             onClick={() =>
               setSettings((prev) =>
-                updateCustomSettings(prev, { fontScale: { sidebar: 1, chat: 1, rightDock: 1 } }),
+                updateCustomSettings(prev, {
+                  fontScale: { sidebar: 1, chat: 1, rightDock: 1 },
+                }),
               )
             }
-            className="shrink-0 rounded-lg border border-border/60 bg-background/80 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/35 hover:text-foreground"
+            className="agent-settings-reset"
           >
             {t("settings.fontSizeReset")}
           </button>
         </div>
 
-        <div className="space-y-2">
+        <div className="agent-settings-control-list">
           {fontScaleZones.map((zone) => (
-            <div
-              key={zone.key}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-background/80 px-3.5 py-2.5"
-            >
-              <div className="text-sm font-medium text-foreground">{zone.label}</div>
-              <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-0.5">
-                {FONT_SCALE_OPTIONS.map((value) => {
-                  const selected = fontScale[zone.key] === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setZoneFontScale(zone.key, value)}
-                      className={`rounded-md px-2.5 py-1 text-xs transition-all ${
-                        selected
-                          ? "bg-background font-semibold text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {getFontScaleLabel(value)}
-                    </button>
-                  );
-                })}
+            <div data-agent-setting-row key={zone.key} className="agent-settings-control-row">
+              <div className="agent-settings-control-copy">
+                <div className="agent-settings-control-label">{zone.label}</div>
+                <div className="agent-settings-control-hint">
+                  {getFontScaleLabel(fontScale[zone.key])}
+                </div>
+              </div>
+              <div data-agent-segmented-control className="agent-settings-segmented">
+                {FONT_SCALE_OPTIONS.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    data-selected={fontScale[zone.key] === value}
+                    onClick={() => setZoneFontScale(zone.key, value)}
+                  >
+                    {getFontScaleLabel(value)}
+                  </button>
+                ))}
               </div>
             </div>
           ))}

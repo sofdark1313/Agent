@@ -68,6 +68,22 @@ test("settings uses Agent management navigation and content regions", () => {
   assert.match(settings, /data-agent-settings-content/);
 });
 
+test("settings follows the flat Codex document and neutral control model", () => {
+  const settings = read("src/pages/SettingsPage.tsx");
+  const system = read("src/pages/settings/SystemSettingsForm.tsx");
+  const shared = read("src/pages/settings/shared.tsx");
+  const css = read("src/index.css");
+
+  assert.match(settings, /data-agent-settings-header/);
+  assert.match(settings, /data-agent-settings-body/);
+  assert.match(system, /data-agent-settings-document/);
+  assert.match(system, /data-agent-setting-row/);
+  assert.match(system, /data-agent-segmented-control/);
+  assert.doesNotMatch(system, /rounded-2xl|shadow-primary/);
+  assert.doesNotMatch(shared, /sky-500/);
+  assert.match(css, /\.agent-settings-option-list/);
+});
+
 test("Skills and MCP share the restrained Agent management chrome", () => {
   const hub = read("src/components/hub/HubChrome.tsx");
 

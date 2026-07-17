@@ -41,8 +41,6 @@ function getSaveIndicator(state: SettingsPageProps["saveState"], t: (key: string
         text: t("settings.saveError"),
         title: state.message,
       };
-    case "saved":
-    case "idle":
     default:
       return {
         dotClass: "bg-emerald-500",
@@ -64,14 +62,14 @@ function NavItem({ icon, label, active, onClick }: NavItemProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`settings-nav-item agent-nav-item group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors duration-150 ${
+      className={`settings-nav-item agent-nav-item group relative flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] transition-colors duration-150 ${
         active
-          ? "settings-nav-item-active bg-foreground/[0.065] font-medium text-foreground"
+          ? "settings-nav-item-active bg-foreground/[0.07] font-medium text-foreground"
           : "text-muted-foreground hover:bg-foreground/[0.045] hover:text-foreground"
       }`}
     >
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center transition-colors ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
       >
         {icon}
       </span>
@@ -134,18 +132,21 @@ export function SettingsPage(props: SettingsPageProps) {
   const { t } = useLocale();
   const [section, setSection] = useState<SectionId>(initialSection);
 
-  const sectionLabels: Record<SectionId, string> = {
-    system: t("settings.navSystem"),
-    systemTools: t("settings.navSystemTools"),
-    providers: t("settings.navProviders"),
-    agents: t("settings.navAgents"),
-    ssh: t("settings.navSsh"),
-    memory: t("settings.navMemory"),
-    hooks: t("settings.navHooks"),
-    cron: t("settings.navCron"),
-    remote: t("settings.navRemote"),
-    about: t("settings.navAbout"),
-  };
+  const sectionLabels = useMemo<Record<SectionId, string>>(
+    () => ({
+      system: t("settings.navSystem"),
+      systemTools: t("settings.navSystemTools"),
+      providers: t("settings.navProviders"),
+      agents: t("settings.navAgents"),
+      ssh: t("settings.navSsh"),
+      memory: t("settings.navMemory"),
+      hooks: t("settings.navHooks"),
+      cron: t("settings.navCron"),
+      remote: t("settings.navRemote"),
+      about: t("settings.navAbout"),
+    }),
+    [t],
+  );
 
   const hiddenSectionSet = useMemo(() => new Set(hiddenSections), [hiddenSections]);
   const navGroups = useMemo(
@@ -214,31 +215,30 @@ export function SettingsPage(props: SettingsPageProps) {
       <div className="flex min-h-0 flex-1">
         <aside
           data-agent-settings-nav
-          className="settings-sidebar flex w-[220px] shrink-0 flex-col border-r border-border/60 bg-[hsl(var(--agent-sidebar))]"
+          className="settings-sidebar flex w-[236px] shrink-0 flex-col border-r border-border/60 bg-[hsl(var(--agent-sidebar))]"
         >
           {onMac && <div data-tauri-drag-region className="h-[38px] shrink-0" />}
-          <div className="border-b border-border/60 px-3 pb-3 pt-3">
+          <div className="px-3 pb-2 pt-3">
             <button
               type="button"
               onClick={onBack}
-              className="settings-back-button flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+              className="settings-back-button flex h-8 w-full items-center gap-2 rounded-md px-2 text-[13px] text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
             >
               <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
               <span>{t("settings.backToChat")}</span>
             </button>
 
-            <div className="mt-3 flex items-center gap-2.5 px-1">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background">
-                <Settings2 className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-sm font-semibold tracking-tight">{t("settings.title")}</span>
+            <div className="mt-3 flex h-8 items-center px-2">
+              <span className="text-[15px] font-semibold tracking-[-0.01em]">
+                {t("settings.title")}
+              </span>
             </div>
           </div>
 
-          <nav className="settings-nav flex-1 overflow-y-auto px-3 py-3">
+          <nav className="settings-nav flex-1 overflow-y-auto px-3 pb-3 pt-1">
             {navGroups.map((group, gi) => (
               <div key={group.label} className={gi > 0 ? "mt-4" : ""}>
-                <div className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <div className="mb-1 px-2 text-[10px] font-medium tracking-wide text-muted-foreground/55">
                   {group.label}
                 </div>
                 <div className="space-y-0.5">
@@ -269,15 +269,22 @@ export function SettingsPage(props: SettingsPageProps) {
 
         <main data-agent-settings-content className="flex min-w-0 flex-1 flex-col">
           <MacOsTitleBarSpacer />
-          <div className="flex h-11 items-center border-b border-border/60 px-6">
-            <div key={section} className="settings-section-title-enter text-base font-semibold">
-              {sectionLabels[section]}
+          <div
+            data-agent-settings-header
+            className="flex h-[52px] shrink-0 items-center border-b border-border/60 px-8"
+          >
+            <div key={section} className="settings-section-title-enter min-w-0">
+              <div className="truncate text-[15px] font-semibold tracking-[-0.01em]">
+                {sectionLabels[section]}
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">{t("settings.title")}</div>
             </div>
           </div>
 
           <div
+            data-agent-settings-body
             key={section}
-            className={`settings-section-enter flex-1 px-6 py-6 ${
+            className={`settings-section-enter flex-1 px-8 py-7 ${
               section === "hooks" || section === "providers" || section === "memory"
                 ? "flex min-h-0 flex-col overflow-hidden"
                 : "overflow-auto"
@@ -287,7 +294,7 @@ export function SettingsPage(props: SettingsPageProps) {
               className={`settings-section-shell ${
                 section === "hooks" || section === "providers" || section === "memory"
                   ? "flex min-h-0 flex-1 flex-col"
-                  : "min-h-full"
+                  : `min-h-full ${section === "system" ? "max-w-[780px]" : "max-w-[1040px]"}`
               }`}
             >
               {sectionContent}

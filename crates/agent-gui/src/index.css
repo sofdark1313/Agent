@@ -2424,6 +2424,209 @@
  * Tailwind flex/align/gap/padding utilities on the same elements
  * (utilities layer > components layer in Tailwind v4 cascade).
  */
+/* Codex-style settings document. Unlayered so it wins over utility classes. */
+.agent-settings-document {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 32px;
+  padding-bottom: 48px;
+}
+
+.agent-settings-group {
+  width: 100%;
+}
+
+.agent-settings-group-header {
+  display: flex;
+  min-height: 38px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 12px;
+}
+
+.agent-settings-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.agent-settings-group-title > svg {
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-settings-group-description {
+  margin-top: 5px;
+  max-width: 620px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.agent-settings-option-list {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border) / 0.72);
+  border-radius: 10px;
+  background: hsl(var(--agent-surface-raised));
+}
+
+.agent-settings-option {
+  display: flex;
+  width: 100%;
+  min-height: 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  transition: background-color 140ms ease;
+}
+
+.agent-settings-option + .agent-settings-option {
+  border-top: 1px solid hsl(var(--border) / 0.58);
+}
+
+.agent-settings-option:hover {
+  background: hsl(var(--foreground) / 0.035);
+}
+
+.agent-settings-option[data-selected="true"] {
+  background: hsl(var(--foreground) / 0.055);
+}
+
+.agent-settings-option-icon {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid hsl(var(--border) / 0.65);
+  border-radius: 7px;
+  background: hsl(var(--background) / 0.72);
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-settings-option[data-selected="true"] .agent-settings-option-icon {
+  color: hsl(var(--foreground));
+}
+
+.agent-settings-control-list {
+  border-top: 1px solid hsl(var(--border) / 0.72);
+}
+
+.agent-settings-control-row {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid hsl(var(--border) / 0.58);
+  padding: 10px 0;
+}
+
+.agent-settings-control-copy {
+  min-width: 140px;
+  flex: 1;
+}
+
+.agent-settings-control-label {
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.agent-settings-control-hint {
+  margin-top: 3px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+}
+
+.agent-settings-segmented {
+  display: inline-flex;
+  max-width: 100%;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border) / 0.58);
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.46);
+  padding: 2px;
+}
+
+.agent-settings-segmented > button {
+  display: inline-flex;
+  min-height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.agent-settings-segmented > button:hover {
+  color: hsl(var(--foreground));
+}
+
+.agent-settings-segmented > button[data-selected="true"] {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.08);
+}
+
+.agent-settings-reset {
+  flex: none;
+  border-radius: 6px;
+  padding: 5px 9px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.agent-settings-reset:hover {
+  background: hsl(var(--foreground) / 0.05);
+  color: hsl(var(--foreground));
+}
+
+@media (max-width: 760px) {
+  [data-agent-settings-nav] {
+    width: 196px !important;
+  }
+
+  [data-agent-settings-header],
+  [data-agent-settings-body] {
+    padding-right: 20px !important;
+    padding-left: 20px !important;
+  }
+
+  .agent-settings-control-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 0;
+  }
+
+  .agent-settings-segmented {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .settings-section-heading-row {
     flex-direction: column;

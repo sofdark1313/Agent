@@ -153,4 +153,3 @@ ChatPage / ChatComposerBar
 本次文档重点覆盖 Chat Runtime、Tools、Skills/MCP、Memory、History Compaction，以及理解这些功能所需的总体架构。
 
 Gateway 内部协议、部署发布、Cron、Hooks、Subagent 和完整 UI 设计不会作为独立深度章节；它们只在主流程或工具边界中按需介绍，并链接到已有架构文档。这样可以保持教程聚焦，同时为后续深入学习提供入口。
-

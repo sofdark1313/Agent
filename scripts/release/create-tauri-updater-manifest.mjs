@@ -16,7 +16,7 @@ if (!assetDir || !outputPath) {
 let releaseVersion;
 try {
   releaseVersion = parseReleaseVersion(
-    process.env.LIVEAGENT_RELEASE_TAG || process.env.RELEASE_TAG,
+    process.env.AGENT_RELEASE_TAG || process.env.RELEASE_TAG,
   );
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
@@ -51,9 +51,9 @@ function releaseAssetUrl(filename) {
 }
 
 function releaseNotes() {
-  if (!notesPath) return `LiveAgent ${releaseTag}`;
+  if (!notesPath) return `Agent ${releaseTag}`;
   const notes = readFileSync(notesPath, "utf8").trim();
-  return notes || `LiveAgent ${releaseTag}`;
+  return notes || `Agent ${releaseTag}`;
 }
 
 for (const file of files) {

@@ -5147,12 +5147,7 @@ export function ChatPage(props: ChatPageProps) {
               <div className="relative z-20">
                 <ChatHeader
                   settings={settings}
-                  hasModels={hasModels}
-                  currentModelLabel={currentModelLabel}
-                  modelOptions={modelOptions}
-                  selectedValue={selectedValue}
                   sidebarOpen={sidebarOpen}
-                  setSettings={setSettings}
                   onOpenSettings={onOpenSettings}
                   onToggleTheme={onToggleTheme}
                   onOpenSidebar={handleOpenSidebar}
@@ -5218,11 +5213,16 @@ export function ChatPage(props: ChatPageProps) {
                 workdir={displayedConversationWorkdir}
                 enabledSkills={enabledComposerSkills}
                 isAgentMode={isAgentMode}
+                hasModels={hasModels}
+                currentModelLabel={currentModelLabel}
+                modelOptions={modelOptions}
+                selectedModelValue={selectedValue}
                 chatRuntimeControls={chatRuntimeControlsForCurrentProvider}
                 reasoningOptions={chatRuntimeReasoningOptions}
                 thinkingAlwaysOn={chatRuntimeThinkingAlwaysOn}
                 gitClient={tauriGitClient}
                 workspaceActivityClient={tauriWorkspaceActivityClient}
+                setSettings={setSettings}
                 onSend={handleSend}
                 onStop={handleStopSending}
                 onComposerBusyChange={handleComposerBusyChange}

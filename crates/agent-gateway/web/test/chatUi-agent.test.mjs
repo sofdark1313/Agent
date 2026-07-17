@@ -220,7 +220,7 @@ test("deriveFileChangeStats derives collapsed-bar line counts", () => {
       arguments: {
         old_string: "o".repeat(4000),
         new_string: "n".repeat(4000),
-        __liveagent_stream_preview: {
+        __agent_stream_preview: {
           v: 2,
           progress: 17_000,
           fields: {
@@ -250,7 +250,7 @@ test("deriveFileChangeStats derives collapsed-bar line counts", () => {
       name: "Write",
       arguments: {
         content: "preview…",
-        __liveagent_stream_preview: {
+        __agent_stream_preview: {
           v: 2,
           progress: 12_000,
           fields: { content: { chars: 12_000, lines: 800, truncated: true } },
@@ -453,7 +453,7 @@ test("applyEventToTurn keeps streamed text after hosted search in event order", 
     id: "search-live-order",
     provider: "codex",
     status: "searching",
-    queries: ["LiveAgent web search"],
+    queries: ["Agent web search"],
     sources: [],
     round: 1,
   });
@@ -467,7 +467,7 @@ test("applyEventToTurn keeps streamed text after hosted search in event order", 
     id: "search-live-order",
     provider: "codex",
     status: "completed",
-    queries: ["LiveAgent web search"],
+    queries: ["Agent web search"],
     sources: [{ url: "https://example.com/live-order", title: "Live order" }],
     round: 1,
   });

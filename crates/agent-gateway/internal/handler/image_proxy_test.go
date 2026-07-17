@@ -24,7 +24,7 @@ func TestImageProxyServesSupportedImage(t *testing.T) {
 		if got, want := r.Header.Get("Referer"), "https://images.example/"; got != want {
 			t.Fatalf("upstream Referer = %q, want %q", got, want)
 		}
-		body := []byte("\x89PNG\r\n\x1a\nliveagent-test")
+		body := []byte("\x89PNG\r\n\x1a\nagent-test")
 		return &http.Response{
 			StatusCode:    http.StatusOK,
 			Header:        http.Header{"Content-Type": []string{"image/png"}},

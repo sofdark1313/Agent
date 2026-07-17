@@ -26,7 +26,7 @@ struct TerminalExitRequestedEvent {
 }
 
 pub fn app_version() -> &'static str {
-    env!("LIVEAGENT_APP_VERSION")
+    env!("AGENT_APP_VERSION")
 }
 
 macro_rules! app_invoke_handler {
@@ -294,7 +294,7 @@ fn configure_system_tray(
         .on_menu_event(move |app, event| match event.id().as_ref() {
             TRAY_SHOW_ID => {
                 if let Err(error) = show_main_window(app) {
-                    eprintln!("failed to show LiveAgent window from tray: {error}");
+                    eprintln!("failed to show Agent window from tray: {error}");
                 }
             }
             TRAY_QUIT_ID => {
@@ -302,7 +302,7 @@ fn configure_system_tray(
                 if running_count > 0 {
                     if let Err(error) = show_main_window(app) {
                         eprintln!(
-                            "failed to show LiveAgent window before terminal exit confirm: {error}"
+                            "failed to show Agent window before terminal exit confirm: {error}"
                         );
                     }
                     if let Err(error) = app.emit(
@@ -326,7 +326,7 @@ fn configure_system_tray(
                     ..
                 } => {
                     if let Err(error) = show_main_window(tray.app_handle()) {
-                        eprintln!("failed to show LiveAgent window from tray double-click: {error}");
+                        eprintln!("failed to show Agent window from tray double-click: {error}");
                     }
                 }
                 TrayIconEvent::Click {
@@ -337,7 +337,7 @@ fn configure_system_tray(
                     if record_tray_left_click(&last_left_click_at) {
                         if let Err(error) = show_main_window(tray.app_handle()) {
                             eprintln!(
-                                "failed to show LiveAgent window from tray left double-click: {error}"
+                                "failed to show Agent window from tray left double-click: {error}"
                             );
                         }
                     }
@@ -387,13 +387,13 @@ fn configure_windows_window_chrome(app: &tauri::App) -> tauri::Result<()> {
 pub fn run() {
     let automation_store = Arc::new(
         services::automation::AutomationStore::open()
-            .expect("failed to initialize LiveAgent automation store"),
+            .expect("failed to initialize Agent automation store"),
     );
     let automation_scheduler = Arc::new(services::automation::AutomationScheduler::new(
         Arc::clone(&automation_store),
     ));
     let memory_store = Arc::new(
-        services::memory::MemoryStore::open().expect("failed to initialize LiveAgent memory store"),
+        services::memory::MemoryStore::open().expect("failed to initialize Agent memory store"),
     );
     let power_activity = Arc::new(services::power_activity::PowerActivityManager::default());
     let managed_process_registry =
@@ -484,7 +484,7 @@ pub fn run() {
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 if let Err(error) = window.hide() {
-                    eprintln!("failed to hide LiveAgent window on close: {error}");
+                    eprintln!("failed to hide Agent window on close: {error}");
                 }
             }
         })
@@ -505,7 +505,7 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen { .. } => {
             if let Err(error) = show_main_window(_app) {
-                eprintln!("failed to show LiveAgent window from dock reopen: {error}");
+                eprintln!("failed to show Agent window from dock reopen: {error}");
             }
         }
         tauri::RunEvent::ExitRequested { api, .. } => {
@@ -514,7 +514,7 @@ pub fn run() {
                 if running_count > 0 {
                     if let Err(error) = show_main_window(_app) {
                         eprintln!(
-                            "failed to show LiveAgent window before terminal exit confirm: {error}"
+                            "failed to show Agent window before terminal exit confirm: {error}"
                         );
                     }
                     if let Err(error) = _app.emit(

@@ -456,16 +456,16 @@ fn collect_worktree_paths(cwd: &Path) -> Result<Vec<PathBuf>, String> {
     Ok(paths)
 }
 
-fn is_liveagent_subagent_worktree(path: &Path) -> bool {
+fn is_agent_subagent_worktree(path: &Path) -> bool {
     path.components().any(|component| match component {
-        Component::Normal(name) => name == ".liveagent-subagents",
+        Component::Normal(name) => name == ".agent-subagents",
         _ => false,
     })
 }
 
-fn normalize_liveagent_subagent_branch(branch_name: Option<&str>) -> Option<String> {
+fn normalize_agent_subagent_branch(branch_name: Option<&str>) -> Option<String> {
     let branch = branch_name?.trim();
-    if branch.starts_with("liveagent/subagent/") {
+    if branch.starts_with("agent/subagent/") {
         Some(branch.to_string())
     } else {
         None
@@ -928,9 +928,9 @@ fn cleanup_worktree_target_blocking(
             return item;
         }
     };
-    if !is_liveagent_subagent_worktree(&worktree_root) {
+    if !is_agent_subagent_worktree(&worktree_root) {
         item.error = Some(format!(
-            "refusing to cleanup non-LiveAgent subagent worktree: {}",
+            "refusing to cleanup non-Agent subagent worktree: {}",
             display_path(&worktree_root)
         ));
         return item;
@@ -985,7 +985,7 @@ fn cleanup_worktree_target_blocking(
     }
 
     if delete_branch {
-        if let Some(branch) = normalize_liveagent_subagent_branch(branch_name.as_deref()) {
+        if let Some(branch) = normalize_agent_subagent_branch(branch_name.as_deref()) {
             if let Some(repo_cwd) = repo_cwd {
                 match run_git_owned(
                     &repo_cwd,
@@ -1015,7 +1015,7 @@ fn cleanup_worktree_target_blocking(
             }
         } else if branch_name.is_some() {
             item.skipped_reason
-                .get_or_insert_with(|| "branch_delete_not_liveagent_branch".to_string());
+                .get_or_insert_with(|| "branch_delete_not_agent_branch".to_string());
         }
     }
 
@@ -1070,7 +1070,7 @@ pub async fn subagent_worktree_create(
         let target_parent = repo_root
             .parent()
             .unwrap_or_else(|| repo_root.as_path())
-            .join(".liveagent-subagents")
+            .join(".agent-subagents")
             .join(&repo_name);
         fs::create_dir_all(&target_parent)
             .map_err(|err| format!("failed to create worktree parent: {err}"))?;
@@ -1081,7 +1081,7 @@ pub async fn subagent_worktree_create(
             for _ in 0..CREATE_WORKTREE_MAX_ATTEMPTS {
                 let suffix = unique_worktree_suffix();
                 let target = target_parent.join(format!("{label}-{suffix}"));
-                let branch_name = format!("liveagent/subagent/{label}-{suffix}");
+                let branch_name = format!("agent/subagent/{label}-{suffix}");
                 match run_git_owned(
                     &repo_root,
                     vec![
@@ -1186,7 +1186,7 @@ mod tests {
 
     fn temp_root(label: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "liveagent-subagent-worktree-{label}-{}-{}",
+            "agent-subagent-worktree-{label}-{}-{}",
             std::process::id(),
             Uuid::new_v4().simple()
         ))
@@ -1201,9 +1201,9 @@ mod tests {
         git(root, &["init"])?;
         git(
             root,
-            &["config", "user.email", "liveagent-test@example.com"],
+            &["config", "user.email", "agent-test@example.com"],
         )?;
-        git(root, &["config", "user.name", "LiveAgent Test"])?;
+        git(root, &["config", "user.name", "Agent Test"])?;
         fs::write(root.join("README.md"), "base\n")
             .map_err(|err| format!("failed to write README: {err}"))?;
         git(root, &["add", "README.md"])?;
@@ -1221,7 +1221,7 @@ mod tests {
     }
 
     fn add_worktree(repo: &Path, worktree: &Path) -> Result<(), String> {
-        let branch = format!("liveagent-test-{}", Uuid::new_v4().simple());
+        let branch = format!("agent-test-{}", Uuid::new_v4().simple());
         add_worktree_with_branch(repo, worktree, &branch)
     }
 
@@ -1393,14 +1393,14 @@ mod tests {
     }
 
     #[test]
-    fn subagent_worktree_cleanup_removes_liveagent_worktree_and_branch() -> Result<(), String> {
+    fn subagent_worktree_cleanup_removes_agent_worktree_and_branch() -> Result<(), String> {
         let root = temp_root("cleanup-worktree");
         let repo = root.join("repo");
         let worktree = root
-            .join(".liveagent-subagents")
+            .join(".agent-subagents")
             .join("repo")
             .join("agent-a");
-        let branch = "liveagent/subagent/test-cleanup";
+        let branch = "agent/subagent/test-cleanup";
         init_repo(&repo)?;
         add_worktree_with_branch(&repo, &worktree, branch)?;
 
@@ -1431,10 +1431,10 @@ mod tests {
         let root = temp_root("cleanup-worktree-no-force");
         let repo = root.join("repo");
         let worktree = root
-            .join(".liveagent-subagents")
+            .join(".agent-subagents")
             .join("repo")
             .join("agent-dirty");
-        let branch = "liveagent/subagent/test-cleanup-no-force";
+        let branch = "agent/subagent/test-cleanup-no-force";
         init_repo(&repo)?;
         add_worktree_with_branch(&repo, &worktree, branch)?;
         fs::write(worktree.join("README.md"), "dirty\n")

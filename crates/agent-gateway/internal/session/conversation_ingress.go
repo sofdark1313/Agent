@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/liveagent/agent-gateway/internal/chatwire"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/chatwire"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 // Ingress normalization: the three agent-facing gRPC payloads (ChatEvent,

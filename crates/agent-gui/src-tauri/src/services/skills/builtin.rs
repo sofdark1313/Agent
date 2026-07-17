@@ -78,7 +78,7 @@ pub(crate) fn ensure_not_builtin_skill_management_target(
 ) -> Result<(), String> {
     if is_builtin_agent_skill_name(name) {
         return Err(format!(
-            "SkillsManager action={action} cannot modify built-in Skill \"{name}\". Built-in Skills are managed by LiveAgent; create or update a separate user Skill instead."
+            "SkillsManager action={action} cannot modify built-in Skill \"{name}\". Built-in Skills are managed by Agent; create or update a separate user Skill instead."
         ));
     }
     Ok(())

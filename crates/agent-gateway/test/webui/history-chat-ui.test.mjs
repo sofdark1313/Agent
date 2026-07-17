@@ -96,8 +96,8 @@ test("parseHistoryMessagesJson preserves upload display text and checkpoint meta
     {
       role: "user",
       content: "internal content with upload instruction",
-      liveAgentDisplayContent: "please inspect notes",
-      liveAgentAttachments: [
+      agentDisplayContent: "please inspect notes",
+      agentAttachments: [
         {
           relativePath: "uploads/notes.txt",
           fileName: "notes.txt",
@@ -105,7 +105,7 @@ test("parseHistoryMessagesJson preserves upload display text and checkpoint meta
           sizeBytes: 42,
         },
       ],
-      liveAgentHistoryRef: {
+      agentHistoryRef: {
         segmentIndex: 1,
         messageIndex: 2,
         segmentId: "segment-1",
@@ -121,7 +121,7 @@ test("parseHistoryMessagesJson preserves upload display text and checkpoint meta
       summaryMeta: {
         coveredMessageCount: 8,
         generatedBy: {
-          providerId: "liveagent",
+          providerId: "agent",
           model: "summary",
           promptVersion: "summary-v2",
         },
@@ -252,7 +252,7 @@ test("WebUI transcript strips leaked DSML tool call markup from text and thinkin
   const dsml = [
     "<||DSML|| tool_calls>",
     '<||DSML|| invoke name="builtin_web_search">',
-    '<||DSML|| parameter name="query">LiveAgent DSML markup</||DSML|| parameter>',
+    '<||DSML|| parameter name="query">Agent DSML markup</||DSML|| parameter>',
     "</||DSML|| invoke>",
     "</||DSML|| tool_calls>",
   ].join("\n");
@@ -281,7 +281,7 @@ test("WebUI transcript hides provider-native web_search tool traces when hosted 
     type: "toolCall",
     id: "dsml-tool-call-webui-search",
     name: "web_search",
-    arguments: { query: "LiveAgent DeepSeek webui search" },
+    arguments: { query: "Agent DeepSeek webui search" },
   };
   const entries = chatUi.parseHistoryMessagesJson(JSON.stringify([
     { role: "user", content: "search" },
@@ -294,7 +294,7 @@ test("WebUI transcript hides provider-native web_search tool traces when hosted 
           id: "hosted-search-1",
           provider: "claude_code",
           status: "completed",
-          queries: ["LiveAgent DeepSeek webui search"],
+          queries: ["Agent DeepSeek webui search"],
           sources: [{ url: "https://example.com/result", title: "Result" }],
         },
         webSearchCall,
@@ -324,7 +324,7 @@ test("WebUI live transcript removes provider-native web_search when hosted searc
     type: "tool_call",
     id: "call_00_webui_search",
     name: "web_search",
-    arguments: { query: "LiveAgent DeepSeek live search" },
+    arguments: { query: "Agent DeepSeek live search" },
     round: 1,
   });
 
@@ -336,7 +336,7 @@ test("WebUI live transcript removes provider-native web_search when hosted searc
     id: "hosted-search-live",
     provider: "claude_code",
     status: "completed",
-    queries: ["LiveAgent DeepSeek live search"],
+    queries: ["Agent DeepSeek live search"],
     sources: [{ url: "https://example.com/live", title: "Live Result" }],
     round: 1,
   });
@@ -355,7 +355,7 @@ test("WebUI live transcript hides recovered provider-native web_search results w
       type: "tool_call",
       id: "call_00_webui_recovered_search",
       name: "WebSearch",
-      arguments: { query: "LiveAgent recovered search" },
+      arguments: { query: "Agent recovered search" },
       round: 1,
     },
     {
@@ -383,7 +383,7 @@ test("WebUI live transcript hides recovered DSML provider-native web_search call
       type: "tool_call",
       id: "dsml-tool-call-webui-live-search",
       name: "builtin_web_search",
-      arguments: { query: "LiveAgent DSML hidden search" },
+      arguments: { query: "Agent DSML hidden search" },
       round: 1,
     },
   ]);
@@ -422,7 +422,7 @@ test("turn reducer appends streaming text, dedupes tool cards, and dedupes compa
     checkpoint: {
       summaryId: "summary-1",
       coveredMessageCount: 5,
-      generatedBy: { providerId: "liveagent", model: "summary" },
+      generatedBy: { providerId: "agent", model: "summary" },
     },
   };
   turn = applyEventToTurn(turn, checkpoint);
@@ -695,7 +695,7 @@ test("resolveConversationBrowserTitle uses project title for project-level empty
       conversation: null,
       conversationId: "conversation-abcdef",
       projectName: "  Project Alpha  ",
-      newConversationTitle: "LiveAgent",
+      newConversationTitle: "Agent",
     }),
     "Project Alpha",
   );
@@ -704,7 +704,7 @@ test("resolveConversationBrowserTitle uses project title for project-level empty
       conversation: { id: "conversation-abcdef", title: "  Named  " },
       conversationId: "conversation-abcdef",
       projectName: "Project Alpha",
-      newConversationTitle: "LiveAgent",
+      newConversationTitle: "Agent",
     }),
     "Named",
   );
@@ -714,9 +714,9 @@ test("resolveConversationBrowserTitle uses project title for project-level empty
       conversationId: "__local_draft__:abc",
       projectName: "Project Alpha",
       isLocalDraftConversation: true,
-      newConversationTitle: "LiveAgent",
+      newConversationTitle: "Agent",
     }),
-    "LiveAgent",
+    "Agent",
   );
 });
 

@@ -259,8 +259,8 @@ function validateBashBackgroundStdio(command: string) {
   throw new Error(
     [
       "Background Bash commands must detach stdout and stderr before using `&`.",
-      "Long-running processes that inherit LiveAgent's tool pipes can keep the Bash task running forever.",
-      "Redirect output to a log file, for example: `nohup command > /tmp/liveagent-task.log 2>&1 < /dev/null &`.",
+      "Long-running processes that inherit Agent's tool pipes can keep the Bash task running forever.",
+      "Redirect output to a log file, for example: `nohup command > /tmp/agent-task.log 2>&1 < /dev/null &`.",
       "For dev servers or watchers, prefer a dedicated terminal or managed process workflow.",
     ].join(" "),
   );
@@ -389,7 +389,7 @@ export function createShellTools(params: {
   const backgroundPolicy =
     runtimePlatform === "windows"
       ? "For dev servers, watchers, or long-running commands on Windows, use ManagedProcess instead of detached shell syntax."
-      : "Background commands using `&` must detach stdout and stderr first, for example `nohup command > /tmp/liveagent-task.log 2>&1 < /dev/null &`; otherwise the tool rejects them because inherited pipes can keep Bash running forever.";
+      : "Background commands using `&` must detach stdout and stderr first, for example `nohup command > /tmp/agent-task.log 2>&1 < /dev/null &`; otherwise the tool rejects them because inherited pipes can keep Bash running forever.";
   const workdir = params.workdir;
   const allowSkillsRoot = params.skillsRootEnabled === true;
   const allowManagedProcess = params.managedProcessEnabled !== false;
@@ -432,7 +432,7 @@ export function createShellTools(params: {
 
   function commandReferencesFixedSkillsRoot(command: string) {
     const value = normalizeCommandForPolicy(command);
-    if (/(\.liveagent\/skills|~\/\.liveagent\/skills)/i.test(value)) return true;
+    if (/(\.agent\/skills|~\/\.agent\/skills)/i.test(value)) return true;
     const root = cachedSkillsRootDir.trim().replace(/\\/g, "/");
     return Boolean(root && value.includes(root));
   }
@@ -446,8 +446,8 @@ export function createShellTools(params: {
     const root = cachedSkillsRootDir.trim().replace(/\\/g, "/");
     const escapedRoot = root ? root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : null;
     const skillPathPrefix = escapedRoot
-      ? `(?:~/\\.liveagent/skills|/\\.liveagent/skills|${escapedRoot})`
-      : "(?:~/\\.liveagent/skills|/\\.liveagent/skills)";
+      ? `(?:~/\\.agent/skills|/\\.agent/skills|${escapedRoot})`
+      : "(?:~/\\.agent/skills|/\\.agent/skills)";
     const fileReadPattern = new RegExp(
       `(?:^|[\\s;&|()])(?:cat|head|tail|less|more|ls|find|grep|fgrep|egrep|rg|sed|awk)\\b(?:\\s+-[A-Za-z0-9_-]+)*\\s+['"]?${skillPathPrefix}`,
       "i",
@@ -461,8 +461,8 @@ export function createShellTools(params: {
     const root = cachedSkillsRootDir.trim().replace(/\\/g, "/");
     const escapedRoot = root ? root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : null;
     const skillPathPrefix = escapedRoot
-      ? `(?:~/\\.liveagent/skills|/\\.liveagent/skills|${escapedRoot})`
-      : "(?:~/\\.liveagent/skills|/\\.liveagent/skills)";
+      ? `(?:~/\\.agent/skills|/\\.agent/skills|${escapedRoot})`
+      : "(?:~/\\.agent/skills|/\\.agent/skills)";
     const cdPattern = new RegExp(
       `(?:^|[\\s;&|()])(?:cd|pushd)\\b\\s+(?:--\\s+)?['"]?${skillPathPrefix}(?:[/\\s'";&|)]|$)`,
       "i",
@@ -477,8 +477,8 @@ export function createShellTools(params: {
     const names = new Set<string>();
     const segmentChars = "[A-Za-z0-9._-]+";
     const patterns: RegExp[] = [
-      new RegExp(`~/\\.liveagent/skills/(${segmentChars})`, "gi"),
-      new RegExp(`(?:^|[\\s;&|(])/\\.liveagent/skills/(${segmentChars})`, "gi"),
+      new RegExp(`~/\\.agent/skills/(${segmentChars})`, "gi"),
+      new RegExp(`(?:^|[\\s;&|(])/\\.agent/skills/(${segmentChars})`, "gi"),
     ];
     for (const re of patterns) {
       for (const match of value.matchAll(re)) names.add(match[1]);
@@ -499,7 +499,7 @@ export function createShellTools(params: {
   }
 
   function commandSearchesFilesystemForSkills(command: string) {
-    return /\bfind\s+\/(?:\s|$)[\s\S]*(skills|\.liveagent|SKILL\.md|skill\.json|README\.md)/i.test(
+    return /\bfind\s+\/(?:\s|$)[\s\S]*(skills|\.agent|SKILL\.md|skill\.json|README\.md)/i.test(
       normalizeCommandForPolicy(command),
     );
   }
@@ -514,7 +514,7 @@ export function createShellTools(params: {
     if (params.cwd.scope === "skill") {
       if (commandReferencesFixedSkillsRoot(params.command)) {
         throw new Error(
-          "Bash with a Skill cwd must use paths relative to that cwd. Do not cd into or execute absolute ~/.liveagent/skills paths.",
+          "Bash with a Skill cwd must use paths relative to that cwd. Do not cd into or execute absolute ~/.agent/skills paths.",
         );
       }
       if (commandSearchesFilesystemForSkills(params.command)) {
@@ -536,7 +536,7 @@ export function createShellTools(params: {
       // and Skill-aware access policy that raw Bash cannot match.
       if (commandFileReadVerbAgainstSkillsAbsolute(params.command)) {
         throw new Error(
-          "Bash cannot read or search ~/.liveagent/skills or absolute Skill paths. Use Read/List/Glob/Grep with a skill://<enabled-skill>/... path instead of cat, head, tail, ls, find, grep, rg, sed, or awk.",
+          "Bash cannot read or search ~/.agent/skills or absolute Skill paths. Use Read/List/Glob/Grep with a skill://<enabled-skill>/... path instead of cat, head, tail, ls, find, grep, rg, sed, or awk.",
         );
       }
       if (commandChangesDirectoryToSkillsAbsolute(params.command)) {
@@ -550,7 +550,7 @@ export function createShellTools(params: {
       const referencedSkills = extractSkillBaseDirsFromAbsolutePath(params.command);
       if (referencedSkills.length === 0) {
         throw new Error(
-          "Bash references the ~/.liveagent/skills root without naming a specific installed Skill. Include a Skill name such as ~/.liveagent/skills/<skill-name>/... or set cwd to skill://<enabled-skill>/scripts.",
+          "Bash references the ~/.agent/skills root without naming a specific installed Skill. Include a Skill name such as ~/.agent/skills/<skill-name>/... or set cwd to skill://<enabled-skill>/scripts.",
         );
       }
       for (const baseDir of referencedSkills) {
@@ -592,7 +592,7 @@ export function createShellTools(params: {
 
     if (
       params.cwd.scope !== "skill" &&
-      /(\.liveagent\/skills|~\/\.liveagent\/skills|\bskills\/[^ \n;&|]+\/scripts\b)/.test(combined)
+      /(\.agent\/skills|~\/\.agent\/skills|\bskills\/[^ \n;&|]+\/scripts\b)/.test(combined)
     ) {
       hints.push(
         "Hint: To run a Skill script, set cwd to skill://<enabled-skill>/scripts and use a relative command, or execute the absolute script path directly when the Skill is enabled.",
@@ -601,7 +601,7 @@ export function createShellTools(params: {
 
     if (
       /(cat|ls|find|grep|rg|sed)\b/.test(params.command) &&
-      /(\.liveagent\/skills|~\/\.liveagent\/skills|skills\/)/.test(params.command)
+      /(\.agent\/skills|~\/\.agent\/skills|skills\/)/.test(params.command)
     ) {
       hints.push(
         "Hint: If you are reading, listing, or searching Skill files, use Read/List/Glob/Grep with skill://<enabled-skill>/... paths instead of Bash.",
@@ -657,7 +657,7 @@ export function createShellTools(params: {
 
   const toolManagedProcess: Tool = {
     name: "ManagedProcess",
-    description: `Start, inspect, read logs for, or stop a long-running local process such as a dev server, watcher, or preview server. Runtime platform: ${platformLabel}; commands use the same platform shell policy as Bash. Use this instead of detached shell/background syntax. action="start" runs a foreground command under LiveAgent process management, redirects stdout/stderr to a log file, and returns immediately with process_id, pid, and log_path. By default managed processes are terminated automatically when LiveAgent exits; pass isolated=true only when the user explicitly wants the service to outlive LiveAgent. Use action="status" to list or inspect processes, action="read_log" to read recent log output, and action="stop" to terminate the process tree.`,
+    description: `Start, inspect, read logs for, or stop a long-running local process such as a dev server, watcher, or preview server. Runtime platform: ${platformLabel}; commands use the same platform shell policy as Bash. Use this instead of detached shell/background syntax. action="start" runs a foreground command under Agent process management, redirects stdout/stderr to a log file, and returns immediately with process_id, pid, and log_path. By default managed processes are terminated automatically when Agent exits; pass isolated=true only when the user explicitly wants the service to outlive Agent. Use action="status" to list or inspect processes, action="read_log" to read recent log output, and action="stop" to terminate the process tree.`,
     parameters: strictToolParameters({
       action: Type.Union(
         [
@@ -691,7 +691,7 @@ export function createShellTools(params: {
       isolated: Type.Optional(
         Type.Boolean({
           description:
-            'Only for action="start". Default false: the process is terminated automatically when LiveAgent exits. Set true ONLY when the user explicitly asks for the service to keep running after LiveAgent quits; it then detaches from the LiveAgent lifecycle and must be stopped manually from the background tasks panel.',
+            'Only for action="start". Default false: the process is terminated automatically when Agent exits. Set true ONLY when the user explicitly asks for the service to keep running after Agent quits; it then detaches from the Agent lifecycle and must be stopped manually from the background tasks panel.',
         }),
       ),
       process_id: Type.Optional(

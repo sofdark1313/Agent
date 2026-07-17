@@ -25,7 +25,7 @@ COPY crates/agent-gateway ./
 COPY --from=webui /src/crates/agent-gateway/web/dist ./web/dist
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build -trimpath -ldflags="-s -w" -o /out/liveagent-gateway ./cmd/gateway
+    go build -trimpath -ldflags="-s -w" -o /out/agent-gateway ./cmd/gateway
 
 FROM debian:bookworm-slim AS runtime
 
@@ -33,16 +33,16 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd --system --uid 10001 --user-group --home-dir /nonexistent --shell /usr/sbin/nologin liveagent \
-    && install -d -o liveagent -g liveagent -m 0700 /var/lib/liveagent
+RUN useradd --system --uid 10001 --user-group --home-dir /nonexistent --shell /usr/sbin/nologin agent \
+    && install -d -o agent -g agent -m 0700 /var/lib/agent
 
-COPY --from=gateway-builder /out/liveagent-gateway /usr/local/bin/liveagent-gateway
+COPY --from=gateway-builder /out/agent-gateway /usr/local/bin/agent-gateway
 
-USER liveagent
+USER agent
 
 ENV PORT=8080
-ENV LIVEAGENT_GATEWAY_GRPC_ADDR=:50051
+ENV AGENT_GATEWAY_GRPC_ADDR=:50051
 
 EXPOSE 8080 50051
 
-ENTRYPOINT ["/usr/local/bin/liveagent-gateway"]
+ENTRYPOINT ["/usr/local/bin/agent-gateway"]

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

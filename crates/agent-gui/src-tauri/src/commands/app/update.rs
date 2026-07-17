@@ -8,7 +8,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Url};
 use tauri_plugin_updater::UpdaterExt;
 
-const DEFAULT_UPDATE_REPOSITORY: &str = "Stack-Cairn/LiveAgent";
+const DEFAULT_UPDATE_REPOSITORY: &str = "Stack-Cairn/Agent";
 const UPDATE_MANIFEST_ASSET: &str = "latest.json";
 
 #[derive(Debug, Clone, Serialize)]
@@ -66,18 +66,18 @@ fn current_version(app: &AppHandle) -> String {
 }
 
 fn update_repository() -> String {
-    std::env::var("LIVEAGENT_UPDATE_REPOSITORY")
+    std::env::var("AGENT_UPDATE_REPOSITORY")
         .ok()
-        .or_else(|| option_env!("LIVEAGENT_UPDATE_REPOSITORY").map(str::to_string))
+        .or_else(|| option_env!("AGENT_UPDATE_REPOSITORY").map(str::to_string))
         .map(|value| value.trim().trim_matches('/').to_string())
         .filter(|value| !value.is_empty())
         .unwrap_or_else(|| DEFAULT_UPDATE_REPOSITORY.to_string())
 }
 
 fn updater_public_key_override() -> Option<String> {
-    std::env::var("LIVEAGENT_UPDATER_PUBLIC_KEY")
+    std::env::var("AGENT_UPDATER_PUBLIC_KEY")
         .ok()
-        .or_else(|| option_env!("LIVEAGENT_UPDATER_PUBLIC_KEY").map(str::to_string))
+        .or_else(|| option_env!("AGENT_UPDATER_PUBLIC_KEY").map(str::to_string))
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
 }
@@ -301,7 +301,7 @@ fn github_client() -> Result<reqwest::Client, String> {
 async fn manifest_exists(client: &reqwest::Client, manifest_url: &str) -> Result<bool, String> {
     let response = client
         .head(manifest_url)
-        .header(USER_AGENT, "LiveAgent-Updater")
+        .header(USER_AGENT, "Agent-Updater")
         .send()
         .await
         .map_err(|error| format!("failed to probe updater manifest: {error}"))?;
@@ -313,7 +313,7 @@ async fn manifest_exists(client: &reqwest::Client, manifest_url: &str) -> Result
     if status == StatusCode::METHOD_NOT_ALLOWED {
         let response = client
             .get(manifest_url)
-            .header(USER_AGENT, "LiveAgent-Updater")
+            .header(USER_AGENT, "Agent-Updater")
             .header(RANGE, "bytes=0-0")
             .send()
             .await
@@ -404,7 +404,7 @@ async fn select_release_manifest(
     let feed_url = release_feed_url(repository)?;
     let response = client
         .get(feed_url)
-        .header(USER_AGENT, "LiveAgent-Updater")
+        .header(USER_AGENT, "Agent-Updater")
         .header(
             ACCEPT,
             "application/atom+xml, application/xml;q=0.9, */*;q=0.8",
@@ -584,9 +584,9 @@ mod tests {
     fn feed_entry(tag_name: &str) -> ReleaseFeedEntry {
         ReleaseFeedEntry {
             tag_name: tag_name.to_string(),
-            title: Some(format!("LiveAgent {tag_name}")),
+            title: Some(format!("Agent {tag_name}")),
             html_url: Some(format!(
-                "https://github.com/Stack-Cairn/LiveAgent/releases/tag/{tag_name}"
+                "https://github.com/Stack-Cairn/Agent/releases/tag/{tag_name}"
             )),
             updated: Some("2026-05-25T12:27:41Z".to_string()),
         }
@@ -599,8 +599,8 @@ mod tests {
 <feed xmlns="http://www.w3.org/2005/Atom">
   <entry>
     <updated>2026-05-25T16:00:34Z</updated>
-    <link rel="alternate" type="text/html" href="https://github.com/Stack-Cairn/LiveAgent/releases/tag/v0.1.2"/>
-    <title>LiveAgent v0.1.2</title>
+    <link rel="alternate" type="text/html" href="https://github.com/Stack-Cairn/Agent/releases/tag/v0.1.2"/>
+    <title>Agent v0.1.2</title>
   </entry>
 </feed>"#,
         )
@@ -610,9 +610,9 @@ mod tests {
             entries,
             vec![ReleaseFeedEntry {
                 tag_name: "v0.1.2".to_string(),
-                title: Some("LiveAgent v0.1.2".to_string()),
+                title: Some("Agent v0.1.2".to_string()),
                 html_url: Some(
-                    "https://github.com/Stack-Cairn/LiveAgent/releases/tag/v0.1.2".to_string()
+                    "https://github.com/Stack-Cairn/Agent/releases/tag/v0.1.2".to_string()
                 ),
                 updated: Some("2026-05-25T16:00:34Z".to_string()),
             }]
@@ -643,7 +643,7 @@ mod tests {
         assert_eq!(selected[0].tag_name, "v0.1.2-beta.1");
         assert_eq!(
             selected[0].manifest_url,
-            "https://github.com/Stack-Cairn/LiveAgent/releases/download/v0.1.2-beta.1/latest.json"
+            "https://github.com/Stack-Cairn/Agent/releases/download/v0.1.2-beta.1/latest.json"
         );
         assert!(selected[0].prerelease);
     }

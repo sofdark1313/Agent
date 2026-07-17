@@ -3,7 +3,7 @@
 // exactly once at ingress so every subscriber observes identical bytes.
 //
 // Tool-call arguments pass through untouched: the desktop app is the single
-// producer of streaming previews (truncated text + __liveagent_stream_preview
+// producer of streaming previews (truncated text + __agent_stream_preview
 // metadata) and the gateway must never recompute or overwrite them.
 package chatwire
 
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 // EventPayload shapes a ChatEvent into a wire payload, decoding the JSON data
@@ -55,7 +55,7 @@ func EventPayload(event *gatewayv1.ChatEvent, seq int64, workdirInput ...string)
 const toolResultMaxBytes = 200
 
 // TrimLargeToolResultContent truncates oversized tool-result content in place,
-// attaching a __liveagent_stream_preview meta block describing the original
+// attaching a __agent_stream_preview meta block describing the original
 // size. Tool-call arguments are never touched.
 func TrimLargeToolResultContent(payload map[string]any, protoType string) {
 	eventType, _ := payload["type"].(string)
@@ -95,7 +95,7 @@ func truncateRuneSafe(s string, maxBytes int) string {
 }
 
 func setPreviewMeta(container map[string]any, fieldName string, original string) {
-	const metaKey = "__liveagent_stream_preview"
+	const metaKey = "__agent_stream_preview"
 	meta, _ := container[metaKey].(map[string]any)
 	if meta == nil {
 		meta = map[string]any{}

@@ -1,7 +1,7 @@
 import { type AppSettings, getDefaultSettings, normalizeSettings } from "@/lib/settings";
 import { redactSettingsForWebStorage } from "@/lib/settings/sync";
 
-const WEB_SETTINGS_STORAGE_KEY = "liveagent.gateway.webui.settings.v1";
+const WEB_SETTINGS_STORAGE_KEY = "agent.gateway.webui.settings.v1";
 
 export type WebSettingsSaveState =
   | { status: "idle" }

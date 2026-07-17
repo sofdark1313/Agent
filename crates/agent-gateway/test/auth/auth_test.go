@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/liveagent/agent-gateway/internal/auth"
+	"github.com/agent/agent-gateway/internal/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -100,7 +100,7 @@ func TestGRPCUnaryInterceptorAuthBoundary(t *testing.T) {
 	got, err := interceptor(
 		context.Background(),
 		"auth request",
-		&grpc.UnaryServerInfo{FullMethod: "/liveagent.gateway.v1.AgentGateway/Authenticate"},
+		&grpc.UnaryServerInfo{FullMethod: "/agent.gateway.v1.AgentGateway/Authenticate"},
 		handler,
 	)
 	if err != nil {
@@ -113,7 +113,7 @@ func TestGRPCUnaryInterceptorAuthBoundary(t *testing.T) {
 	_, err = interceptor(
 		context.Background(),
 		"protected request",
-		&grpc.UnaryServerInfo{FullMethod: "/liveagent.gateway.v1.AgentGateway/Other"},
+		&grpc.UnaryServerInfo{FullMethod: "/agent.gateway.v1.AgentGateway/Other"},
 		handler,
 	)
 	if status.Code(err) != codes.Unauthenticated {
@@ -124,7 +124,7 @@ func TestGRPCUnaryInterceptorAuthBoundary(t *testing.T) {
 	got, err = interceptor(
 		ctx,
 		"protected request",
-		&grpc.UnaryServerInfo{FullMethod: "/liveagent.gateway.v1.AgentGateway/Other"},
+		&grpc.UnaryServerInfo{FullMethod: "/agent.gateway.v1.AgentGateway/Other"},
 		handler,
 	)
 	if err != nil {

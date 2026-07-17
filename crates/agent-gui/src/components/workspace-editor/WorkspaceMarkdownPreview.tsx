@@ -82,7 +82,7 @@ function MarkdownImageUnavailable(props: { alt?: string; title?: string }) {
   return (
     <span
       className="text-xs italic text-muted-foreground"
-      data-liveagent-markdown-image="text-fallback"
+      data-agent-markdown-image="text-fallback"
       title={label ? reason : undefined}
     >
       {label || reason}
@@ -99,7 +99,7 @@ function PreviewImage(props: { url: string; alt?: string; title?: string }) {
   return (
     <img
       className="my-1 inline-block h-auto max-w-full rounded-md"
-      data-liveagent-markdown-image="preview"
+      data-agent-markdown-image="preview"
       src={url}
       alt={alt ?? ""}
       title={title}
@@ -121,7 +121,7 @@ function WorkspacePreviewImage(props: {
     return (
       <span
         className="inline-block h-4 w-20 animate-pulse rounded bg-muted align-middle"
-        data-liveagent-markdown-image="loading"
+        data-agent-markdown-image="loading"
       />
     );
   }

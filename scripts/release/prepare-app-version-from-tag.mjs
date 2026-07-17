@@ -9,7 +9,7 @@ function usage() {
     "Usage: prepare-app-version-from-tag.mjs <release-tag> [options]",
     "",
     "Options:",
-    "  --github-env <path>      Append LIVEAGENT_* variables for later workflow steps.",
+    "  --github-env <path>      Append AGENT_* variables for later workflow steps.",
     "  --github-output <path>   Append release metadata as GitHub Action step outputs.",
     "  --tauri-config <path>    Write a generated Tauri config overlay with the app version.",
     "  --json                   Print metadata as JSON.",
@@ -90,7 +90,7 @@ function writeTauriConfig(path, appVersion) {
 try {
   const options = parseArgs(process.argv.slice(2));
   const metadata = parseReleaseVersion(
-    options.releaseTag || process.env.LIVEAGENT_RELEASE_TAG || process.env.RELEASE_TAG,
+    options.releaseTag || process.env.AGENT_RELEASE_TAG || process.env.RELEASE_TAG,
   );
 
   if (options.tauriConfigPath) {
@@ -99,12 +99,12 @@ try {
 
   if (options.githubEnvPath) {
     const envLines = [
-      `LIVEAGENT_RELEASE_TAG=${metadata.releaseTag}`,
-      `LIVEAGENT_APP_VERSION=${metadata.appVersion}`,
-      `LIVEAGENT_IS_PRERELEASE=${metadata.isPrerelease}`,
+      `AGENT_RELEASE_TAG=${metadata.releaseTag}`,
+      `AGENT_APP_VERSION=${metadata.appVersion}`,
+      `AGENT_IS_PRERELEASE=${metadata.isPrerelease}`,
     ];
     if (options.tauriConfigPath) {
-      envLines.push(`LIVEAGENT_TAURI_VERSION_CONFIG=${options.tauriConfigPath}`);
+      envLines.push(`AGENT_TAURI_VERSION_CONFIG=${options.tauriConfigPath}`);
     }
     appendLines(options.githubEnvPath, envLines);
   }
@@ -137,7 +137,7 @@ try {
       ? ` Wrote Tauri version config: ${options.tauriConfigPath}.`
       : "";
     console.log(
-      `Prepared LiveAgent ${metadata.releaseTag} (app version ${metadata.appVersion}, prerelease ${metadata.isPrerelease}).${configSuffix}`,
+      `Prepared Agent ${metadata.releaseTag} (app version ${metadata.appVersion}, prerelease ${metadata.isPrerelease}).${configSuffix}`,
     );
   }
 } catch (error) {

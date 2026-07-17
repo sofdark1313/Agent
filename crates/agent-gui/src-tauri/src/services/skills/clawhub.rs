@@ -140,7 +140,7 @@ pub(crate) fn fetch_clawhub_json(path: &str, params: &[(&str, String)]) -> Resul
 
     let client = HttpClient::builder()
         .timeout(Duration::from_secs(30))
-        .user_agent("liveagent-skillsmanager")
+        .user_agent("agent-skillsmanager")
         .build()
         .map_err(|e| format!("Failed to create ClawHub HTTP client: {e}"))?;
     let response = client

@@ -22,7 +22,7 @@ export const SSH_TUNNEL_TAB_ID = RIGHT_DOCK_SINGLETON_TAB_IDS.sshTunnel;
 // Derived tab: exists while the managed-process store has records; never
 // persisted into right-dock settings.
 export const BACKGROUND_TASKS_TAB_ID = "background-tasks";
-export const PROJECT_TOOLS_RESIZE_END_EVENT = "liveagent:project-tools-resize-end";
+export const PROJECT_TOOLS_RESIZE_END_EVENT = "agent:project-tools-resize-end";
 
 export type RightDockSingletonTabKind = RightDockToolKind;
 

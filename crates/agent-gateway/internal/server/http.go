@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gateway "github.com/liveagent/agent-gateway"
-	"github.com/liveagent/agent-gateway/internal/auth"
-	"github.com/liveagent/agent-gateway/internal/config"
-	"github.com/liveagent/agent-gateway/internal/handler"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	gateway "github.com/agent/agent-gateway"
+	"github.com/agent/agent-gateway/internal/auth"
+	"github.com/agent/agent-gateway/internal/config"
+	"github.com/agent/agent-gateway/internal/handler"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 func NewHTTPServer(cfg *config.Config, sm *session.Manager) http.Handler {

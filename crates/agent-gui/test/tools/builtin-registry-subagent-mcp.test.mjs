@@ -70,9 +70,9 @@ function createRegistryHarness() {
           if (command === "subagent_worktree_create") {
             return {
               repoRoot: "/repo",
-              worktreeRoot: "/tmp/liveagent-subagents/agent-a",
-              workdir: "/tmp/liveagent-subagents/agent-a",
-              branchName: "liveagent/subagent/agent-a",
+              worktreeRoot: "/tmp/agent-subagents/agent-a",
+              workdir: "/tmp/agent-subagents/agent-a",
+              branchName: "agent/subagent/agent-a",
             };
           }
           if (command === "subagent_worktree_status") {
@@ -107,7 +107,7 @@ async function buildRegistry(harness, { withSubagentRuntime, storeIpc } = {}) {
   const { createFileToolState } = loader.loadModule("src/lib/tools/fileToolState.ts");
   const mcpSettingsHolder = { value: { selected: ["docs"], servers: [DOCS_SERVER] } };
   const baseParams = {
-    workdir: "/tmp/liveagent-subagent-registry-test",
+    workdir: "/tmp/agent-subagent-registry-test",
     providerId: "codex",
     fileState: createFileToolState(),
     skillsEnabled: true,
@@ -250,7 +250,7 @@ test("worktree children get fs/shell/ro-memory/MCP tools but no skills, system, 
   assert.ok(!names.includes("ReadTerminal"));
 
   // The child executed inside the isolated worktree workdir.
-  assert.equal(harness.runnerCalls[0].workdir, "/tmp/liveagent-subagents/agent-a");
+  assert.equal(harness.runnerCalls[0].workdir, "/tmp/agent-subagents/agent-a");
 });
 
 test("subagent registries list MCP servers from live settings, not turn-start snapshots", async () => {

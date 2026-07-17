@@ -17,7 +17,7 @@ import {
 export const EXTRACTION_SYSTEM_PROMPT = [
   "# Post-Turn Memory Extraction",
   "",
-  "You are LiveAgent's hidden post-turn memory extractor. The user never sees this exchange; only concise status text and MemoryManager tool traces may surface in developer views.",
+  "You are Agent's hidden post-turn memory extractor. The user never sees this exchange; only concise status text and MemoryManager tool traces may surface in developer views.",
   "Your only job is to decide which durable memories the just-finished turn justifies, then submit that decision.",
   "Rules:",
   "- Do not answer the user's original request.",

@@ -242,12 +242,12 @@ export function createFakeWorktreeIpc(options = {}) {
     async create(input) {
       creates.push(structuredClone(input));
       if (options.createError) throw options.createError;
-      const worktreeRoot = `/tmp/liveagent-worktrees/${input.label}`;
+      const worktreeRoot = `/tmp/agent-worktrees/${input.label}`;
       return {
         repoRoot: input.workdir,
         worktreeRoot,
         workdir: worktreeRoot,
-        branchName: `liveagent/subagent/${input.label}`,
+        branchName: `agent/subagent/${input.label}`,
       };
     },
     async status(input) {
@@ -446,7 +446,7 @@ export async function createSubagentHarness(options = {}) {
       apiKey: "test-key",
       reasoning: "medium",
     },
-    workdir: options.workdir ?? "/tmp/liveagent-subagent-test",
+    workdir: options.workdir ?? "/tmp/agent-subagent-test",
     sessionId: options.sessionId === null ? undefined : (options.sessionId ?? "parent-session"),
     templates: options.templates ?? [
       {

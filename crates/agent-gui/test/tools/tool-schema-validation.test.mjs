@@ -11,7 +11,7 @@ test("built-in tool schemas use pi-compatible typebox metadata", () => {
     },
   });
   const { createTerminalTools } = loader.loadModule("src/lib/tools/terminalTools.ts");
-  const bundle = createTerminalTools({ workdir: "/tmp/liveagent-tool-schema-test" });
+  const bundle = createTerminalTools({ workdir: "/tmp/agent-tool-schema-test" });
   const tool = bundle.tools.find((candidate) => candidate.name === "ReadTerminal");
 
   assert.ok(tool);

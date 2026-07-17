@@ -10,89 +10,89 @@
   font-family: "OpenAI Sans Semibold Web", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-html[data-liveagent-webui="gateway"] .chat-history-new-conversation-button {
+html[data-agent-webui="gateway"] .chat-history-new-conversation-button {
   font-size: 14px;
   line-height: 20px;
   font-weight: 400;
 }
 
-html[data-liveagent-webui="gateway"] .chat-history-new-conversation-label {
+html[data-agent-webui="gateway"] .chat-history-new-conversation-label {
   font-family: "OpenAI Sans Semibold Web", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: inherit;
   line-height: inherit;
   font-weight: inherit;
 }
 
-html[data-liveagent-webui="gateway"] button {
+html[data-agent-webui="gateway"] button {
   font-size: 13px;
   line-height: 1.2;
 }
 
-html[data-liveagent-webui="gateway"] .model-selector-trigger,
-html[data-liveagent-webui="gateway"] .model-selector-current-label,
-html[data-liveagent-webui="gateway"] .model-selector-dropdown,
-html[data-liveagent-webui="gateway"] .model-selector-menu-title,
-html[data-liveagent-webui="gateway"] .model-selector-group-label,
-html[data-liveagent-webui="gateway"] .model-selector-item {
+html[data-agent-webui="gateway"] .model-selector-trigger,
+html[data-agent-webui="gateway"] .model-selector-current-label,
+html[data-agent-webui="gateway"] .model-selector-dropdown,
+html[data-agent-webui="gateway"] .model-selector-menu-title,
+html[data-agent-webui="gateway"] .model-selector-group-label,
+html[data-agent-webui="gateway"] .model-selector-item {
   font-family: "OpenAI Sans Semibold Web", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-html[data-liveagent-webui="gateway"] .model-selector-trigger,
-html[data-liveagent-webui="gateway"] .model-selector-current-label {
+html[data-agent-webui="gateway"] .model-selector-trigger,
+html[data-agent-webui="gateway"] .model-selector-current-label {
   font-size: 15px;
   line-height: 1.1;
 }
 
-html[data-liveagent-webui="gateway"] .model-selector-dropdown,
-html[data-liveagent-webui="gateway"] .model-selector-item {
+html[data-agent-webui="gateway"] .model-selector-dropdown,
+html[data-agent-webui="gateway"] .model-selector-item {
   font-size: 14px;
   line-height: 1.15;
 }
 
-html[data-liveagent-webui="gateway"] .model-selector-menu-title,
-html[data-liveagent-webui="gateway"] .model-selector-group-label {
+html[data-agent-webui="gateway"] .model-selector-menu-title,
+html[data-agent-webui="gateway"] .model-selector-group-label {
   font-size: 14px;
   line-height: 1.15;
 }
 
-html[data-liveagent-webui="gateway"] .chat-history-sidebar {
+html[data-agent-webui="gateway"] .chat-history-sidebar {
   contain: layout paint style;
 }
 
-html[data-liveagent-webui="gateway"] .chat-history-row {
+html[data-agent-webui="gateway"] .chat-history-row {
   contain: layout paint style;
 }
 
-html[data-liveagent-webui="gateway"] .gateway-project-tools-panel-toggle {
+html[data-agent-webui="gateway"] .gateway-project-tools-panel-toggle {
   margin-right: 6px;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-handle {
+html[data-agent-webui="gateway"] .project-tools-panel-handle {
   display: none;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-shell {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-shell {
   display: flex;
   flex-direction: column;
   gap: 3px;
   justify-content: center;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs {
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
 }
 
-html[data-liveagent-webui="gateway"] .project-file-tree-panel-scroll {
+html[data-agent-webui="gateway"] .project-file-tree-panel-scroll {
   padding-bottom: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
   scroll-padding-bottom: 16px;
   scroll-padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
-html[data-liveagent-webui="gateway"] .workdir-picker-tree {
+html[data-agent-webui="gateway"] .workdir-picker-tree {
   --rct-color-tree-bg: transparent;
   --rct-color-tree-focus-outline: transparent;
   --rct-color-focustree-item-selected-bg: hsl(var(--accent));
@@ -113,13 +113,13 @@ html[data-liveagent-webui="gateway"] .workdir-picker-tree {
   --rct-focus-outline: hsl(var(--ring));
 }
 
-html[data-liveagent-webui="gateway"] .workdir-picker-tree .rct-tree-root {
+html[data-agent-webui="gateway"] .workdir-picker-tree .rct-tree-root {
   background: transparent;
   color: hsl(var(--foreground));
   font-family: inherit;
 }
 
-html[data-liveagent-webui="gateway"].dark .workdir-picker-tree {
+html[data-agent-webui="gateway"].dark .workdir-picker-tree {
   --rct-color-focustree-item-selected-bg: hsl(var(--accent) / 0.92);
   --rct-color-focustree-item-selected-text: hsl(var(--foreground));
   --rct-color-focustree-item-hover-bg: hsl(var(--muted) / 0.68);
@@ -129,17 +129,17 @@ html[data-liveagent-webui="gateway"].dark .workdir-picker-tree {
   --rct-color-search-highlight-bg: hsl(var(--primary) / 0.24);
 }
 
-html[data-liveagent-webui="gateway"] .workdir-picker-tree .rct-tree-item-button {
+html[data-agent-webui="gateway"] .workdir-picker-tree .rct-tree-item-button {
   min-width: 0;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tabs {
+html[data-agent-webui="gateway"] .workspace-ssh-terminal-tabs {
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -147,17 +147,17 @@ html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tabs {
   scroll-padding-inline: 0.5rem;
 }
 
-html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tabs::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .workspace-ssh-terminal-tabs::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tab {
+html[data-agent-webui="gateway"] .workspace-ssh-terminal-tab {
   max-width: min(14rem, calc(100vw - 2rem));
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar {
   position: relative;
   height: 4px;
   flex: 0 0 4px;
@@ -172,12 +172,12 @@ html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar {
     opacity 160ms ease;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar-visible {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar-visible {
   opacity: 1;
   pointer-events: auto;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar-thumb {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar-thumb {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -191,21 +191,21 @@ html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar-thumb {
     box-shadow 160ms ease;
 }
 
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar:hover,
-html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar-dragging {
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar:hover,
+html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar-dragging {
   background: var(--gateway-scrollbar-track-hover);
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-tools-panel-tabs-scrollbar:hover
   .project-tools-panel-tabs-scrollbar-thumb,
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-tools-panel-tabs-scrollbar-dragging
   .project-tools-panel-tabs-scrollbar-thumb {
   background: var(--gateway-scrollbar-thumb-hover);
 }
 
-html[data-liveagent-webui="gateway"] {
+html[data-agent-webui="gateway"] {
   --ring: 220 13% 62%;
   --gateway-scrollbar-size: 10px;
   --gateway-scrollbar-track: transparent;
@@ -216,7 +216,7 @@ html[data-liveagent-webui="gateway"] {
   --gateway-scrollbar-thumb-border: hsl(var(--background) / 0.82);
 }
 
-html[data-liveagent-webui="gateway"].dark {
+html[data-agent-webui="gateway"].dark {
   --ring: 220 18% 68%;
   --gateway-scrollbar-track-hover: hsl(var(--muted) / 0.46);
   --gateway-scrollbar-thumb: hsl(var(--muted-foreground) / 0.28);
@@ -225,38 +225,38 @@ html[data-liveagent-webui="gateway"].dark {
   --gateway-scrollbar-thumb-border: hsl(var(--background) / 0.76);
 }
 
-html[data-liveagent-webui="gateway"],
-html[data-liveagent-webui="gateway"] * {
+html[data-agent-webui="gateway"],
+html[data-agent-webui="gateway"] * {
   scrollbar-width: thin;
   scrollbar-color: var(--gateway-scrollbar-thumb) transparent;
 }
 
-html[data-liveagent-webui="gateway"]:hover,
-html[data-liveagent-webui="gateway"]:focus-within,
-html[data-liveagent-webui="gateway"] *:hover,
-html[data-liveagent-webui="gateway"] *:focus-within {
+html[data-agent-webui="gateway"]:hover,
+html[data-agent-webui="gateway"]:focus-within,
+html[data-agent-webui="gateway"] *:hover,
+html[data-agent-webui="gateway"] *:focus-within {
   scrollbar-color: var(--gateway-scrollbar-thumb-hover) transparent;
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar {
+html[data-agent-webui="gateway"]::-webkit-scrollbar,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar {
   width: var(--gateway-scrollbar-size);
   height: var(--gateway-scrollbar-size);
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-track,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-track {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-track,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-track {
   border-radius: 999px;
   background: var(--gateway-scrollbar-track);
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-track:hover,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-track:hover {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-track:hover,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-track:hover {
   background: var(--gateway-scrollbar-track-hover);
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-thumb,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-thumb {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-thumb,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-thumb {
   min-width: 36px;
   min-height: 36px;
   border: 3px solid transparent;
@@ -265,36 +265,36 @@ html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-thumb {
   background-clip: content-box;
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-thumb:hover,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-thumb:hover {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-thumb:hover,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-thumb:hover {
   border-width: 2px;
   background-color: var(--gateway-scrollbar-thumb-hover);
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-thumb:active,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-thumb:active {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-thumb:active,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-thumb:active {
   border-width: 2px;
   background-color: var(--gateway-scrollbar-thumb-active);
 }
 
-html[data-liveagent-webui="gateway"]::-webkit-scrollbar-corner,
-html[data-liveagent-webui="gateway"] *::-webkit-scrollbar-corner {
+html[data-agent-webui="gateway"]::-webkit-scrollbar-corner,
+html[data-agent-webui="gateway"] *::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scroll {
+html[data-agent-webui="gateway"] .chat-queue-scroll {
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scroll::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .chat-queue-scroll::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scrollbar {
+html[data-agent-webui="gateway"] .chat-queue-scrollbar {
   position: absolute;
   top: 2px;
   right: 1px;
@@ -308,7 +308,7 @@ html[data-liveagent-webui="gateway"] .chat-queue-scrollbar {
   touch-action: none;
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scrollbar-thumb {
+html[data-agent-webui="gateway"] .chat-queue-scrollbar-thumb {
   position: absolute;
   left: 1px;
   right: 1px;
@@ -322,46 +322,46 @@ html[data-liveagent-webui="gateway"] .chat-queue-scrollbar-thumb {
   transition: background-color 0.16s ease;
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scrollbar:hover .chat-queue-scrollbar-thumb {
+html[data-agent-webui="gateway"] .chat-queue-scrollbar:hover .chat-queue-scrollbar-thumb {
   background: hsl(var(--muted-foreground) / 0.56);
 }
 
-html[data-liveagent-webui="gateway"] .chat-queue-scrollbar-thumb:active {
+html[data-agent-webui="gateway"] .chat-queue-scrollbar-thumb:active {
   background: hsl(var(--muted-foreground) / 0.7);
 }
 
-html[data-liveagent-webui="gateway"] .git-review-transient-scrollbar {
+html[data-agent-webui="gateway"] .git-review-transient-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-html[data-liveagent-webui="gateway"] .git-review-transient-scrollbar::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .git-review-transient-scrollbar::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-html[data-liveagent-webui="gateway"] .git-review-floating-scrollbar {
+html[data-agent-webui="gateway"] .git-review-floating-scrollbar {
   background-color: var(--gateway-scrollbar-thumb-hover);
 }
 
-html[data-liveagent-webui="gateway"] .git-review-floating-scrollbar:hover,
-html[data-liveagent-webui="gateway"] .git-review-floating-scrollbar[data-dragging="true"] {
+html[data-agent-webui="gateway"] .git-review-floating-scrollbar:hover,
+html[data-agent-webui="gateway"] .git-review-floating-scrollbar[data-dragging="true"] {
   background-color: var(--gateway-scrollbar-thumb-active);
 }
 
-html[data-liveagent-webui="gateway"] [data-radix-scroll-area-viewport] {
+html[data-agent-webui="gateway"] [data-radix-scroll-area-viewport] {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-html[data-liveagent-webui="gateway"] [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+html[data-agent-webui="gateway"] [data-radix-scroll-area-viewport]::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-scrollbar {
+html[data-agent-webui="gateway"] .scroll-area-scrollbar {
   border-color: transparent;
   background: transparent;
   transition:
@@ -369,21 +369,21 @@ html[data-liveagent-webui="gateway"] .scroll-area-scrollbar {
     opacity 160ms ease;
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-scrollbar[data-orientation="vertical"] {
+html[data-agent-webui="gateway"] .scroll-area-scrollbar[data-orientation="vertical"] {
   width: var(--gateway-scrollbar-size);
   padding: 2px;
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-scrollbar[data-orientation="horizontal"] {
+html[data-agent-webui="gateway"] .scroll-area-scrollbar[data-orientation="horizontal"] {
   height: var(--gateway-scrollbar-size);
   padding: 2px;
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-scrollbar:hover {
+html[data-agent-webui="gateway"] .scroll-area-scrollbar:hover {
   background: var(--gateway-scrollbar-track-hover);
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-thumb {
+html[data-agent-webui="gateway"] .scroll-area-thumb {
   min-height: 36px;
   min-width: 36px;
   border-radius: 999px;
@@ -394,29 +394,29 @@ html[data-liveagent-webui="gateway"] .scroll-area-thumb {
     box-shadow 160ms ease;
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-scrollbar:hover .scroll-area-thumb,
-html[data-liveagent-webui="gateway"] .scroll-area-thumb:hover {
+html[data-agent-webui="gateway"] .scroll-area-scrollbar:hover .scroll-area-thumb,
+html[data-agent-webui="gateway"] .scroll-area-thumb:hover {
   background: var(--gateway-scrollbar-thumb-hover);
 }
 
-html[data-liveagent-webui="gateway"] .scroll-area-thumb:active {
+html[data-agent-webui="gateway"] .scroll-area-thumb:active {
   background: var(--gateway-scrollbar-thumb-active);
 }
 
-html[data-liveagent-webui="gateway"] .upload-file-list,
-html[data-liveagent-webui="gateway"] .tool-text-scroll,
-html[data-liveagent-webui="gateway"] .mention-popup-scroll,
-html[data-liveagent-webui="gateway"] .settings-provider-tabs-wrap {
+html[data-agent-webui="gateway"] .upload-file-list,
+html[data-agent-webui="gateway"] .tool-text-scroll,
+html[data-agent-webui="gateway"] .mention-popup-scroll,
+html[data-agent-webui="gateway"] .settings-provider-tabs-wrap {
   scrollbar-color: var(--gateway-scrollbar-thumb) transparent;
 }
 
-html[data-liveagent-webui="gateway"] .upload-file-list::-webkit-scrollbar,
-html[data-liveagent-webui="gateway"] .settings-provider-tabs-wrap::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .upload-file-list::-webkit-scrollbar,
+html[data-agent-webui="gateway"] .settings-provider-tabs-wrap::-webkit-scrollbar {
   height: 8px;
 }
 
-html[data-liveagent-webui="gateway"] .tool-text-scroll::-webkit-scrollbar,
-html[data-liveagent-webui="gateway"] .mention-popup-scroll::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .tool-text-scroll::-webkit-scrollbar,
+html[data-agent-webui="gateway"] .mention-popup-scroll::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
@@ -466,7 +466,7 @@ pre {
   font-weight: 500;
 }
 
-html[data-liveagent-webui="gateway"] .composer-dropdown {
+html[data-agent-webui="gateway"] .composer-dropdown {
   box-sizing: border-box;
   display: flex;
   width: min(420px, calc(100vw - 24px));
@@ -476,7 +476,7 @@ html[data-liveagent-webui="gateway"] .composer-dropdown {
   flex-direction: column;
 }
 
-html[data-liveagent-webui="gateway"] .composer-dropdown-body {
+html[data-agent-webui="gateway"] .composer-dropdown-body {
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
@@ -485,16 +485,16 @@ html[data-liveagent-webui="gateway"] .composer-dropdown-body {
   overscroll-behavior: contain;
 }
 
-html[data-liveagent-webui="gateway"] .composer-dropdown-item {
+html[data-agent-webui="gateway"] .composer-dropdown-item {
   width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
 }
 
-html[data-liveagent-webui="gateway"] .composer-dropdown-text,
-html[data-liveagent-webui="gateway"] .composer-dropdown-title,
-html[data-liveagent-webui="gateway"] .composer-dropdown-description {
+html[data-agent-webui="gateway"] .composer-dropdown-text,
+html[data-agent-webui="gateway"] .composer-dropdown-title,
+html[data-agent-webui="gateway"] .composer-dropdown-description {
   display: block;
   min-width: 0;
   max-width: 100%;
@@ -510,21 +510,21 @@ select {
   font: inherit;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
-html[data-liveagent-webui="gateway"] textarea:focus,
-html[data-liveagent-webui="gateway"] select:focus,
-html[data-liveagent-webui="gateway"] [contenteditable="true"]:focus,
-html[data-liveagent-webui="gateway"] [role="textbox"]:focus {
+html[data-agent-webui="gateway"] textarea:focus,
+html[data-agent-webui="gateway"] select:focus,
+html[data-agent-webui="gateway"] [contenteditable="true"]:focus,
+html[data-agent-webui="gateway"] [role="textbox"]:focus {
   outline: none;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
-html[data-liveagent-webui="gateway"] textarea:focus-visible,
-html[data-liveagent-webui="gateway"] select:focus-visible,
-html[data-liveagent-webui="gateway"] [contenteditable="true"]:focus-visible,
-html[data-liveagent-webui="gateway"] [role="textbox"]:focus-visible {
+html[data-agent-webui="gateway"] textarea:focus-visible,
+html[data-agent-webui="gateway"] select:focus-visible,
+html[data-agent-webui="gateway"] [contenteditable="true"]:focus-visible,
+html[data-agent-webui="gateway"] [role="textbox"]:focus-visible {
   --tw-ring-offset-shadow: 0 0 #0000;
   --tw-ring-shadow: 0 0 #0000;
   border-color: hsl(var(--input));
@@ -1219,50 +1219,50 @@ html[data-liveagent-webui="gateway"] [role="textbox"]:focus-visible {
   line-height: 1.2;
 }
 
-html[data-liveagent-webui="gateway"] .settings-page-shell,
-html[data-liveagent-webui="gateway"] .settings-main,
-html[data-liveagent-webui="gateway"] .settings-content,
-html[data-liveagent-webui="gateway"] .settings-section-shell {
+html[data-agent-webui="gateway"] .settings-page-shell,
+html[data-agent-webui="gateway"] .settings-main,
+html[data-agent-webui="gateway"] .settings-content,
+html[data-agent-webui="gateway"] .settings-section-shell {
   min-width: 0;
 }
 
-html[data-liveagent-webui="gateway"] .settings-back-bar {
+html[data-agent-webui="gateway"] .settings-back-bar {
   display: none;
 }
 
-html[data-liveagent-webui="gateway"] .settings-section-actions,
-html[data-liveagent-webui="gateway"] .settings-card-actions,
-html[data-liveagent-webui="gateway"] .settings-modal-actions {
+html[data-agent-webui="gateway"] .settings-section-actions,
+html[data-agent-webui="gateway"] .settings-card-actions,
+html[data-agent-webui="gateway"] .settings-modal-actions {
   min-width: 0;
 }
 
-html[data-liveagent-webui="gateway"] .settings-confirm-popover {
+html[data-agent-webui="gateway"] .settings-confirm-popover {
   max-width: calc(100vw - 24px);
 }
 
-html[data-liveagent-webui="gateway"] .settings-modal-overlay,
-html[data-liveagent-webui="gateway"] .history-share-modal-overlay,
-html[data-liveagent-webui="gateway"] .external-link-modal-overlay {
+html[data-agent-webui="gateway"] .settings-modal-overlay,
+html[data-agent-webui="gateway"] .history-share-modal-overlay,
+html[data-agent-webui="gateway"] .external-link-modal-overlay {
   opacity: 0;
   transition: opacity 180ms ease;
   will-change: opacity;
 }
 
-html[data-liveagent-webui="gateway"] .settings-modal-overlay[data-state="open"],
-html[data-liveagent-webui="gateway"] .history-share-modal-overlay[data-state="open"],
-html[data-liveagent-webui="gateway"] .external-link-modal-overlay[data-state="open"] {
+html[data-agent-webui="gateway"] .settings-modal-overlay[data-state="open"],
+html[data-agent-webui="gateway"] .history-share-modal-overlay[data-state="open"],
+html[data-agent-webui="gateway"] .external-link-modal-overlay[data-state="open"] {
   opacity: 1;
 }
 
-html[data-liveagent-webui="gateway"] .settings-modal-overlay[data-state="closed"],
-html[data-liveagent-webui="gateway"] .history-share-modal-overlay[data-state="closed"],
-html[data-liveagent-webui="gateway"] .external-link-modal-overlay[data-state="closed"] {
+html[data-agent-webui="gateway"] .settings-modal-overlay[data-state="closed"],
+html[data-agent-webui="gateway"] .history-share-modal-overlay[data-state="closed"],
+html[data-agent-webui="gateway"] .external-link-modal-overlay[data-state="closed"] {
   pointer-events: none;
 }
 
-html[data-liveagent-webui="gateway"] .settings-modal-panel,
-html[data-liveagent-webui="gateway"] .history-share-modal-panel,
-html[data-liveagent-webui="gateway"] .external-link-modal-panel {
+html[data-agent-webui="gateway"] .settings-modal-panel,
+html[data-agent-webui="gateway"] .history-share-modal-panel,
+html[data-agent-webui="gateway"] .external-link-modal-panel {
   opacity: 0;
   transform: translateY(12px) scale(0.985);
   transition:
@@ -1271,26 +1271,26 @@ html[data-liveagent-webui="gateway"] .external-link-modal-panel {
   will-change: opacity, transform;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .settings-modal-overlay[data-state="open"]
   .settings-modal-panel,
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .history-share-modal-overlay[data-state="open"]
   .history-share-modal-panel,
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .external-link-modal-overlay[data-state="open"]
   .external-link-modal-panel {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .settings-modal-overlay[data-state="closed"]
   .settings-modal-panel,
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .history-share-modal-overlay[data-state="closed"]
   .history-share-modal-panel,
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .external-link-modal-overlay[data-state="closed"]
   .external-link-modal-panel {
   opacity: 0;
@@ -1298,17 +1298,17 @@ html[data-liveagent-webui="gateway"]
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-liveagent-webui="gateway"] .settings-modal-overlay,
-  html[data-liveagent-webui="gateway"] .external-link-modal-overlay,
-  html[data-liveagent-webui="gateway"] .settings-modal-panel,
-  html[data-liveagent-webui="gateway"] .external-link-modal-panel {
+  html[data-agent-webui="gateway"] .settings-modal-overlay,
+  html[data-agent-webui="gateway"] .external-link-modal-overlay,
+  html[data-agent-webui="gateway"] .settings-modal-panel,
+  html[data-agent-webui="gateway"] .external-link-modal-panel {
     transition-duration: 1ms;
   }
 }
 
 /* Settings system-tools tab views: soft enter when switching between the
  * built-in and custom tabs (the view wrapper is keyed by tab). */
-html[data-liveagent-webui="gateway"] .settings-tools-view-enter {
+html[data-agent-webui="gateway"] .settings-tools-view-enter {
   animation: settingsToolsViewIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
 }
@@ -1325,7 +1325,7 @@ html[data-liveagent-webui="gateway"] .settings-tools-view-enter {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-liveagent-webui="gateway"] .settings-tools-view-enter {
+  html[data-agent-webui="gateway"] .settings-tools-view-enter {
     animation: none;
   }
 }
@@ -2060,7 +2060,7 @@ html[data-liveagent-webui="gateway"] .settings-tools-view-enter {
   }
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport {
+html[data-agent-webui="gateway"] .project-terminal-viewport {
   --project-terminal-padding-x: 0.75rem;
   --project-terminal-padding-y: 0.625rem;
   --project-terminal-scrollbar-size: 8px;
@@ -2068,19 +2068,19 @@ html[data-liveagent-webui="gateway"] .project-terminal-viewport {
   background: var(--project-terminal-background);
 }
 
-html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-overlay .project-terminal-viewport {
+html[data-agent-webui="gateway"] .workspace-ssh-terminal-overlay .project-terminal-viewport {
   --project-terminal-padding-x: 1rem;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport,
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm,
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-screen,
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
+html[data-agent-webui="gateway"] .project-terminal-viewport,
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm,
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-screen,
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
   overscroll-behavior: contain;
   touch-action: none;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm {
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm {
   background: var(--project-terminal-background);
   box-sizing: border-box;
   width: 100%;
@@ -2089,17 +2089,17 @@ html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm {
     var(--project-terminal-padding-y) var(--project-terminal-padding-x);
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-viewport,
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-screen,
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-viewport,
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-screen,
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
   background: var(--project-terminal-background) !important;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-scrollable-element {
   -webkit-overflow-scrolling: touch;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-terminal-viewport
   .xterm-scrollable-element
   > .scrollbar.vertical
@@ -2107,28 +2107,28 @@ html[data-liveagent-webui="gateway"]
   border-radius: 999px;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-viewport {
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-viewport {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   transition: scrollbar-color 0.2s ease;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport:hover .xterm-viewport {
+html[data-agent-webui="gateway"] .project-terminal-viewport:hover .xterm-viewport {
   scrollbar-color: hsl(var(--muted-foreground) / 0.32) transparent;
 }
 
-html[data-liveagent-webui="gateway"] .project-terminal-viewport .xterm-viewport::-webkit-scrollbar {
+html[data-agent-webui="gateway"] .project-terminal-viewport .xterm-viewport::-webkit-scrollbar {
   width: var(--project-terminal-scrollbar-size);
   height: var(--project-terminal-scrollbar-size);
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-terminal-viewport
   .xterm-viewport::-webkit-scrollbar-track {
   background: transparent;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-terminal-viewport
   .xterm-viewport::-webkit-scrollbar-thumb {
   border-radius: 999px;
@@ -2136,13 +2136,13 @@ html[data-liveagent-webui="gateway"]
   transition: background 0.2s ease;
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-terminal-viewport:hover
   .xterm-viewport::-webkit-scrollbar-thumb {
   background: hsl(var(--muted-foreground) / 0.28);
 }
 
-html[data-liveagent-webui="gateway"]
+html[data-agent-webui="gateway"]
   .project-terminal-viewport
   .xterm-viewport::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.45);
@@ -2216,15 +2216,15 @@ html[data-liveagent-webui="gateway"]
     padding-top: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .assistant-bubble-shell {
+  html[data-agent-webui="gateway"] .assistant-bubble-shell {
     gap: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .assistant-bubble-avatar {
+  html[data-agent-webui="gateway"] .assistant-bubble-avatar {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .assistant-bubble-content {
+  html[data-agent-webui="gateway"] .assistant-bubble-content {
     padding-top: 0;
   }
 
@@ -2232,11 +2232,11 @@ html[data-liveagent-webui="gateway"]
     margin-left: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .chat-history-row-menu-button {
+  html[data-agent-webui="gateway"] .chat-history-row-menu-button {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .chat-history-row-title-button {
+  html[data-agent-webui="gateway"] .chat-history-row-title-button {
     -webkit-touch-callout: none;
     user-select: none;
     touch-action: pan-y;
@@ -2304,7 +2304,7 @@ html[data-liveagent-webui="gateway"]
     padding-bottom: 100px;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel {
+  html[data-agent-webui="gateway"] .project-tools-panel {
     inset: 0;
     z-index: 50;
     width: 100%;
@@ -2336,7 +2336,7 @@ html[data-liveagent-webui="gateway"]
     backface-visibility: hidden;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel[data-state="open"] {
+  html[data-agent-webui="gateway"] .project-tools-panel[data-state="open"] {
     opacity: 1 !important;
     visibility: visible;
     transition:
@@ -2344,29 +2344,29 @@ html[data-liveagent-webui="gateway"]
       visibility 0s linear 0s !important;
   }
 
-  html[data-liveagent-webui="gateway"] .workspace-code-editor-overlay,
-  html[data-liveagent-webui="gateway"] .workspace-file-preview-overlay,
-  html[data-liveagent-webui="gateway"] .workspace-image-preview-overlay,
-  html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-overlay {
+  html[data-agent-webui="gateway"] .workspace-code-editor-overlay,
+  html[data-agent-webui="gateway"] .workspace-file-preview-overlay,
+  html[data-agent-webui="gateway"] .workspace-image-preview-overlay,
+  html[data-agent-webui="gateway"] .workspace-ssh-terminal-overlay {
     z-index: 60;
   }
 
-  html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tabs {
+  html[data-agent-webui="gateway"] .workspace-ssh-terminal-tabs {
     height: 44px;
     padding-inline: 8px;
     scroll-padding-inline: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tab {
+  html[data-agent-webui="gateway"] .workspace-ssh-terminal-tab {
     max-width: min(13.5rem, calc(100vw - 1rem));
   }
 
-  html[data-liveagent-webui="gateway"] .workspace-ssh-terminal-tab > button:last-child {
+  html[data-agent-webui="gateway"] .workspace-ssh-terminal-tab > button:last-child {
     width: 1.75rem;
     height: 1.75rem;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-inner {
+  html[data-agent-webui="gateway"] .project-tools-panel-inner {
     min-width: 0;
     opacity: 1 !important;
     translate: 0 0 !important;
@@ -2376,7 +2376,7 @@ html[data-liveagent-webui="gateway"]
     backface-visibility: hidden;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-handle {
+  html[data-agent-webui="gateway"] .project-tools-panel-handle {
     display: block;
     width: 36px;
     height: 4px;
@@ -2387,45 +2387,45 @@ html[data-liveagent-webui="gateway"]
     background: hsl(var(--muted-foreground) / 0.24);
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-header {
+  html[data-agent-webui="gateway"] .project-tools-panel-header {
     height: auto;
     min-height: 44px;
     gap: 6px;
     padding: 6px 8px 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-shell {
+  html[data-agent-webui="gateway"] .project-tools-panel-tabs-shell {
     gap: 4px;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-tabs-scrollbar {
+  html[data-agent-webui="gateway"] .project-tools-panel-tabs-scrollbar {
     height: 5px;
     flex-basis: 5px;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-tab {
+  html[data-agent-webui="gateway"] .project-tools-panel-tab {
     max-width: min(12rem, calc(100vw - 10rem));
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-shell-select {
+  html[data-agent-webui="gateway"] .project-tools-panel-shell-select {
     max-width: 6.75rem;
   }
 
-  html[data-liveagent-webui="gateway"] .gateway-settings-overlay {
+  html[data-agent-webui="gateway"] .gateway-settings-overlay {
     height: 100svh;
     height: 100dvh;
     min-height: 100svh;
     min-height: 100dvh;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-page-shell {
+  html[data-agent-webui="gateway"] .settings-page-shell {
     height: 100%;
     min-height: 0;
     flex-direction: column;
     overflow: hidden;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-sidebar {
+  html[data-agent-webui="gateway"] .settings-sidebar {
     width: 100% !important;
     flex: 0 0 auto;
     border-right: 0;
@@ -2433,11 +2433,11 @@ html[data-liveagent-webui="gateway"]
     background: hsl(var(--background) / 0.96);
   }
 
-  html[data-liveagent-webui="gateway"] .settings-sidebar-header {
+  html[data-agent-webui="gateway"] .settings-sidebar-header {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav {
+  html[data-agent-webui="gateway"] .settings-nav {
     order: 2;
     display: flex;
     flex-wrap: nowrap;
@@ -2449,32 +2449,32 @@ html[data-liveagent-webui="gateway"]
     scrollbar-width: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav::-webkit-scrollbar {
+  html[data-agent-webui="gateway"] .settings-nav::-webkit-scrollbar {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav > * + * {
+  html[data-agent-webui="gateway"] .settings-nav > * + * {
     margin-top: 0 !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-group {
+  html[data-agent-webui="gateway"] .settings-nav-group {
     display: contents;
     margin-top: 0 !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-group-label {
+  html[data-agent-webui="gateway"] .settings-nav-group-label {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-group > div:last-child {
+  html[data-agent-webui="gateway"] .settings-nav-group > div:last-child {
     display: contents;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-group > div:last-child > * + * {
+  html[data-agent-webui="gateway"] .settings-nav-group > div:last-child > * + * {
     margin-top: 0 !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-item {
+  html[data-agent-webui="gateway"] .settings-nav-item {
     width: auto;
     flex: 0 0 auto;
     white-space: nowrap;
@@ -2483,25 +2483,25 @@ html[data-liveagent-webui="gateway"]
     border-radius: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-item-active {
+  html[data-agent-webui="gateway"] .settings-nav-item-active {
     border-color: hsl(var(--primary) / 0.35);
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-item > div {
+  html[data-agent-webui="gateway"] .settings-nav-item > div {
     gap: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-icon {
+  html[data-agent-webui="gateway"] .settings-nav-icon {
     width: 24px;
     height: 24px;
     border-radius: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-label {
+  html[data-agent-webui="gateway"] .settings-nav-label {
     font-size: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-back-bar {
+  html[data-agent-webui="gateway"] .settings-back-bar {
     display: flex;
     align-items: center;
     order: 1;
@@ -2510,78 +2510,78 @@ html[data-liveagent-webui="gateway"]
     padding: max(8px, env(safe-area-inset-top)) 10px 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-back-button {
+  html[data-agent-webui="gateway"] .settings-back-button {
     width: auto;
     min-height: 34px;
     padding: 8px 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-main {
+  html[data-agent-webui="gateway"] .settings-main {
     min-height: 0;
     flex: 1 1 auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-main-header {
+  html[data-agent-webui="gateway"] .settings-main-header {
     gap: 12px;
     padding: 10px 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-save-indicator {
+  html[data-agent-webui="gateway"] .settings-save-indicator {
     flex: 0 0 auto;
     white-space: nowrap;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-content {
+  html[data-agent-webui="gateway"] .settings-content {
     min-height: 0;
     padding: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-content-hooks {
+  html[data-agent-webui="gateway"] .settings-content-hooks {
     overflow-y: auto !important;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-shell-hooks {
+  html[data-agent-webui="gateway"] .settings-section-shell-hooks {
     display: block;
     min-height: auto;
     flex: 0 0 auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-content-memory {
+  html[data-agent-webui="gateway"] .settings-content-memory {
     overflow-y: auto !important;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-shell-memory {
+  html[data-agent-webui="gateway"] .settings-section-shell-memory {
     display: block;
     min-height: auto;
     flex: 0 0 auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-panel {
+  html[data-agent-webui="gateway"] .settings-memory-panel {
     min-height: auto;
     flex: 0 0 auto;
     gap: 12px;
     padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-summary-card {
+  html[data-agent-webui="gateway"] .settings-memory-summary-card {
     border-radius: 12px;
     padding: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-summary-actions {
+  html[data-agent-webui="gateway"] .settings-memory-summary-actions {
     width: 100%;
     align-items: stretch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-summary-actions > button {
+  html[data-agent-webui="gateway"] .settings-memory-summary-actions > button {
     min-height: 34px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-layout {
+  html[data-agent-webui="gateway"] .settings-memory-layout {
     display: flex;
     min-height: auto;
     flex: 0 0 auto;
@@ -2589,14 +2589,14 @@ html[data-liveagent-webui="gateway"]
     gap: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-list-section,
-  html[data-liveagent-webui="gateway"] .settings-memory-detail-section {
+  html[data-agent-webui="gateway"] .settings-memory-list-section,
+  html[data-agent-webui="gateway"] .settings-memory-detail-section {
     min-height: auto;
     overflow: visible;
     border-radius: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-entry-list {
+  html[data-agent-webui="gateway"] .settings-memory-entry-list {
     max-height: min(42svh, 320px);
     flex: 0 1 auto;
     overflow-y: auto;
@@ -2604,85 +2604,85 @@ html[data-liveagent-webui="gateway"]
     -webkit-overflow-scrolling: touch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-memory-detail-body {
+  html[data-agent-webui="gateway"] .settings-memory-detail-body {
     min-height: auto;
     flex: 0 0 auto;
     overflow: visible;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-heading-row,
-  html[data-liveagent-webui="gateway"] .settings-model-toolbar {
+  html[data-agent-webui="gateway"] .settings-section-heading-row,
+  html[data-agent-webui="gateway"] .settings-model-toolbar {
     align-items: stretch;
     flex-direction: column;
     gap: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-title-group {
+  html[data-agent-webui="gateway"] .settings-section-title-group {
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-actions {
+  html[data-agent-webui="gateway"] .settings-section-actions {
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-start;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-card-actions,
-  html[data-liveagent-webui="gateway"] .settings-hover-actions {
+  html[data-agent-webui="gateway"] .settings-card-actions,
+  html[data-agent-webui="gateway"] .settings-hover-actions {
     opacity: 1 !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hover-action {
+  html[data-agent-webui="gateway"] .settings-hover-action {
     display: flex !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-provider-tabs-wrap {
+  html[data-agent-webui="gateway"] .settings-provider-tabs-wrap {
     overflow-x: auto;
     padding-bottom: 2px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-provider-tabs {
+  html[data-agent-webui="gateway"] .settings-provider-tabs {
     min-width: max-content;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-form-grid,
-  html[data-liveagent-webui="gateway"] .settings-cron-type-grid,
-  html[data-liveagent-webui="gateway"] .settings-choice-grid {
+  html[data-agent-webui="gateway"] .settings-form-grid,
+  html[data-agent-webui="gateway"] .settings-cron-type-grid,
+  html[data-agent-webui="gateway"] .settings-choice-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-language-grid {
+  html[data-agent-webui="gateway"] .settings-language-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-field-row {
+  html[data-agent-webui="gateway"] .settings-field-row {
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-remote-gateway-row {
+  html[data-agent-webui="gateway"] .settings-remote-gateway-row {
     flex-wrap: wrap;
     align-items: stretch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-remote-gateway-row > input:first-of-type {
+  html[data-agent-webui="gateway"] .settings-remote-gateway-row > input:first-of-type {
     flex: 1 1 100%;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-remote-gateway-row > span {
+  html[data-agent-webui="gateway"] .settings-remote-gateway-row > span {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-remote-gateway-row > input:last-of-type {
+  html[data-agent-webui="gateway"] .settings-remote-gateway-row > input:last-of-type {
     width: 100%;
     flex: 1 1 8rem;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-overlay {
+  html[data-agent-webui="gateway"] .settings-modal-overlay {
     align-items: stretch;
     padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-panel {
+  html[data-agent-webui="gateway"] .settings-modal-panel {
     display: flex;
     width: min(100%, calc(100vw - 16px)) !important;
     max-width: calc(100vw - 16px) !important;
@@ -2692,40 +2692,40 @@ html[data-liveagent-webui="gateway"]
     border-radius: 16px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-header,
-  html[data-liveagent-webui="gateway"] .settings-modal-subheader {
+  html[data-agent-webui="gateway"] .settings-modal-header,
+  html[data-agent-webui="gateway"] .settings-modal-subheader {
     flex: 0 0 auto;
     padding: 12px 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-body {
+  html[data-agent-webui="gateway"] .settings-modal-body {
     min-height: 0;
     overflow-y: auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-body.px-6 {
+  html[data-agent-webui="gateway"] .settings-modal-body.px-6 {
     padding-left: 14px;
     padding-right: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-body.py-5,
-  html[data-liveagent-webui="gateway"] .settings-modal-body.py-4 {
+  html[data-agent-webui="gateway"] .settings-modal-body.py-5,
+  html[data-agent-webui="gateway"] .settings-modal-body.py-4 {
     padding-top: 14px;
     padding-bottom: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-body > .px-6 {
+  html[data-agent-webui="gateway"] .settings-modal-body > .px-6 {
     padding-left: 14px;
     padding-right: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-body > .py-5,
-  html[data-liveagent-webui="gateway"] .settings-modal-body > .py-4 {
+  html[data-agent-webui="gateway"] .settings-modal-body > .py-5,
+  html[data-agent-webui="gateway"] .settings-modal-body > .py-4 {
     padding-top: 14px;
     padding-bottom: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-footer {
+  html[data-agent-webui="gateway"] .settings-modal-footer {
     align-items: stretch;
     flex: 0 0 auto;
     flex-direction: column;
@@ -2733,7 +2733,7 @@ html[data-liveagent-webui="gateway"]
     padding: 12px 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-footer.settings-modal-footer-row {
+  html[data-agent-webui="gateway"] .settings-modal-footer.settings-modal-footer-row {
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
@@ -2741,28 +2741,28 @@ html[data-liveagent-webui="gateway"]
     gap: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-actions {
+  html[data-agent-webui="gateway"] .settings-modal-actions {
     width: 100%;
     justify-content: flex-end;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-header {
+  html[data-agent-webui="gateway"] .settings-tools-header {
     align-items: stretch;
     flex-direction: column;
     gap: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-tabs {
+  html[data-agent-webui="gateway"] .settings-tools-tabs {
     width: 100%;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-tab {
+  html[data-agent-webui="gateway"] .settings-tools-tab {
     flex: 1 1 0;
     justify-content: center;
     min-height: 36px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-category-bar {
+  html[data-agent-webui="gateway"] .settings-tools-category-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 2px;
@@ -2770,49 +2770,49 @@ html[data-liveagent-webui="gateway"]
     -webkit-overflow-scrolling: touch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-category-bar::-webkit-scrollbar {
+  html[data-agent-webui="gateway"] .settings-tools-category-bar::-webkit-scrollbar {
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-category-chip {
+  html[data-agent-webui="gateway"] .settings-tools-category-chip {
     min-height: 36px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-row {
+  html[data-agent-webui="gateway"] .settings-tools-row {
     padding: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-row-actions {
+  html[data-agent-webui="gateway"] .settings-tools-row-actions {
     gap: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tools-row-action {
+  html[data-agent-webui="gateway"] .settings-tools-row-action {
     min-height: 40px;
     min-width: 40px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-step-row {
+  html[data-agent-webui="gateway"] .settings-modal-step-row {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-http-row {
+  html[data-agent-webui="gateway"] .settings-http-row {
     flex-wrap: wrap;
     align-items: stretch;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-http-row > input {
+  html[data-agent-webui="gateway"] .settings-http-row > input {
     order: 5;
     flex: 1 1 100%;
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-http-row > div:last-child {
+  html[data-agent-webui="gateway"] .settings-http-row > div:last-child {
     margin-left: auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-section {
+  html[data-agent-webui="gateway"] .settings-hooks-section {
     height: auto;
     min-height: 0;
     gap: 12px;
@@ -2820,29 +2820,29 @@ html[data-liveagent-webui="gateway"]
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-hero {
+  html[data-agent-webui="gateway"] .settings-section-hero {
     padding: 14px;
     gap: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stats {
+  html[data-agent-webui="gateway"] .settings-hooks-stats {
     gap: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stat {
+  html[data-agent-webui="gateway"] .settings-hooks-stat {
     padding: 5px 9px;
     gap: 6px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stat-label {
+  html[data-agent-webui="gateway"] .settings-hooks-stat-label {
     font-size: 11px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stat-value {
+  html[data-agent-webui="gateway"] .settings-hooks-stat-value {
     font-size: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-grid {
+  html[data-agent-webui="gateway"] .settings-hooks-grid {
     display: flex;
     flex: 0 0 auto;
     flex-direction: column;
@@ -2852,134 +2852,134 @@ html[data-liveagent-webui="gateway"]
     overflow: visible;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-lifecycle {
+  html[data-agent-webui="gateway"] .settings-hooks-lifecycle {
     flex: 0 0 auto;
     max-height: none;
     overflow: visible;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-lifecycle-header {
+  html[data-agent-webui="gateway"] .settings-hooks-lifecycle-header {
     padding: 8px 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-lifecycle-body {
+  html[data-agent-webui="gateway"] .settings-hooks-lifecycle-body {
     flex: 0 0 auto;
     overflow: visible;
     padding: 6px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-phase-button {
+  html[data-agent-webui="gateway"] .settings-hooks-phase-button {
     padding: 6px 8px;
     border-radius: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-event-tree {
+  html[data-agent-webui="gateway"] .settings-hooks-event-tree {
     margin-left: 16px;
     padding-bottom: 2px;
     padding-top: 2px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-event-button {
+  html[data-agent-webui="gateway"] .settings-hooks-event-button {
     min-height: 32px;
     padding: 7px 10px 7px 30px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-event-label {
+  html[data-agent-webui="gateway"] .settings-hooks-event-label {
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-phase-spacer {
+  html[data-agent-webui="gateway"] .settings-hooks-phase-spacer {
     margin-left: 16px;
     height: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail {
+  html[data-agent-webui="gateway"] .settings-hooks-detail {
     flex: 0 0 auto;
     min-height: 0;
     overflow: visible;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-header {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-header {
     padding: 12px 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-body {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-body {
     flex: 0 0 auto;
     overflow: visible;
     padding: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-icon {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-icon {
     width: 32px;
     height: 32px;
     border-radius: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-title {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-title {
     font-size: 15px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-desc {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-desc {
     font-size: 12.5px;
     line-height: 1.5;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card {
+  html[data-agent-webui="gateway"] .settings-hooks-card {
     padding: 12px;
     border-radius: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-row {
+  html[data-agent-webui="gateway"] .settings-hooks-card-row {
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-icon {
+  html[data-agent-webui="gateway"] .settings-hooks-card-icon {
     width: 36px;
     height: 36px;
     border-radius: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-name {
+  html[data-agent-webui="gateway"] .settings-hooks-card-name {
     font-size: 13.5px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-desc {
+  html[data-agent-webui="gateway"] .settings-hooks-card-desc {
     font-size: 12.5px;
     line-height: 1.5;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-cron-view-panel {
+  html[data-agent-webui="gateway"] .settings-cron-view-panel {
     height: calc(100dvh - 16px) !important;
     flex-direction: column;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-cron-view-left {
+  html[data-agent-webui="gateway"] .settings-cron-view-left {
     width: 100% !important;
     max-height: 42%;
     border-right: 0;
     border-bottom: 1px solid hsl(var(--border) / 0.4);
   }
 
-  html[data-liveagent-webui="gateway"] .settings-cron-view-right {
+  html[data-agent-webui="gateway"] .settings-cron-view-right {
     min-height: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-log-row {
+  html[data-agent-webui="gateway"] .settings-log-row {
     flex-wrap: wrap;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-log-row > span {
+  html[data-agent-webui="gateway"] .settings-log-row > span {
     width: auto !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-log-row > span:first-of-type {
+  html[data-agent-webui="gateway"] .settings-log-row > span:first-of-type {
     flex: 1 1 100%;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-log-row > span:nth-of-type(3) {
+  html[data-agent-webui="gateway"] .settings-log-row > span:nth-of-type(3) {
     margin-left: 0 !important;
   }
 
@@ -3171,7 +3171,7 @@ html[data-liveagent-webui="gateway"]
     line-height: 1.5;
   }
 
-  html[data-liveagent-webui="gateway"] .composer-dropdown {
+  html[data-agent-webui="gateway"] .composer-dropdown {
     width: min(92vw, 420px);
     min-width: min(92vw, 260px);
     max-width: calc(100vw - 20px);
@@ -3216,57 +3216,57 @@ html[data-liveagent-webui="gateway"]
     display: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-content {
+  html[data-agent-webui="gateway"] .settings-content {
     padding: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-main-header {
+  html[data-agent-webui="gateway"] .settings-main-header {
     padding: 9px 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav {
+  html[data-agent-webui="gateway"] .settings-nav {
     padding-left: 8px;
     padding-right: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-card-row {
+  html[data-agent-webui="gateway"] .settings-card-row {
     padding: 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-card-actions {
+  html[data-agent-webui="gateway"] .settings-card-actions {
     margin-left: auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-inline-form {
+  html[data-agent-webui="gateway"] .settings-inline-form {
     flex-direction: column;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-inline-form > button,
-  html[data-liveagent-webui="gateway"] .settings-modal-actions > button {
+  html[data-agent-webui="gateway"] .settings-inline-form > button,
+  html[data-agent-webui="gateway"] .settings-modal-actions > button {
     width: 100%;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-actions {
+  html[data-agent-webui="gateway"] .settings-modal-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-footer > .text-xs,
-  html[data-liveagent-webui="gateway"] .settings-modal-footer > .min-w-0 {
+  html[data-agent-webui="gateway"] .settings-modal-footer > .text-xs,
+  html[data-agent-webui="gateway"] .settings-modal-footer > .min-w-0 {
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-footer .truncate {
+  html[data-agent-webui="gateway"] .settings-modal-footer .truncate {
     white-space: normal;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-subheader .settings-field-row {
+  html[data-agent-webui="gateway"] .settings-modal-subheader .settings-field-row {
     align-items: stretch;
     flex-direction: column;
     gap: 8px;
   }
 
-  html[data-liveagent-webui="gateway"]
+  html[data-agent-webui="gateway"]
     .settings-modal-subheader
     .settings-field-row
     > div:first-child {
@@ -3274,12 +3274,12 @@ html[data-liveagent-webui="gateway"]
   }
 
   /* Tool detail modal becomes a bottom sheet on small screens. */
-  html[data-liveagent-webui="gateway"] .settings-tool-detail-overlay {
+  html[data-agent-webui="gateway"] .settings-tool-detail-overlay {
     align-items: flex-end;
     padding: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tool-detail-overlay .settings-tool-detail-panel {
+  html[data-agent-webui="gateway"] .settings-tool-detail-overlay .settings-tool-detail-panel {
     width: 100% !important;
     max-width: 100% !important;
     max-height: min(86dvh, 640px) !important;
@@ -3291,61 +3291,61 @@ html[data-liveagent-webui="gateway"]
       transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  html[data-liveagent-webui="gateway"]
+  html[data-agent-webui="gateway"]
     .settings-tool-detail-overlay[data-state="open"]
     .settings-tool-detail-panel {
     transform: translateY(0);
   }
 
-  html[data-liveagent-webui="gateway"]
+  html[data-agent-webui="gateway"]
     .settings-tool-detail-overlay[data-state="closed"]
     .settings-tool-detail-panel {
     opacity: 1;
     transform: translateY(100%);
   }
 
-  html[data-liveagent-webui="gateway"] .settings-tool-drawer-handle {
+  html[data-agent-webui="gateway"] .settings-tool-drawer-handle {
     display: flex;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-confirm-popover {
+  html[data-agent-webui="gateway"] .settings-confirm-popover {
     width: min(16rem, calc(100vw - 24px));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-lifecycle {
+  html[data-agent-webui="gateway"] .settings-hooks-lifecycle {
     max-height: none;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-header {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-header {
     padding: 11px 12px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-detail-body {
+  html[data-agent-webui="gateway"] .settings-hooks-detail-body {
     padding: 10px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card {
+  html[data-agent-webui="gateway"] .settings-hooks-card {
     padding: 11px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-icon {
+  html[data-agent-webui="gateway"] .settings-hooks-card-icon {
     width: 32px;
     height: 32px;
     border-radius: 9px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-icon svg {
+  html[data-agent-webui="gateway"] .settings-hooks-card-icon svg {
     height: 16px;
     width: 16px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-actions {
+  html[data-agent-webui="gateway"] .settings-hooks-card-actions {
     min-height: 32px;
     align-items: center;
     gap: 4px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-actions [role="switch"] {
+  html[data-agent-webui="gateway"] .settings-hooks-card-actions [role="switch"] {
     width: 36px;
     height: 20px;
     align-self: center;
@@ -3353,57 +3353,57 @@ html[data-liveagent-webui="gateway"]
     background-color: hsl(var(--muted-foreground) / 0.18);
   }
 
-  html[data-liveagent-webui="gateway"]
+  html[data-agent-webui="gateway"]
     .settings-hooks-card-actions
     [role="switch"][aria-checked="true"] {
     border-color: hsl(var(--primary) / 0.4);
     background-color: hsl(var(--primary));
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-actions > button:not([role="switch"]) {
+  html[data-agent-webui="gateway"] .settings-hooks-card-actions > button:not([role="switch"]) {
     height: 30px;
     width: 30px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-cron-logs-header {
+  html[data-agent-webui="gateway"] .settings-cron-logs-header {
     flex-wrap: wrap;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-cron-logs-header > div {
+  html[data-agent-webui="gateway"] .settings-cron-logs-header > div {
     margin-left: auto;
   }
 }
 
 @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
-  html[data-liveagent-webui="gateway"] .settings-tool-detail-overlay .settings-tool-detail-panel {
+  html[data-agent-webui="gateway"] .settings-tool-detail-overlay .settings-tool-detail-panel {
     transition-duration: 1ms;
   }
 }
 
 @media (max-width: 520px) {
-  html[data-liveagent-webui="gateway"] .settings-language-grid {
+  html[data-agent-webui="gateway"] .settings-language-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-section-actions > button:not([role="switch"]),
-  html[data-liveagent-webui="gateway"] .settings-section-actions > .settings-section-action {
+  html[data-agent-webui="gateway"] .settings-section-actions > button:not([role="switch"]),
+  html[data-agent-webui="gateway"] .settings-section-actions > .settings-section-action {
     flex: 1 1 auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-card-row {
+  html[data-agent-webui="gateway"] .settings-card-row {
     align-items: flex-start;
     flex-wrap: wrap;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-row {
+  html[data-agent-webui="gateway"] .settings-hooks-card-row {
     grid-template-columns: 32px minmax(0, 1fr) auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-main {
+  html[data-agent-webui="gateway"] .settings-hooks-card-main {
     min-width: 0;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-card-actions {
+  html[data-agent-webui="gateway"] .settings-hooks-card-actions {
     margin-left: auto;
     margin-top: 0;
     width: auto;
@@ -3413,33 +3413,33 @@ html[data-liveagent-webui="gateway"]
     flex-basis: auto;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stat {
+  html[data-agent-webui="gateway"] .settings-hooks-stat {
     flex: 1 1 calc(50% - 4px);
     min-width: 0;
     justify-content: center;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-hooks-stats {
+  html[data-agent-webui="gateway"] .settings-hooks-stats {
     width: 100%;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-nav-item {
+  html[data-agent-webui="gateway"] .settings-nav-item {
     padding: 7px 9px;
   }
 
-  html[data-liveagent-webui="gateway"] .settings-modal-panel {
+  html[data-agent-webui="gateway"] .settings-modal-panel {
     border-radius: 14px;
   }
 
-  html[data-liveagent-webui="gateway"] .model-selector-trigger {
+  html[data-agent-webui="gateway"] .model-selector-trigger {
     width: clamp(7rem, calc(100vw - 13rem), 15rem);
     max-width: clamp(7rem, calc(100vw - 13rem), 15rem) !important;
     padding-left: 8px;
     padding-right: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .model-selector-trigger,
-  html[data-liveagent-webui="gateway"] .model-selector-current-label {
+  html[data-agent-webui="gateway"] .model-selector-trigger,
+  html[data-agent-webui="gateway"] .model-selector-current-label {
     font-size: 13px;
   }
 
@@ -3458,7 +3458,7 @@ html[data-liveagent-webui="gateway"]
     height: 7px;
   }
 
-  html[data-liveagent-webui="gateway"] .gateway-project-tools-panel-toggle {
+  html[data-agent-webui="gateway"] .gateway-project-tools-panel-toggle {
     margin-right: 8px;
   }
 }
@@ -3473,18 +3473,18 @@ html[data-liveagent-webui="gateway"]
     padding-right: 8px;
   }
 
-  html[data-liveagent-webui="gateway"] .model-selector-trigger {
+  html[data-agent-webui="gateway"] .model-selector-trigger {
     width: clamp(6.25rem, calc(100vw - 12.5rem), 13rem);
     max-width: clamp(6.25rem, calc(100vw - 12.5rem), 13rem) !important;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-tab {
+  html[data-agent-webui="gateway"] .project-tools-panel-tab {
     max-width: min(10rem, calc(100vw - 8.5rem));
     padding-left: 6px;
     padding-right: 6px;
   }
 
-  html[data-liveagent-webui="gateway"] .project-tools-panel-shell-select {
+  html[data-agent-webui="gateway"] .project-tools-panel-shell-select {
     max-width: 5.8rem;
   }
 

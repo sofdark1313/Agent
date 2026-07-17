@@ -2997,6 +2997,84 @@ body > div:not(#root) [data-streamdown="mermaid"] svg {
   box-shadow: var(--agent-shadow-float);
 }
 
+.agent-codex-composer {
+  border: 1px solid hsl(var(--border) / 0.78);
+  background: hsl(var(--agent-surface-raised));
+  box-shadow:
+    0 20px 54px -36px hsl(220 22% 16% / 0.38),
+    0 2px 8px -5px hsl(220 22% 16% / 0.16);
+}
+
+.agent-codex-composer:focus-within {
+  border-color: hsl(var(--foreground) / 0.2);
+  box-shadow:
+    0 24px 62px -38px hsl(220 22% 16% / 0.46),
+    0 0 0 1px hsl(var(--foreground) / 0.025);
+}
+
+.dark .agent-codex-composer {
+  border-color: hsl(0 0% 100% / 0.1);
+  background: hsl(var(--agent-surface-raised));
+  box-shadow:
+    0 24px 66px -36px hsl(0 0% 0% / 0.78),
+    0 2px 10px -5px hsl(0 0% 0% / 0.62);
+}
+
+.dark .agent-codex-composer:focus-within {
+  border-color: hsl(0 0% 100% / 0.18);
+  box-shadow:
+    0 26px 72px -38px hsl(0 0% 0% / 0.86),
+    0 0 0 1px hsl(0 0% 100% / 0.025);
+}
+
+.agent-composer-add-trigger {
+  background: hsl(var(--foreground) / 0.055);
+}
+
+.agent-composer-add-trigger[data-popup-open] {
+  background: hsl(var(--foreground) / 0.11);
+}
+
+.agent-composer-add-menu {
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-composer-add-menu[data-starting-style],
+.agent-composer-add-menu[data-ending-style] {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+.agent-codex-composer .composer-branch-trigger {
+  border-color: transparent;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-codex-composer .composer-branch-trigger:hover,
+.agent-codex-composer .composer-branch-trigger[data-popup-open] {
+  border-color: transparent;
+  background: hsl(var(--foreground) / 0.055);
+  color: hsl(var(--foreground));
+}
+
+.agent-codex-composer .composer-branch-trigger svg {
+  color: currentColor;
+}
+
+@media (max-width: 720px) {
+  .agent-codex-composer .composer-branch-trigger {
+    max-width: 7rem;
+  }
+
+  [data-agent-composer-access] span {
+    display: none;
+  }
+}
+
 .agent-nav-item {
   border-radius: 8px;
   transition:

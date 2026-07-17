@@ -331,7 +331,7 @@ where
         return Err(INSTALL_CANCELLED_ERROR.to_string());
     }
 
-    let tmp = TempDir::new("liveagent-skill-install")?;
+    let tmp = TempDir::new("agent-skill-install")?;
     let stage_root = if is_github_source(source) {
         on_progress(SkillInstallProgressUpdate {
             phase: "downloading",

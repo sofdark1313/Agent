@@ -132,7 +132,7 @@ export function renderMessageBusSnapshot(params: {
   const recentMessages = consume(takeLatest(messages, maxMessages));
 
   const sections: string[] = [
-    "## LiveAgent Message Bus",
+    "## Agent Message Bus",
     "",
     `Current agent: ${displayAgentLabel(currentAgentId, params.currentAgentName)}`,
     "Messages below are a Markdown snapshot of the conversation-level bus. Use the SendMessage tool for new cross-agent messages; do not write temporary files for communication.",

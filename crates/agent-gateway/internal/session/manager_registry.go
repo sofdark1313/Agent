@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 func (m *Manager) RecordAuthentication(agentID, agentVersion, sessionID string) {

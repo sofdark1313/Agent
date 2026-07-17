@@ -9,7 +9,7 @@ import {
 import { normalizeBaseUrl } from "../../lib/settings/normalize";
 
 const GATEWAY_WEBUI_MARKER = "gateway";
-const GATEWAY_TOKEN_STORAGE_KEY = "liveagent.gateway.token";
+const GATEWAY_TOKEN_STORAGE_KEY = "agent.gateway.token";
 const CODEX_MODELS_SUFFIXES = ["/chat/completions", "/responses", "/response"];
 const GEMINI_GENERATE_SUFFIXES = [":streamGenerateContent", ":generateContent"];
 const ANTHROPIC_API_VERSION = "2023-06-01";
@@ -17,7 +17,7 @@ const ANTHROPIC_API_VERSION = "2023-06-01";
 export function isGatewayWebuiRuntime() {
   return (
     typeof document !== "undefined" &&
-    document.documentElement.dataset.liveagentWebui === GATEWAY_WEBUI_MARKER
+    document.documentElement.dataset.agentWebui === GATEWAY_WEBUI_MARKER
   );
 }
 

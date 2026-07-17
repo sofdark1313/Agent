@@ -102,7 +102,7 @@ where
 {
     let client = HttpClient::builder()
         .timeout(Duration::from_secs(30))
-        .user_agent("liveagent-skill-installer")
+        .user_agent("agent-skill-installer")
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
     let mut response = client

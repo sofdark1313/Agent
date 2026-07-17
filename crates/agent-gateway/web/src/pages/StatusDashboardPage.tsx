@@ -1120,7 +1120,7 @@ export function StatusDashboardPage() {
               <Sparkles size={19} strokeWidth={2.4} />
             </div>
             <div>
-              <p>LiveAgent Nexus</p>
+              <p>Agent Nexus</p>
               <h1>实时遥测指挥舱</h1>
             </div>
           </div>

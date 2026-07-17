@@ -181,7 +181,7 @@ function hashString(value: string) {
 }
 
 const SANDBOXED_HTML_PREVIEW_BOOTSTRAP = [
-  "<script data-liveagent-html-preview-bootstrap>",
+  "<script data-agent-html-preview-bootstrap>",
   "(() => {",
   "  function createStorage() {",
   "    const values = new Map();",

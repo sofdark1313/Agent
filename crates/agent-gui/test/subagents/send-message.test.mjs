@@ -53,7 +53,7 @@ test("subagent sends a direct message to the parent", async () => {
   );
 
   assert.equal(result.isError, false);
-  assert.match(result.content[0].text, /Message sent to parent via LiveAgent Message Bus\./);
+  assert.match(result.content[0].text, /Message sent to parent via Agent Message Bus\./);
   assert.match(result.content[0].text, /seq=1/);
   assert.match(result.content[0].text, /channel=direct/);
 

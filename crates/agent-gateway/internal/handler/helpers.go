@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 func decodeJSON(r *http.Request, target any) error {

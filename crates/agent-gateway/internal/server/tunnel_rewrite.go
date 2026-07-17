@@ -204,7 +204,7 @@ func tunnelRuntimeBootstrapScript(rw tunnelRewrite) string {
 	if body == "" {
 		return ""
 	}
-	return `<script data-liveagent-tunnel-shim>` + body + `</script>`
+	return `<script data-agent-tunnel-shim>` + body + `</script>`
 }
 
 // tunnelShimScriptBody is the raw JS between the shim's script tags; CSP
@@ -221,9 +221,9 @@ func tunnelShimScriptBody(rw tunnelRewrite) string {
 		return ""
 	}
 	return `(function(config){` +
-		`if(window.__LIVEAGENT_TUNNEL__&&window.__LIVEAGENT_TUNNEL__.installed)return;` +
+		`if(window.__AGENT_TUNNEL__&&window.__AGENT_TUNNEL__.installed)return;` +
 		`var base=String(config.basePath||"").replace(/\/+$/,"");` +
-		`window.__LIVEAGENT_TUNNEL__={basePath:base,installed:true};` +
+		`window.__AGENT_TUNNEL__={basePath:base,installed:true};` +
 		`function rw(input){if(input==null||!base)return input;var raw=input instanceof URL?input.href:String(input);var u;try{u=new URL(raw,location.href)}catch(_){return input}` +
 		`if(u.host!==location.host||!/^(http:|https:|ws:|wss:)$/i.test(u.protocol))return input;` +
 		`if(u.pathname===base||u.pathname.indexOf(base+"/")===0)return u.href;` +
@@ -356,7 +356,7 @@ func amendTunnelCSP(headers http.Header, shimScriptBody string) {
 		if strings.Contains(lower, "'nonce-") || strings.Contains(lower, "'strict-dynamic'") {
 			headers.Del("Content-Security-Policy")
 			headers.Del("Content-Security-Policy-Report-Only")
-			headers.Set("X-Liveagent-Tunnel-Csp", "stripped")
+			headers.Set("X-Agent-Tunnel-Csp", "stripped")
 			return
 		}
 		amended = append(amended, amendTunnelCSPPolicy(policy, hash))

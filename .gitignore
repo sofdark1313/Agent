@@ -11,7 +11,7 @@ lerna-debug.log*
 .codex
 .claude
 .codex-artifacts
-.liveagent
+.agent
 workspace
 !crates/agent-gui/src-tauri/src/commands/workspace/
 !crates/agent-gui/src-tauri/src/commands/workspace/**

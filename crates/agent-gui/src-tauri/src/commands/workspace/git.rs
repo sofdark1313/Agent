@@ -2705,16 +2705,16 @@ mod tests {
         assert!(validate_repo_relative_path("../secret").is_err());
         assert!(validate_repo_relative_path("/tmp/secret").is_err());
         assert!(looks_like_windows_drive_path(
-            "C:/Users/liveagent/secret.txt"
+            "C:/Users/agent/secret.txt"
         ));
         assert!(looks_like_windows_drive_path(
-            "C:\\Users\\liveagent\\secret.txt"
+            "C:\\Users\\agent\\secret.txt"
         ));
         assert!(looks_like_windows_drive_path("C:relative\\secret.txt"));
         #[cfg(windows)]
         {
-            assert!(validate_repo_relative_path("C:/Users/liveagent/secret.txt").is_err());
-            assert!(validate_repo_relative_path("C:\\Users\\liveagent\\secret.txt").is_err());
+            assert!(validate_repo_relative_path("C:/Users/agent/secret.txt").is_err());
+            assert!(validate_repo_relative_path("C:\\Users\\agent\\secret.txt").is_err());
             assert!(validate_repo_relative_path("C:relative\\secret.txt").is_err());
             assert!(validate_repo_relative_path("\\\\server\\share\\secret.txt").is_err());
         }
@@ -2745,11 +2745,11 @@ mod tests {
         assert!(parse_gateway_args(String::new()).is_ok());
         assert!(parse_gateway_args(json!({"path":"src/main.rs"}).to_string()).is_ok());
         let init_args = parse_gateway_args(
-            json!({"branch":"main","userName":"LiveAgent Test","userEmail":"test@example.com"})
+            json!({"branch":"main","userName":"Agent Test","userEmail":"test@example.com"})
                 .to_string(),
         )
         .expect("parse init args");
-        assert_eq!(init_args.user_name.as_deref(), Some("LiveAgent Test"));
+        assert_eq!(init_args.user_name.as_deref(), Some("Agent Test"));
         assert_eq!(init_args.user_email.as_deref(), Some("test@example.com"));
         let log_args =
             parse_gateway_args(json!({"limit":50,"skip":100}).to_string()).expect("parse log args");
@@ -2819,7 +2819,7 @@ mod tests {
         }
         let temp = tempfile::tempdir().expect("temp repo");
         run_temp_git(temp.path(), &["init"]);
-        run_temp_git(temp.path(), &["config", "user.name", "LiveAgent Test"]);
+        run_temp_git(temp.path(), &["config", "user.name", "Agent Test"]);
         run_temp_git(temp.path(), &["config", "user.email", "test@example.com"]);
         fs::write(temp.path().join("README.md"), "initial\n").expect("write readme");
         run_temp_git(temp.path(), &["add", "README.md"]);
@@ -2837,7 +2837,7 @@ mod tests {
         let initialized = git_init_sync(
             workdir.clone(),
             "trunk".to_string(),
-            Some("LiveAgent Test".to_string()),
+            Some("Agent Test".to_string()),
             Some("test@example.com".to_string()),
         )
         .expect("init repo");
@@ -2849,7 +2849,7 @@ mod tests {
             git_success(&workdir, &["config", "--get", "user.name"]).expect("user.name");
         let user_email =
             git_success(&workdir, &["config", "--get", "user.email"]).expect("user.email");
-        assert_eq!(user_name.stdout, "LiveAgent Test");
+        assert_eq!(user_name.stdout, "Agent Test");
         assert_eq!(user_email.stdout, "test@example.com");
 
         let duplicate = git_init_sync(workdir, "main".to_string(), None, None)

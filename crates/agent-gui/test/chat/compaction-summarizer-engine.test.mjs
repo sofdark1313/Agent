@@ -99,7 +99,7 @@ test("runCompaction produces a zero-usage checkpoint and appends a new segment",
   assert.ok(calls[0].context.systemPrompt.includes("CONTEXT CHECKPOINT"));
 
   const checkpoint = outcome.checkpointMessage;
-  assert.equal(checkpoint.api, "liveagent-compaction");
+  assert.equal(checkpoint.api, "agent-compaction");
   assert.equal(checkpoint.model, "claude-x");
   assert.equal(checkpoint.promptVersion, "summary-v2");
   // usage 恒为零：summarizer 用量只进 compactionStats。

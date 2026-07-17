@@ -21,13 +21,13 @@ pub(crate) struct TerminalSftpConnection {
     pub(crate) session: russh_sftp::client::SftpSession,
 }
 
-pub(crate) struct LiveAgentSshClient {
+pub(crate) struct AgentSshClient {
     pub(crate) host: String,
     pub(crate) port: u16,
     pub(crate) captured_host_key: Arc<tokio::sync::Mutex<Option<CapturedHostKey>>>,
 }
 
-impl client::Handler for LiveAgentSshClient {
+impl client::Handler for AgentSshClient {
     type Error = russh::Error;
 
     async fn check_server_key(
@@ -102,8 +102,8 @@ pub(crate) fn ssh_proxy_configured(host: &RuntimeSshHostConfig) -> bool {
 pub(crate) async fn connect_ssh_handle(
     host_config: &RuntimeSshHostConfig,
     captured_host_key: Arc<tokio::sync::Mutex<Option<CapturedHostKey>>>,
-) -> Result<client::Handle<LiveAgentSshClient>, String> {
-    let ssh_client = LiveAgentSshClient {
+) -> Result<client::Handle<AgentSshClient>, String> {
+    let ssh_client = AgentSshClient {
         host: host_config.host.clone(),
         port: host_config.port,
         captured_host_key,

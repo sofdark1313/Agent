@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 func TestParseTunnelPublicPath(t *testing.T) {
@@ -189,7 +189,7 @@ func TestAmendTunnelCSPNonceStripped(t *testing.T) {
 	if headers.Get("Content-Security-Policy-Report-Only") != "" {
 		t.Fatal("report-only policy must be stripped alongside")
 	}
-	if headers.Get("X-Liveagent-Tunnel-Csp") != "stripped" {
+	if headers.Get("X-Agent-Tunnel-Csp") != "stripped" {
 		t.Fatal("stripped marker header missing")
 	}
 }

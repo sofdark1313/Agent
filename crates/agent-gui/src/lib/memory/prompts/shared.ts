@@ -87,7 +87,7 @@ export const MEMORY_WRITE_EVIDENCE_POLICY = [
   "- source_quote: a verbatim user quote, max 80 characters",
   "- reasoning: one short sentence explaining why this is durable",
   "- supersedes / conflicts_with / override_reject when replacing, conflicting with, or overriding previous memory.",
-  "LiveAgent stores these fields as a structured evidence block alongside the memory body.",
+  "Agent stores these fields as a structured evidence block alongside the memory body.",
 ].join("\n");
 
-export const MEMORY_CONFIDENCE_CONTRACT_LINE = `confidence=high requires source_quote of >=${CONFIDENCE_CONTRACT.highMinQuoteChars} characters. LiveAgent auto-downgrades high→medium when the quote is shorter, and medium→low when the quote is empty; the stored evidence records auto_downgraded: true so your self-rating remains auditable.`;
+export const MEMORY_CONFIDENCE_CONTRACT_LINE = `confidence=high requires source_quote of >=${CONFIDENCE_CONTRACT.highMinQuoteChars} characters. Agent auto-downgrades high→medium when the quote is shorter, and medium→low when the quote is empty; the stored evidence records auto_downgraded: true so your self-rating remains auditable.`;

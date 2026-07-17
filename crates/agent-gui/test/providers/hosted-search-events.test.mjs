@@ -172,7 +172,7 @@ test("hosted search aggregation dedupes identical updates and separates completi
       type: "web_search_call",
       id: "search-1",
       status: "in_progress",
-      action: { query: "LiveAgent hosted search" },
+      action: { query: "Agent hosted search" },
     },
   };
 
@@ -201,7 +201,7 @@ test("hosted search aggregation extracts structural Anthropic and Gemini search 
       type: "server_tool_use",
       id: "toolu_1",
       name: "web_search",
-      input: { query: "LiveAgent Anthropic search" },
+      input: { query: "Agent Anthropic search" },
     },
   });
   anthropic.accept({
@@ -219,7 +219,7 @@ test("hosted search aggregation extracts structural Anthropic and Gemini search 
     },
   });
 
-  assert.deepEqual(anthropic.getBlocks()[0].queries, ["LiveAgent Anthropic search"]);
+  assert.deepEqual(anthropic.getBlocks()[0].queries, ["Agent Anthropic search"]);
   assert.deepEqual(anthropic.getBlocks()[0].sources.map((source) => source.url), [
     "https://example.com/anthropic",
   ]);
@@ -231,7 +231,7 @@ test("hosted search aggregation extracts structural Anthropic and Gemini search 
     candidates: [
       {
         groundingMetadata: {
-          webSearchQueries: ["LiveAgent Gemini search"],
+          webSearchQueries: ["Agent Gemini search"],
           groundingChunks: [
             {
               web: {
@@ -245,7 +245,7 @@ test("hosted search aggregation extracts structural Anthropic and Gemini search 
     ],
   });
 
-  assert.deepEqual(gemini.getBlocks()[0].queries, ["LiveAgent Gemini search"]);
+  assert.deepEqual(gemini.getBlocks()[0].queries, ["Agent Gemini search"]);
   assert.deepEqual(gemini.getBlocks()[0].sources.map((source) => source.url), [
     "https://example.com/gemini",
   ]);
@@ -274,7 +274,7 @@ test("hosted search aggregation accumulates an Anthropic query streamed as parti
   anthropic.accept({
     type: "content_block_delta",
     index: 0,
-    delta: { type: "input_json_delta", partial_json: 'ry": "LiveAg' },
+    delta: { type: "input_json_delta", partial_json: 'ry": "Ag' },
   });
   assert.deepEqual(anthropic.getBlocks(), []);
 
@@ -284,7 +284,7 @@ test("hosted search aggregation accumulates an Anthropic query streamed as parti
     delta: { type: "input_json_delta", partial_json: 'ent incremental search"}' },
   });
 
-  assert.deepEqual(anthropic.getBlocks()[0].queries, ["LiveAgent incremental search"]);
+  assert.deepEqual(anthropic.getBlocks()[0].queries, ["Agent incremental search"]);
   assert.equal(anthropic.getBlocks()[0].status, "searching");
 
   anthropic.accept({ type: "content_block_stop", index: 0 });
@@ -301,7 +301,7 @@ test("hosted search aggregation extracts Anthropic citations_delta into the acti
       type: "server_tool_use",
       id: "toolu_cited",
       name: "web_search",
-      input: { query: "LiveAgent citation search" },
+      input: { query: "Agent citation search" },
     },
   });
   anthropic.accept({
@@ -314,7 +314,7 @@ test("hosted search aggregation extracts Anthropic citations_delta into the acti
   });
 
   const block = anthropic.getBlocks()[0];
-  assert.deepEqual(block.queries, ["LiveAgent citation search"]);
+  assert.deepEqual(block.queries, ["Agent citation search"]);
   assert.deepEqual(
     block.sources.map((source) => ({ url: source.url, sourceType: source.sourceType })),
     [{ url: "https://example.com/cited", sourceType: "citation" }],
@@ -332,7 +332,7 @@ test("hosted search aggregation marks Anthropic web_search_tool_result_error as 
       type: "server_tool_use",
       id: "toolu_failed",
       name: "web_search",
-      input: { query: "LiveAgent failing search" },
+      input: { query: "Agent failing search" },
     },
   });
   anthropic.accept({
@@ -356,7 +356,7 @@ test("hosted search aggregation extracts OpenAI url_citation annotations and mar
       type: "web_search_call",
       id: "search-annotated",
       status: "in_progress",
-      action: { query: "LiveAgent OpenAI search" },
+      action: { query: "Agent OpenAI search" },
     },
   });
   openai.accept({
@@ -374,7 +374,7 @@ test("hosted search aggregation extracts OpenAI url_citation annotations and mar
 
   const block = openai.getBlocks()[0];
   assert.equal(block.status, "completed");
-  assert.deepEqual(block.queries, ["LiveAgent OpenAI search"]);
+  assert.deepEqual(block.queries, ["Agent OpenAI search"]);
   assert.deepEqual(
     block.sources.map((source) => ({ url: source.url, sourceType: source.sourceType })),
     [{ url: "https://example.com/openai", sourceType: "citation" }],

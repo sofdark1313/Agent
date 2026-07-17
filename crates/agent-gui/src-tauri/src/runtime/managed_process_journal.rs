@@ -4,7 +4,7 @@
 //! restarts and are restored into the registry; non-isolated leftovers are
 //! crash residue that gets reaped on the next launch and never displayed.
 //!
-//! Rows carry the owning LiveAgent instance's identity (pid + start time) so
+//! Rows carry the owning Agent instance's identity (pid + start time) so
 //! a second concurrently-running instance never treats a live sibling's
 //! children as crash residue.
 

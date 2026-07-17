@@ -666,15 +666,15 @@ pub(crate) fn run_shell_script_with_envs(
         }
         if shell_profile.platform == "windows" {
             stderr_str.push_str(
-                "LiveAgent warning: command exited, but stdout/stderr remained open after exit. \
+                "Agent warning: command exited, but stdout/stderr remained open after exit. \
 This usually means a background process inherited the tool pipes. Use ManagedProcess for \
-long-running Windows commands so LiveAgent can capture logs and stop the process tree.",
+long-running Windows commands so Agent can capture logs and stop the process tree.",
             );
         } else {
             stderr_str.push_str(
-                "LiveAgent warning: command exited, but stdout/stderr remained open after exit. \
+                "Agent warning: command exited, but stdout/stderr remained open after exit. \
 This usually means a background process inherited the tool pipes. Redirect long-running \
-process output to a log file, for example: `nohup command > /tmp/liveagent-task.log 2>&1 < /dev/null &`.",
+process output to a log file, for example: `nohup command > /tmp/agent-task.log 2>&1 < /dev/null &`.",
             );
         }
     }
@@ -776,7 +776,7 @@ mod tests {
         let registry = ShellRunRegistry::default();
         let token = registry.register("cancel-test");
         let temp_dir = std::env::temp_dir().join(format!(
-            "liveagent-shell-cancel-test-{}",
+            "agent-shell-cancel-test-{}",
             std::process::id()
         ));
         let _ = fs::create_dir_all(&temp_dir);
@@ -819,7 +819,7 @@ mod tests {
     #[test]
     fn run_shell_script_returns_when_background_process_keeps_stdio_open() {
         let temp_dir = std::env::temp_dir().join(format!(
-            "liveagent-shell-background-stdio-test-{}",
+            "agent-shell-background-stdio-test-{}",
             std::process::id()
         ));
         let _ = fs::create_dir_all(&temp_dir);
@@ -852,11 +852,11 @@ mod tests {
     #[test]
     fn run_shell_script_accepts_absolute_cwd_outside_workdir() {
         let workdir = std::env::temp_dir().join(format!(
-            "liveagent-shell-abs-cwd-workdir-{}",
+            "agent-shell-abs-cwd-workdir-{}",
             std::process::id()
         ));
         let external = std::env::temp_dir().join(format!(
-            "liveagent-shell-abs-cwd-external-{}",
+            "agent-shell-abs-cwd-external-{}",
             std::process::id()
         ));
         let _ = fs::create_dir_all(&workdir);
@@ -890,12 +890,12 @@ mod tests {
     #[test]
     fn run_shell_script_rejects_missing_absolute_cwd() {
         let workdir = std::env::temp_dir().join(format!(
-            "liveagent-shell-abs-cwd-missing-{}",
+            "agent-shell-abs-cwd-missing-{}",
             std::process::id()
         ));
         let _ = fs::create_dir_all(&workdir);
         let missing = std::env::temp_dir()
-            .join(format!("liveagent-missing-cwd-{}", std::process::id()))
+            .join(format!("agent-missing-cwd-{}", std::process::id()))
             .join("nope");
 
         let error = run_shell_script(

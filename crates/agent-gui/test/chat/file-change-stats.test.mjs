@@ -7,7 +7,7 @@ const fileChangeStats = loader.loadModule("src/lib/chat/messages/fileChangeStats
 const odometer = loader.loadModule("src/components/chat/OdometerNumber.tsx");
 const badge = loader.loadModule("src/components/chat/FileChangeBadge.tsx");
 
-const PREVIEW_META_KEY = "__liveagent_stream_preview";
+const PREVIEW_META_KEY = "__agent_stream_preview";
 
 function editCall(args) {
   return { type: "toolCall", id: "edit-1", name: "Edit", arguments: args };

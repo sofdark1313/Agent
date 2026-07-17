@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 func (m *Manager) SubscribeSettingsSync() (<-chan *gatewayv1.SettingsSyncEvent, func()) {

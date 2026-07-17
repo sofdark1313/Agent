@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/liveagent/agent-gateway/internal/config"
-	"github.com/liveagent/agent-gateway/internal/handler"
-	"github.com/liveagent/agent-gateway/internal/session"
+	"github.com/agent/agent-gateway/internal/config"
+	"github.com/agent/agent-gateway/internal/handler"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 func newChatCommandTestManager(t *testing.T) (*session.Manager, *session.AgentSession) {

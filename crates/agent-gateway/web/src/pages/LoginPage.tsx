@@ -58,7 +58,7 @@ export function LoginPage({ token, error, isSubmitting, onTokenChange, onSubmit 
             <div className="login-logo-mark">
               <Shield size={18} strokeWidth={2} />
             </div>
-            <h1 className="login-hero-title">LiveAgent Gateway</h1>
+            <h1 className="login-hero-title">Agent Gateway</h1>
           </div>
           <p className="login-hero-desc">
             安全连接到远程代理会话，在浏览器中获得完整的控制台体验。

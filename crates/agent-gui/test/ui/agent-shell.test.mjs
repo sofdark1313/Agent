@@ -44,6 +44,13 @@ test("global sidebar exposes task, project, management, and app-menu regions", (
   assert.match(sidebar, /AgentAppMenu/);
 });
 
+test("sidebar app menu does not render the bottom update button", () => {
+  const appMenu = read("src/components/app-shell/AgentAppMenu.tsx");
+
+  assert.doesNotMatch(appMenu, /AppUpdateButton/);
+  assert.doesNotMatch(appMenu, /showUpdateButton/);
+});
+
 test("task workspace uses compact topbar, document transcript, and floating composer", () => {
   assert.match(read("src/pages/chat/components/ChatHeader.tsx"), /data-agent-topbar/);
   assert.match(read("src/pages/chat/transcript/ChatTranscript.tsx"), /data-agent-transcript/);

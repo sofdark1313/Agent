@@ -1,7 +1,5 @@
 import { useLocale } from "../../i18n";
-import type { AppUpdateController } from "../../lib/appUpdates";
 import type { SectionId } from "../../pages/settings/types";
-import { AppUpdateButton } from "../AppUpdateButton";
 import { AgentMark } from "../brand/AgentMark";
 import { APP_NAME } from "../brand/brand";
 import { Info, Moon, MoreHorizontal, Settings, Sun } from "../icons";
@@ -18,20 +16,14 @@ type AgentAppMenuProps = {
   theme: "light" | "dark";
   onToggleTheme: () => void;
   onOpenSettings: (section?: SectionId) => void;
-  appUpdate?: AppUpdateController;
 };
 
-export function AgentAppMenu({
-  theme,
-  onToggleTheme,
-  onOpenSettings,
-  appUpdate,
-}: AgentAppMenuProps) {
+export function AgentAppMenu({ theme, onToggleTheme, onOpenSettings }: AgentAppMenuProps) {
   const { t } = useLocale();
   const ThemeIcon = theme === "dark" ? Moon : Sun;
 
   return (
-    <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5">
+    <div className="w-full">
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -75,14 +67,6 @@ export function AgentAppMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {appUpdate?.showUpdateButton ? (
-        <AppUpdateButton
-          appUpdate={appUpdate}
-          iconOnly
-          iconClassName="h-3.5 w-3.5"
-          className="h-8 w-8 rounded-lg bg-foreground px-0 text-background hover:bg-foreground/85 hover:text-background"
-        />
-      ) : null}
     </div>
   );
 }

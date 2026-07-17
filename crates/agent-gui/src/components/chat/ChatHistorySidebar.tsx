@@ -911,7 +911,6 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     theme,
     onToggleTheme,
     onOpenSettings,
-    appUpdate,
     onOpenSkillsHub,
     onOpenMcpHub,
   } = props;
@@ -1679,7 +1678,6 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
             theme={theme}
             onToggleTheme={onToggleTheme}
             onOpenSettings={onOpenSettings}
-            appUpdate={appUpdate}
           />
         </div>
       </div>

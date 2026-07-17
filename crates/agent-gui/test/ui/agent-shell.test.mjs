@@ -53,3 +53,11 @@ test("context tools and editor overlays share Agent workspace chrome", () => {
     /data-agent-editor-workspace/,
   );
 });
+
+test("settings uses Agent management navigation and content regions", () => {
+  const settings = read("src/pages/SettingsPage.tsx");
+
+  assert.match(settings, /data-agent-settings/);
+  assert.match(settings, /data-agent-settings-nav/);
+  assert.match(settings, /data-agent-settings-content/);
+});

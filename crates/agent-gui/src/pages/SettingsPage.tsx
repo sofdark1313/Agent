@@ -64,18 +64,14 @@ function NavItem({ icon, label, active, onClick }: NavItemProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`settings-nav-item group relative flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-all duration-150 ${
+      className={`settings-nav-item agent-nav-item group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors duration-150 ${
         active
-          ? "settings-nav-item-active bg-primary/10 font-medium text-primary"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          ? "settings-nav-item-active bg-foreground/[0.065] font-medium text-foreground"
+          : "text-muted-foreground hover:bg-foreground/[0.045] hover:text-foreground"
       }`}
     >
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors ${
-          active
-            ? "bg-primary/15 text-primary"
-            : "bg-muted/60 text-muted-foreground group-hover:bg-accent group-hover:text-foreground"
-        }`}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
       >
         {icon}
       </span>
@@ -214,9 +210,12 @@ export function SettingsPage(props: SettingsPageProps) {
   const onMac = isMacOsTauri();
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div data-agent-settings className="flex h-full flex-col bg-background">
       <div className="flex min-h-0 flex-1">
-        <aside className="settings-sidebar flex w-56 shrink-0 flex-col border-r border-border/60 bg-muted/20">
+        <aside
+          data-agent-settings-nav
+          className="settings-sidebar flex w-[220px] shrink-0 flex-col border-r border-border/60 bg-[hsl(var(--agent-sidebar))]"
+        >
           {onMac && <div data-tauri-drag-region className="h-[38px] shrink-0" />}
           <div className="border-b border-border/60 px-3 pb-3 pt-3">
             <button
@@ -229,8 +228,8 @@ export function SettingsPage(props: SettingsPageProps) {
             </button>
 
             <div className="mt-3 flex items-center gap-2.5 px-1">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                <Settings2 className="h-3.5 w-3.5 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background">
+                <Settings2 className="h-3.5 w-3.5" />
               </div>
               <span className="text-sm font-semibold tracking-tight">{t("settings.title")}</span>
             </div>
@@ -268,9 +267,9 @@ export function SettingsPage(props: SettingsPageProps) {
           </div>
         </aside>
 
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main data-agent-settings-content className="flex min-w-0 flex-1 flex-col">
           <MacOsTitleBarSpacer />
-          <div className="border-b px-6 py-3.5">
+          <div className="flex h-11 items-center border-b border-border/60 px-6">
             <div key={section} className="settings-section-title-enter text-base font-semibold">
               {sectionLabels[section]}
             </div>
@@ -278,7 +277,7 @@ export function SettingsPage(props: SettingsPageProps) {
 
           <div
             key={section}
-            className={`settings-section-enter flex-1 px-6 py-5 ${
+            className={`settings-section-enter flex-1 px-6 py-6 ${
               section === "hooks" || section === "providers" || section === "memory"
                 ? "flex min-h-0 flex-col overflow-hidden"
                 : "overflow-auto"

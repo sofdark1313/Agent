@@ -183,7 +183,212 @@ History 和 Memory 因此不能混为一谈：History 回答“当时发生了�
 
 ## 4. Chat Runtime：如何组织一次对话
 
+Chat Runtime 位于 React/TypeScript 层，是“用户请求如何变成模型请求，以及模型结果如何变成应用状态”的核心。它不负责直接实现文件系统或数据库，但负责决定什么时候加载上下文、暴露哪些工具、调用哪个 provider、怎样处理流式事件，以及何时持久化。
+
+### 4.1 主要入口
+
+| 关注点 | 主要路径 | 作用 |
+|---|---|---|
+| 页面与输入 | `crates/agent-gui/src/pages/ChatPage.tsx`、`src/pages/chat/components/ChatComposerBar.tsx` | 收集输入、模型、模式、附件和 workdir |
+| Text Turn | `src/pages/chat/turns/runTextConversationTurn.ts` | 不带本地工具的模型流式调用 |
+| Agent Turn | `src/pages/chat/turns/runAgentConversationTurn.ts` | 构建工具注册表、控制 compaction、运行工具循环和回合收尾 |
+| 上下文构造 | `src/pages/chat/runtime/conversationContextBuilders.ts` | 组装模型请求需要的消息与系统上下文 |
+| Conversation State | `src/lib/chat/conversation/conversationState.ts` | 管理 segment、summary、checkpoint 和请求可见状态 |
+| Agent Runner | `src/lib/chat/runner/agentRunner.ts` | provider 流式适配、round 推进、工具调用执行和 toolResult 汇总 |
+| Provider 层 | `src/lib/providers/llm.ts` | 将统一请求映射为 Anthropic、OpenAI、Gemini 或自定义 Provider API |
+
+表中的 `src/...` 都相对于 `crates/agent-gui/`。
+
+### 4.2 模型请求由哪些上下文块组成
+
+| 上下文块 | 主要来源 | 为什么需要处理 |
+|---|---|---|
+| System Prompt | 默认系统提示、用户设置、Skills Prompt、Memory Overview、Compaction Summary | 决定模型身份、规则、可见方法和长期知识 |
+| Messages | 当前 active segment 中的 user、assistant、toolResult | 提供本轮对话事实；发送前需要 sanitizer 清理不兼容或过大的内容 |
+| Tools | Builtin Registry 与动态 MCP Tools | 只有 tools 类模式才暴露；schema 必须与 executor 一致 |
+| Attachments | 上传文件、图片或已有附件引用 | 文件被导入受控 workspace 位置；图片 bytes 会按上下文策略处理 |
+| Hosted Search | Provider native search 或 probe 产生的搜索块 | 同时进入模型消息和 UI transcript，并保留来源状态 |
+| Summary Checkpoint | 已压缩的旧消息摘要 | 用较小 token 成本续接早期上下文 |
+
+构造上下文不是简单拼接字符串。Runtime 需要同时处理模型上下文窗口、provider 能力、工具 schema 成本、图片数据、历史 segment 边界和已有 summary。
+
+### 4.3 Provider 层为什么要统一
+
+`src/lib/providers/llm.ts` 把项目内部 provider 配置转换成不同厂商 API。各厂商对 thinking、tool choice、hosted search、cache control、Responses storage 和消息格式的支持不同。如果这些差异直接散落在 Chat 页面，Runtime 会很难维护。
+
+因此上层尽量使用统一的消息、工具和流式事件概念，Provider 层负责翻译。排查问题时要先判断：
+
+- 所有模型都异常：优先检查 Runtime、上下文或工具层。
+- 只有某个 provider 异常：优先检查 `llm.ts` 及该 provider 的请求/流式适配。
+- 只有 hosted search 或 thinking 异常：检查 provider 能力探测与对应事件聚合。
+
+### 4.4 流式事件如何进入 UI
+
+模型开始返回后，Runtime 持续处理多种事件：
+
+| 事件 | UI 表现 | 相关模块 |
+|---|---|---|
+| text delta | Assistant 文本逐字增长 | `liveTranscriptStore.ts`、`AssistantBubble.tsx` |
+| thinking delta | 思考区域更新 | Agent Runner、Assistant Bubble |
+| tool call / delta | 工具卡片出现，参数逐步完整 | `agentRunner.ts`、tool trace components |
+| tool execution status | 显示工具正在执行或已结束 | Hook lifecycle、ToolCallItem/ToolResultDisplay |
+| hosted search | 搜索状态、来源和锚点 | `messages/hostedSearch.ts`、HostedSearchGroupView |
+| usage | round token usage | `UsagePanel.tsx`，在 `agent-dev` 中更明显 |
+| done / error | 回合完成或错误状态 | Turn runner、Gateway Bridge events |
+
+桌面端还会把关键事件通过 `src/lib/chat/conversation/run/gatewayBridgeEvents.ts` 发布给 Gateway。WebUI 看到的是桌面 Runtime 的远程投影，不是自己重新运行一遍模型和工具。
+
+### 4.5 Hooks 生命周期
+
+Hooks 用于在 Agent 生命周期关键点执行 shell script 或 HTTP request：
+
+```text
+agent_start
+  turn_start
+    message_start
+    message_end
+    tool_execution_start
+    tool_execution_end
+  turn_end
+agent_end
+```
+
+一次用户请求可能有多个 turn：模型先调用 `Read`，工具完成后进入下一轮；之后模型调用 `Edit`，又进入下一轮。`createConversationHookLifecycle()` 会防止同一阶段被重复结束，并等待本轮工具结果全部返回后触发 `turn_end`。
+
+### 4.6 回合结束时发生什么
+
+最终回答生成后，系统还需要：
+
+1. 确保最后一个 message、turn 和 agent 生命周期已经结束。
+2. 把 transcript 转换为可持久化的 History Segment。
+3. 发布 history sync，使 GUI/WebUI 侧边栏刷新。
+4. 必要时异步生成对话标题。
+5. 请求静默 Memory 提取；`agent-dev` 可等待并展示更多状态，普通模式通常在后台运行。
+6. 释放取消信号、运行态缓存和本轮临时状态。
+
+### 4.7 修改 Chat Runtime 时的思考顺序
+
+假设要新增一种流式 block，至少要回答：
+
+1. Provider 如何产生该 block？
+2. Agent Runner 如何规范化并发出事件？
+3. Live Transcript 如何保存它？
+4. Assistant Bubble 如何渲染它？
+5. History 如何序列化与恢复它？
+6. Gateway/WebUI 是否要同步协议和渲染？
+7. Compaction sanitizer 是否应保留、裁剪或丢弃它？
+
+这套问题能避免只改 UI，导致重载历史后数据消失，或 WebUI 无法识别新类型。
+
 ## 5. Tools：模型如何执行真实操作
+
+LLM 本身只能生成内容。LiveAgent 的工具系统把“模型提出一个结构化调用”转换成真实操作，例如读取文件、运行 Shell、查询 Memory 或调用 MCP Server。
+
+### 5.1 Builtin Registry 是组合中心
+
+`crates/agent-gui/src/lib/tools/builtinRegistry.ts` 中的 `buildBuiltinToolRegistry()` 接收 workdir、provider、Skills/MCP 设置、runtime scope、系统工具选择、Todo 状态和 Subagent Runtime 等依赖，返回四项关键能力：
+
+| 返回值 | 含义 | 使用者 |
+|---|---|---|
+| `tools` | 暴露给模型的工具 schema 列表 | Provider 请求构造 |
+| `executeToolCall` | 根据名称找到 executor 并执行调用 | Agent Runner |
+| `metadataByName` | 工具展示名、分组、UI details 等元数据 | Transcript 与 Tool Trace UI |
+| `hasTool` | 判断一个工具名是否在当前 registry 中有效 | 参数保护、恢复和运行时判断 |
+
+Registry 同时维护 schema 与 executor 的映射。如果只把 schema 发给模型，却没有注册 executor，模型会“看见”工具但调用失败；如果只实现 executor，却没把 schema 加入 `tools`，模型永远不会主动调用它。
+
+### 5.2 一次工具调用的实际路径
+
+```mermaid
+sequenceDiagram
+    participant L as LLM
+    participant R as Agent Runner
+    participant B as Builtin Registry
+    participant E as Tool Executor
+    participant T as Tauri/Rust
+    participant U as Transcript UI
+
+    L->>R: toolCall(name, arguments)
+    R->>U: 展示 tool call
+    R->>B: executeToolCall(call)
+    B->>E: 按规范化名称分派
+    E->>T: invoke 本地能力（需要时）
+    T-->>E: 数据或结构化错误
+    E-->>B: toolResult
+    B-->>R: toolResult
+    R->>U: 展示执行结果
+    R->>L: 追加 toolResult 后继续推理
+```
+
+不是所有工具都必须进入 Rust。例如部分 Todo 或纯前端状态工具可在 TypeScript 内完成；涉及文件、Shell、数据库、MCP 进程等能力时通常需要 Tauri/Rust。
+
+### 5.3 主要工具 Bundle
+
+| Bundle | 典型工具或能力 | 关键路径 |
+|---|---|---|
+| File System | `Read`、`List`、`Glob`、`Grep`、`Write`、`Edit`、`Delete`、`Image` | `src/lib/tools/fsTools.ts`、`fileToolState.ts` |
+| Shell | Bash/Shell、ManagedProcess 相关能力 | `shellTools.ts`、`bashTimeoutPolicy.ts` |
+| SkillsManager | list/read/install/create/validate/package/ClawHub | `skillTools.ts` |
+| CronTaskManager | Cron task CRUD 与日志 | `cronTools.ts` |
+| McpManager | MCP 配置、诊断、test/restart/stop/tools | `mcpManagerTools.ts` |
+| Dynamic MCP | 把外部 server tools 转成模型工具 | `mcpTools.ts` |
+| MemoryManager | list/read/search/write/update/delete/accept | `memoryTools.ts` |
+| TodoWrite | 会话内任务清单，全量替换 | `todoTools.ts` |
+| Subagent | `Agent`、`SendMessage`、worktree 与 Message Bus | `src/lib/subagents/*` |
+
+### 5.4 工具可用性不是固定的
+
+Registry 会根据运行上下文决定工具集合：
+
+- `text` 模式根本不进入 Builtin Registry。
+- `runtimeScope=chat` 时可启用 Todo、部分进程或管理类能力。
+- Cron 等非 chat scope 会限制 MCP 写操作及某些生命周期操作。
+- Settings 中未选择的系统工具不会暴露。
+- MCP Server 必须 enabled 且 selected，动态工具才会加载。
+- Skill Access Policy 会限制模型对 Skills Root 的访问或修改。
+- Subagent 的 readonly/worktree mode 会得到不同的工具集合。
+
+因此“工具文件存在”不等于“当前模型能看到该工具”。排查时必须检查构建 Registry 时传入的 runtime 配置。
+
+### 5.5 文件工具的安全边界
+
+文件工具不仅执行 `readFile` 或 `writeFile`，还需要处理：
+
+- workdir 与 skills root 的根目录策略。
+- 相对路径、绝对路径和路径逃逸。
+- 工具调用失败时返回 `isError`，而不是把失败伪装成普通文本。
+- 文件修改状态和 UI diff 展示。
+- 图片工具的 URL、多来源和预览处理。
+- 删除等高风险操作的路径校验。
+
+统一案例中的 `Read(config.ts)` 只有在路径被解析到允许的 workspace 内时才应成功。
+
+### 5.6 GUI、WebUI 和 Gateway 的执行边界
+
+| 场景 | 谁编排 Tool Loop | 谁执行本地能力 |
+|---|---|---|
+| GUI 本地 Chat | 桌面 React Runtime | TypeScript executor + Tauri/Rust |
+| WebUI 远程 Chat | 仍然是桌面 React Runtime | 仍然是桌面 TypeScript executor + Tauri/Rust |
+| Gateway | 不编排本地 Tool Loop | 不执行本地业务工具，只转发命令和事件 |
+
+如果 WebUI 上 `Read` 失败但 GUI 正常，优先检查 WebUI 命令是否抵达桌面会话、Gateway Bridge 是否在线、workdir 是否正确，而不是在浏览器里寻找文件读取实现。
+
+### 5.7 新增一个 Builtin Tool 要改什么
+
+假设新增 `ProjectInfo` 工具，完整影响面通常包括：
+
+1. **Schema**：定义稳定的工具名称、描述和 JSON 参数。
+2. **Executor**：验证参数，执行操作，返回标准 `toolResult`。
+3. **Registry**：把 bundle 合并到当前 runtime scope 的工具集合。
+4. **Metadata**：定义 UI 分组、展示标题和 details 形状。
+5. **Tauri Command**：如果需要系统能力，在 Rust 注册 invoke command，并保持前端参数名一致。
+6. **错误边界**：明确用户错误、路径错误、系统错误和取消分别如何返回。
+7. **可观测性**：确保 agent-dev、Hook lifecycle 和 Gateway trace 能看到调用状态。
+8. **History/Compaction**：决定结果是否持久化、是否需要裁剪，以及摘要是否应保留关键信息。
+9. **GUI/WebUI**：如果新增专用 details UI，需要两端同步或提供通用降级渲染。
+10. **测试**：至少覆盖 schema、分派、成功结果、错误结果、权限/runtime scope 和 UI details。
+
+只完成前两项通常只能得到“本地似乎能跑”的原型，不能算完整接入 LiveAgent。
 
 ## 6. Skills 与 MCP：方法知识和外部能力如何接入
 

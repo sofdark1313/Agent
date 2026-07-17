@@ -249,6 +249,8 @@ import {
   takeNextQueuedChatTurn,
 } from "./chat/queue/chatTurnQueue";
 import { ChatSidebarContainer } from "./chat/sidebar/ChatSidebarContainer";
+import { ConversationTodoPanel } from "./chat/components/ConversationTodoPanel";
+import { ConversationUsagePanel } from "./chat/components/ConversationUsagePanel";
 import { ToolApprovalCard } from "./chat/components/ToolApprovalCard";
 import { McpHubPage } from "./mcp-hub/McpHubPage";
 import type { SectionId } from "./settings/types";
@@ -5358,6 +5360,21 @@ export function ChatPage(props: ChatPageProps) {
                 onMoveQueuedTurnUp={moveQueuedTurnUp}
                 onEditQueuedTurn={editQueuedTurn}
                 onRemoveQueuedTurn={removeQueuedTurn}
+                usagePanel={
+                  <ConversationUsagePanel
+                    show={isAgentDevExecutionMode}
+                    historyItems={historyRenderItems}
+                    liveTranscriptStore={liveTranscriptStore}
+                    contextWindow={currentModelContextWindow}
+                  />
+                }
+                taskListPanel={
+                  <ConversationTodoPanel
+                    key={currentConversationId}
+                    historyItems={historyRenderItems}
+                    liveTranscriptStore={liveTranscriptStore}
+                  />
+                }
                 onHeightChange={setComposerOverlayHeight}
               />
               {visibleToolApprovals[0] ? (

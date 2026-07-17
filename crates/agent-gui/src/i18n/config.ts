@@ -285,6 +285,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.tool.todoEmpty": "暂无任务",
     "chat.tool.expandActivity": "展开工具活动",
     "chat.tool.collapseActivity": "收起工具活动",
+    "chat.tool.ranCommand": "运行了 1 个命令",
+    "chat.tool.ranCommands": "运行了 {count} 个命令",
+    "chat.tool.usedTool": "使用了 1 个工具",
+    "chat.tool.usedTools": "使用了 {count} 个工具",
     "chat.hookWarningTitle": "Hooks 告警",
 
     /* ── MCP chip ── */
@@ -2121,6 +2125,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.tool.todoEmpty": "No tasks yet",
     "chat.tool.expandActivity": "Expand tool activity",
     "chat.tool.collapseActivity": "Collapse tool activity",
+    "chat.tool.ranCommand": "Ran 1 command",
+    "chat.tool.ranCommands": "Ran {count} commands",
+    "chat.tool.usedTool": "Used 1 tool",
+    "chat.tool.usedTools": "Used {count} tools",
     "chat.hookWarningTitle": "Hooks Warning",
 
     /* ── MCP chip ── */

@@ -267,6 +267,8 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   onMoveQueuedTurnUp: (id: string) => void;
   onEditQueuedTurn: (id: string) => void;
   onRemoveQueuedTurn: (id: string) => void;
+  usagePanel?: ReactNode;
+  taskListPanel?: ReactNode;
   onHeightChange?: (height: number) => void;
 }) {
   const {
@@ -306,6 +308,8 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     onMoveQueuedTurnUp,
     onEditQueuedTurn,
     onRemoveQueuedTurn,
+    usagePanel,
+    taskListPanel,
     onHeightChange,
   } = props;
   const { t } = useLocale();
@@ -547,6 +551,8 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
       className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-4"
     >
       <div className="pointer-events-auto relative w-full max-w-[768px]">
+        {usagePanel}
+        {taskListPanel}
         {queuedTurns.length > 0 ? (
           <div
             ref={queuePanelRef}

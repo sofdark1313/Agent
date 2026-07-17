@@ -9,11 +9,9 @@ import { useScrollFollow } from "../../../../lib/chat-scroll/useScrollFollow";
 import { groupRoundBlocks } from "./assistantBubbleUtils";
 import { HostedSearchGroupView } from "./HostedSearchGroupView";
 import { CompactingText, VibingText } from "./StatusText";
-import { TodoListBlock } from "./TodoListView";
 import { MemoToolCallItem } from "./ToolCallItem";
 import { getNativeDisplayImagePayload, NativeDisplayImageBlock } from "./ToolImages";
 import { ToolTraceGroup } from "./ToolTraceGroup";
-import { UsagePanel } from "./UsagePanel";
 
 function ThinkingBlock({ text }: { text: string }) {
   const hasText = /\S/.test(text || "");
@@ -79,8 +77,6 @@ export const RoundContent = memo(function RoundContent(props: {
   const {
     round,
     showLabel,
-    showUsage,
-    usageContextWindow,
     isLive,
     isActive,
     renderMode,
@@ -90,7 +86,13 @@ export const RoundContent = memo(function RoundContent(props: {
   } = props;
   const hasContent =
     round.blocks.some((block) => {
-      if (block.kind === "tool" || block.kind === "hostedSearch") return true;
+      if (block.kind === "tool") {
+        if (block.item.toolCall.name === "TodoWrite" && !block.item.toolResult?.isError) {
+          return false;
+        }
+        return true;
+      }
+      if (block.kind === "hostedSearch") return true;
       return block.text.trim().length > 0;
     }) ||
     (isActive && isLive);
@@ -134,10 +136,10 @@ export const RoundContent = memo(function RoundContent(props: {
             return null;
           }
 
-          // TodoWrite renders as a bare checklist in the reply flow; only
-          // failed calls fall through to the tool card so the error is visible.
+          // Successful TodoWrite snapshots are rendered once above the
+          // composer. Failed calls still fall through so the error is visible.
           if (block.item.toolCall.name === "TodoWrite" && !block.item.toolResult?.isError) {
-            return <TodoListBlock key={block.key} item={block.item} />;
+            return null;
           }
 
           return (
@@ -184,10 +186,6 @@ export const RoundContent = memo(function RoundContent(props: {
           />
         );
       })}
-
-      {showUsage ? (
-        <UsagePanel usage={round.meta?.usage} contextWindow={usageContextWindow} />
-      ) : null}
     </div>
   );
 });

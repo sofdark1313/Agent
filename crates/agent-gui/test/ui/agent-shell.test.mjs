@@ -137,6 +137,72 @@ test("chat composer follows the Codex input surface and action hierarchy", () =>
   assert.match(css, /\.agent-composer-add-menu/);
 });
 
+test("conversation task list is a single collapsed panel above the composer", () => {
+  const panelPath = path.join(root, "src/pages/chat/components/ConversationTodoPanel.tsx");
+  assert.equal(fs.existsSync(panelPath), true, "conversation task panel is required");
+
+  const panel = read("src/pages/chat/components/ConversationTodoPanel.tsx");
+  const composer = read("src/pages/chat/components/ChatComposerBar.tsx");
+  const chatPage = read("src/pages/ChatPage.tsx");
+
+  assert.match(panel, /data-agent-conversation-todos/);
+  assert.match(panel, /useState\(false\)/);
+  assert.match(panel, /useSyncExternalStore/);
+  assert.match(panel, /findLatestConversationTodos/);
+  assert.match(composer, /taskListPanel\?: ReactNode/);
+  assert.match(composer, /\{taskListPanel\}/);
+  assert.match(chatPage, /<ConversationTodoPanel/);
+  assert.match(chatPage, /key=\{currentConversationId\}/);
+  assert.match(chatPage, /historyItems=\{historyRenderItems\}/);
+  assert.match(chatPage, /liveTranscriptStore=\{liveTranscriptStore\}/);
+});
+
+test("conversation usage is maintained once above the composer", () => {
+  const usagePanelPath = path.join(root, "src/pages/chat/components/ConversationUsagePanel.tsx");
+  assert.equal(fs.existsSync(usagePanelPath), true, "conversation usage panel is required");
+
+  const usagePanel = read("src/pages/chat/components/ConversationUsagePanel.tsx");
+  const composer = read("src/pages/chat/components/ChatComposerBar.tsx");
+  const chatPage = read("src/pages/ChatPage.tsx");
+  const round = read("src/pages/chat/components/assistant-bubble/RoundContent.tsx");
+
+  assert.match(usagePanel, /data-agent-conversation-usage/);
+  assert.match(usagePanel, /useSyncExternalStore/);
+  assert.match(usagePanel, /findLatestConversationUsage/);
+  assert.match(composer, /usagePanel\?: ReactNode/);
+  assert.match(composer, /\{usagePanel\}/);
+  assert.match(chatPage, /<ConversationUsagePanel/);
+  assert.match(chatPage, /show=\{isAgentDevExecutionMode\}/);
+  assert.doesNotMatch(round, /<UsagePanel/);
+});
+
+test("successful TodoWrite calls stay out of the transcript message flow", () => {
+  const round = read("src/pages/chat/components/assistant-bubble/RoundContent.tsx");
+  const todoView = read("src/pages/chat/components/assistant-bubble/TodoListView.tsx");
+
+  assert.doesNotMatch(round, /TodoListBlock/);
+  assert.match(
+    round,
+    /toolCall\.name === "TodoWrite" && !block\.item\.toolResult\?\.isError\)[\s\S]*?return null/,
+  );
+  assert.match(
+    round,
+    /block\.kind === "tool"[\s\S]*?toolCall\.name === "TodoWrite"[\s\S]*?return false/,
+  );
+  assert.doesNotMatch(todoView, /export function TodoListBlock/);
+});
+
+test("ordinary tool activity is summarized and collapsed by default", () => {
+  const group = read("src/pages/chat/components/assistant-bubble/ToolTraceGroup.tsx");
+  const utils = read("src/pages/chat/components/assistant-bubble/assistantBubbleUtils.ts");
+
+  assert.match(group, /data-agent-tool-activity/);
+  assert.match(group, /useState\(false\)/);
+  assert.doesNotMatch(group, /shouldAutoOpen|setOpen\(true\)/);
+  assert.match(utils, /kind: "toolGroup"/);
+  assert.doesNotMatch(utils, /if \(pendingTools\.length === 1\)/);
+});
+
 test("context tools and editor overlays share Agent workspace chrome", () => {
   assert.match(read("src/components/project-tools/RightDockPanel.tsx"), /data-agent-context-dock/);
   assert.match(read("src/components/project-tools/RightDockTabStrip.tsx"), /data-agent-dock-tabs/);

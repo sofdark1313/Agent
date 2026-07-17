@@ -93,6 +93,41 @@ test("groupRoundBlocks keys survive a block being inserted before them", () => {
   assert.equal(keysAfter[0], "thinking-1");
 });
 
+test("a single ordinary tool is normalized into a collapsed activity group", () => {
+  const grouped = bubbleUtils.groupRoundBlocks([
+    {
+      kind: "tool",
+      item: {
+        toolCall: {
+          type: "toolCall",
+          id: "call-read",
+          name: "Read",
+          arguments: { path: "src/App.tsx" },
+        },
+      },
+    },
+  ]);
+
+  assert.equal(grouped.length, 1);
+  assert.equal(grouped[0].kind, "toolGroup");
+  assert.equal(grouped[0].items.length, 1);
+  assert.equal(grouped[0].items[0].toolCall.name, "Read");
+});
+
+test("image todo and agent calls keep their dedicated rendering paths", () => {
+  for (const name of ["Image", "TodoWrite", "Agent"]) {
+    const grouped = bubbleUtils.groupRoundBlocks([
+      {
+        kind: "tool",
+        item: {
+          toolCall: { type: "toolCall", id: `call-${name}`, name, arguments: {} },
+        },
+      },
+    ]);
+    assert.equal(grouped[0].kind, "tool");
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Round keys: history rounds are r<n>; rebuilds are deterministic
 

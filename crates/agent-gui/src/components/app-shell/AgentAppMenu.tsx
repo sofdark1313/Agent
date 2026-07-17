@@ -2,13 +2,12 @@ import { useLocale } from "../../i18n";
 import type { SectionId } from "../../pages/settings/types";
 import { AgentMark } from "../brand/AgentMark";
 import { APP_NAME } from "../brand/brand";
-import { Info, Moon, MoreHorizontal, Settings, Sun } from "../icons";
+import { Moon, MoreHorizontal, Settings, Sun } from "../icons";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
@@ -56,14 +55,6 @@ export function AgentAppMenu({ theme, onToggleTheme, onOpenSettings }: AgentAppM
           <DropdownMenuItem onSelect={onToggleTheme} className="gap-2 rounded-lg px-2.5 py-2">
             <ThemeIcon className="h-4 w-4" />
             {t("settings.appearance")}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator className="my-1 bg-border/60" />
-          <DropdownMenuItem
-            onSelect={() => onOpenSettings("about")}
-            className="gap-2 rounded-lg px-2.5 py-2"
-          >
-            <Info className="h-4 w-4" />
-            {t("settings.navAbout")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,10 +1,19 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 import { useLocale } from "../i18n";
+import { dispatchAppCommand } from "../lib/appCommands";
 import { cn } from "../lib/shared/utils";
+import type { SectionId } from "../pages/settings/types";
 import { AgentMark } from "./brand/AgentMark";
 import { Maximize2, Minimize2, Minus, X } from "./icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 type TauriRuntimeWindow = Window & {
   __TAURI__?: unknown;
@@ -29,7 +38,43 @@ function reportWindowChromeError(action: string, error: unknown) {
   console.error(`failed to ${action} Agent window`, error);
 }
 
-export function WindowsTitleBar() {
+function MenuShortcut({ children }: { children: ReactNode }) {
+  return <span className="ml-auto pl-6 text-[11px] text-muted-foreground/65">{children}</span>;
+}
+
+function TitleBarMenu(props: {
+  id: "file" | "edit" | "view" | "help";
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            data-agent-window-menu={props.id}
+            className="h-6 rounded px-2 text-[12px] text-foreground/70 transition-colors hover:bg-foreground/[0.06] hover:text-foreground data-[popup-open]:bg-foreground/[0.08]"
+          />
+        }
+      >
+        {props.label}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={3}
+        className="min-w-52 rounded-lg border-border/70 bg-popover/98 p-1 shadow-[var(--agent-shadow-menu)]"
+      >
+        {props.children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function WindowsTitleBar(props: {
+  onOpenSettings?: (section?: SectionId) => void;
+  onToggleTheme?: () => void;
+}) {
   const { t } = useLocale();
   const [isVisible, setIsVisible] = useState(() => isWindowsTauriRuntime());
   const [isMaximized, setIsMaximized] = useState(false);
@@ -122,8 +167,40 @@ export function WindowsTitleBar() {
     };
   }, [getAppWindow, isVisible, syncMaximized]);
 
+  useEffect(() => {
+    if (!isVisible) return undefined;
+
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!event.ctrlKey || event.altKey || event.metaKey) return;
+      const key = event.key.toLowerCase();
+
+      if (key === "n" && !event.shiftKey) {
+        event.preventDefault();
+        dispatchAppCommand("newChat");
+      } else if (key === "," && !event.shiftKey) {
+        event.preventDefault();
+        props.onOpenSettings?.();
+      } else if (key === "l" && !event.shiftKey) {
+        event.preventDefault();
+        dispatchAppCommand("focusComposer");
+      } else if (key === "b" && event.shiftKey) {
+        event.preventDefault();
+        dispatchAppCommand("toggleProjectTools");
+      } else if (key === "b") {
+        event.preventDefault();
+        dispatchAppCommand("toggleSidebar");
+      }
+    };
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [isVisible, props.onOpenSettings]);
+
   const startDragging = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof HTMLElement && event.target.closest("button")) {
+        return;
+      }
       if (event.button !== 0 || event.detail !== 1) {
         return;
       }
@@ -145,6 +222,9 @@ export function WindowsTitleBar() {
 
   const handleTitleDoubleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
+      if (event.target instanceof HTMLElement && event.target.closest("button")) {
+        return;
+      }
       if (event.button !== 0) {
         return;
       }
@@ -190,6 +270,76 @@ export function WindowsTitleBar() {
         <span className="truncate text-[12px] font-medium leading-[1.45] tracking-[0.01em] text-foreground/80">
           {t("app.name")}
         </span>
+        <div className="ml-1 flex h-full items-center gap-0.5">
+          <TitleBarMenu id="file" label={t("window.menu.file")}>
+            <DropdownMenuItem
+              onSelect={() => dispatchAppCommand("newChat")}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.newChat")}
+              <MenuShortcut>Ctrl+N</MenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 bg-border/60" />
+            <DropdownMenuItem
+              disabled={!props.onOpenSettings}
+              onSelect={() => props.onOpenSettings?.()}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.settings")}
+              <MenuShortcut>Ctrl+,</MenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 bg-border/60" />
+            <DropdownMenuItem onSelect={closeWindow} className="rounded-md px-2 py-1.5 text-xs">
+              {t("window.menu.exit")}
+              <MenuShortcut>Alt+F4</MenuShortcut>
+            </DropdownMenuItem>
+          </TitleBarMenu>
+
+          <TitleBarMenu id="edit" label={t("window.menu.edit")}>
+            <DropdownMenuItem
+              onSelect={() => dispatchAppCommand("focusComposer")}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.focusComposer")}
+              <MenuShortcut>Ctrl+L</MenuShortcut>
+            </DropdownMenuItem>
+          </TitleBarMenu>
+
+          <TitleBarMenu id="view" label={t("window.menu.view")}>
+            <DropdownMenuItem
+              onSelect={() => dispatchAppCommand("toggleSidebar")}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.toggleSidebar")}
+              <MenuShortcut>Ctrl+B</MenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => dispatchAppCommand("toggleProjectTools")}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.toggleProjectTools")}
+              <MenuShortcut>Ctrl+Shift+B</MenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 bg-border/60" />
+            <DropdownMenuItem
+              disabled={!props.onToggleTheme}
+              onSelect={() => props.onToggleTheme?.()}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.appearance")}
+            </DropdownMenuItem>
+          </TitleBarMenu>
+
+          <TitleBarMenu id="help" label={t("window.menu.help")}>
+            <DropdownMenuItem
+              disabled={!props.onOpenSettings}
+              onSelect={() => props.onOpenSettings?.("about")}
+              className="rounded-md px-2 py-1.5 text-xs"
+            >
+              {t("window.menu.about")}
+            </DropdownMenuItem>
+          </TitleBarMenu>
+        </div>
       </div>
 
       <fieldset

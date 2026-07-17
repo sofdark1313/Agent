@@ -101,7 +101,7 @@ function createRegistryHarness() {
   return { loader, runnerCalls, listedServerIds, listedServerCommands };
 }
 
-async function buildRegistry(harness, { withSubagentRuntime, storeIpc } = {}) {
+async function buildRegistry(harness, { withSubagentRuntime, storeIpc, approval } = {}) {
   const { loader } = harness;
   const { buildBuiltinToolRegistry } = loader.loadModule("src/lib/tools/builtinRegistry.ts");
   const { createFileToolState } = loader.loadModule("src/lib/tools/fileToolState.ts");
@@ -114,6 +114,7 @@ async function buildRegistry(harness, { withSubagentRuntime, storeIpc } = {}) {
     runtimeScope: "chat",
     selectedSystemToolIds: [],
     getMcpSettings: () => mcpSettingsHolder.value,
+    approval,
   };
   if (!withSubagentRuntime) {
     return { registry: await buildBuiltinToolRegistry(baseParams), mcpSettingsHolder };
@@ -157,6 +158,42 @@ test("registry without a subagent runtime exposes neither Agent nor SendMessage"
   // Sanity: the base surface is otherwise intact.
   assert.ok(names.includes("Read"));
   assert.ok(names.includes("mcp_docs_search"));
+});
+
+test("registry approval gate blocks a write before its executor runs", async () => {
+  const harness = createRegistryHarness();
+  const requests = [];
+  const { registry } = await buildRegistry(harness, {
+    approval: {
+      policy: "ask",
+      customRules: {
+        allowWorkspaceWrites: false,
+        allowCommands: false,
+        allowNetwork: false,
+        allowMcp: false,
+        allowOutsideWorkspace: false,
+      },
+      sessionId: "approval-run",
+      async requestApproval(input) {
+        requests.push(input);
+        throw new Error("approval denied in test");
+      },
+    },
+  });
+
+  await assert.rejects(
+    () =>
+      registry.executeToolCall({
+        type: "toolCall",
+        id: "write-approval",
+        name: "Write",
+        arguments: { path: "notes.txt", content: "blocked" },
+      }),
+    /approval denied in test/,
+  );
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].assessment.category, "write");
+  assert.equal(requests[0].sessionId, "approval-run");
 });
 
 test("registry with a subagent runtime exposes Agent and the parent SendMessage", async () => {

@@ -3,10 +3,8 @@ import {
   ArrowLeft,
   BookOpen,
   Brain,
-  Clock3,
   Cloud,
   Cpu,
-  Info,
   Key,
   Settings2,
   Wrench,
@@ -17,7 +15,6 @@ import { isMacOsTauri, MacOsTitleBarSpacer } from "../components/MacOsTitleBarSp
 import { useLocale } from "../i18n";
 import { AboutSection } from "./settings/AboutSection";
 import { AgentsSection } from "./settings/AgentsSection";
-import { CronSection } from "./settings/CronSection";
 import { HooksSection } from "./settings/HooksSection";
 import { MemoryPanel } from "./settings/memory/MemoryPanel";
 import { ProvidersSection } from "./settings/ProvidersSection";
@@ -85,7 +82,7 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    labelKey: "settings.groupGeneral",
+    labelKey: "settings.groupPersonal",
     items: [
       { id: "system", icon: <Settings2 className="h-3.5 w-3.5" /> },
       { id: "providers", icon: <Cpu className="h-3.5 w-3.5" /> },
@@ -93,29 +90,14 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    labelKey: "settings.groupIntelligence",
+    labelKey: "settings.groupIntegrationsCoding",
     items: [
       { id: "memory", icon: <Brain className="h-3.5 w-3.5" /> },
       { id: "systemTools", icon: <Wrench className="h-3.5 w-3.5" /> },
-    ],
-  },
-  {
-    labelKey: "settings.groupAutomation",
-    items: [
       { id: "hooks", icon: <Zap className="h-3.5 w-3.5" /> },
-      { id: "cron", icon: <Clock3 className="h-3.5 w-3.5" /> },
-    ],
-  },
-  {
-    labelKey: "settings.groupConnectivity",
-    items: [
       { id: "ssh", icon: <Key className="h-3.5 w-3.5" /> },
       { id: "remote", icon: <Cloud className="h-3.5 w-3.5" /> },
     ],
-  },
-  {
-    labelKey: "settings.groupOther",
-    items: [{ id: "about", icon: <Info className="h-3.5 w-3.5" /> }],
   },
 ];
 
@@ -141,7 +123,6 @@ export function SettingsPage(props: SettingsPageProps) {
       ssh: t("settings.navSsh"),
       memory: t("settings.navMemory"),
       hooks: t("settings.navHooks"),
-      cron: t("settings.navCron"),
       remote: t("settings.navRemote"),
       about: t("settings.navAbout"),
     }),
@@ -166,7 +147,7 @@ export function SettingsPage(props: SettingsPageProps) {
   }, [initialSection]);
 
   useEffect(() => {
-    if (allNavItems.some((item) => item.id === section)) {
+    if (section === "about" || allNavItems.some((item) => item.id === section)) {
       return;
     }
     setSection(allNavItems[0]?.id ?? "system");
@@ -183,8 +164,6 @@ export function SettingsPage(props: SettingsPageProps) {
         return <SystemToolsSection settings={settings} setSettings={setSettings} />;
       case "hooks":
         return <HooksSection settings={settings} setSettings={setSettings} />;
-      case "cron":
-        return <CronSection settings={settings} setSettings={setSettings} />;
       case "agents":
         return <AgentsSection settings={settings} setSettings={setSettings} />;
       case "ssh":

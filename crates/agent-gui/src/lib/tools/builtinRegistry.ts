@@ -33,6 +33,12 @@ import { createSSHManagerTools, type SshManagerSessionChange } from "./sshManage
 import type { SystemToolId, SystemToolRuntimeScope } from "./systemToolOptions";
 import { createTerminalTools } from "./terminalTools";
 import { createTodoTools, type TodoToolState } from "./todoTools";
+import {
+  type ApprovalPolicy,
+  type CustomApprovalRules,
+  enforceToolApproval,
+  type ToolApprovalRequester,
+} from "./toolApprovalPolicy";
 import { createTunnelManagerTools, type TunnelManagerChange } from "./tunnelManagerTools";
 
 export type BuiltinToolRegistry = {
@@ -46,7 +52,17 @@ export type BuiltinToolRegistry = {
   hasTool: (toolName: string) => boolean;
 };
 
-function createBuiltinToolRegistry(bundles: BuiltinToolBundle[]): BuiltinToolRegistry {
+export type BuiltinToolApprovalOptions = {
+  policy: ApprovalPolicy;
+  customRules: CustomApprovalRules;
+  sessionId: string;
+  requestApproval: ToolApprovalRequester;
+};
+
+function createBuiltinToolRegistry(
+  bundles: BuiltinToolBundle[],
+  options?: { workdir: string; approval?: BuiltinToolApprovalOptions },
+): BuiltinToolRegistry {
   const tools: BuiltinToolBundle["tools"] = [];
   const metadataByName = new Map<string, BuiltinToolMetadata>();
   const executorsByName = new Map<string, BuiltinToolBundle["executeToolCall"]>();
@@ -115,6 +131,18 @@ function createBuiltinToolRegistry(bundles: BuiltinToolBundle[]): BuiltinToolReg
       }
       const effectiveToolCall =
         resolvedToolName === toolCall.name ? toolCall : { ...toolCall, name: resolvedToolName };
+      if (options?.approval) {
+        await enforceToolApproval({
+          policy: options.approval.policy,
+          customRules: options.approval.customRules,
+          workdir: options.workdir,
+          sessionId: options.approval.sessionId,
+          toolCall: effectiveToolCall,
+          metadata: metadataByName.get(resolvedToolName),
+          signal,
+          requestApproval: options.approval.requestApproval,
+        });
+      }
       return execute(effectiveToolCall, signal, context);
     },
   };
@@ -154,6 +182,7 @@ type BuildBuiltinBaseToolRegistryParams = {
   sshManagerRemoteAllowed?: boolean;
   onSshSessionsChanged?: (change: SshManagerSessionChange) => void | Promise<void>;
   onTunnelsChanged?: (change: TunnelManagerChange) => void | Promise<void>;
+  approval?: BuiltinToolApprovalOptions;
 };
 
 const resolveHomeDir = () => homeDir();
@@ -263,10 +292,16 @@ export async function buildBuiltinToolRegistry(
 
   const subagentRuntime = params.subagentRuntime;
   if (!subagentRuntime) {
-    return createBuiltinToolRegistry([...baseBundles, ...todoBundles]);
+    return createBuiltinToolRegistry([...baseBundles, ...todoBundles], {
+      workdir: params.workdir,
+      approval: params.approval,
+    });
   }
 
-  const baseRegistry = createBuiltinToolRegistry(baseBundles);
+  const baseRegistry = createBuiltinToolRegistry(baseBundles, {
+    workdir: params.workdir,
+    approval: params.approval,
+  });
   // The Agent tool description embeds the roster, so the store must be
   // hydrated before the bundle is created. Roster load failures degrade to an
   // empty roster instead of blocking the whole registry.
@@ -283,36 +318,40 @@ export async function buildBuiltinToolRegistry(
       })
     : null;
   const parentBundles = parentMessageBundle ? [...baseBundles, parentMessageBundle] : baseBundles;
-  return createBuiltinToolRegistry([
-    ...parentBundles,
-    ...todoBundles,
-    createSubagentTools({
-      providerId: subagentRuntime.providerId,
-      model: subagentRuntime.model,
-      runtime: subagentRuntime.runtime,
-      runtimePlatform: params.runtimePlatform,
-      workdir: params.workdir,
-      resolveHomeDir,
-      sessionId: subagentRuntime.sessionId,
-      templates: subagentRuntime.templates,
-      store: subagentRuntime.store,
-      scheduler: subagentRuntime.scheduler,
-      baseTools: baseRegistry.tools,
-      executeToolCall: baseRegistry.executeToolCall,
-      metadataByName: baseRegistry.metadataByName,
-      createSubagentToolRegistry: async (workdir) =>
-        createBuiltinToolRegistry(
-          await buildBaseBuiltinToolBundles({
-            ...params,
-            workdir,
-            fileState: createFileToolState(),
-            skillsEnabled: false,
-            applyMcpOps: undefined,
-            selectedSystemToolIds: [],
-            mcpLoadFailureMode: "continue",
-            memoryToolMode: "ro",
-          }),
-        ),
-    }),
-  ]);
+  return createBuiltinToolRegistry(
+    [
+      ...parentBundles,
+      ...todoBundles,
+      createSubagentTools({
+        providerId: subagentRuntime.providerId,
+        model: subagentRuntime.model,
+        runtime: subagentRuntime.runtime,
+        runtimePlatform: params.runtimePlatform,
+        workdir: params.workdir,
+        resolveHomeDir,
+        sessionId: subagentRuntime.sessionId,
+        templates: subagentRuntime.templates,
+        store: subagentRuntime.store,
+        scheduler: subagentRuntime.scheduler,
+        baseTools: baseRegistry.tools,
+        executeToolCall: baseRegistry.executeToolCall,
+        metadataByName: baseRegistry.metadataByName,
+        createSubagentToolRegistry: async (workdir) =>
+          createBuiltinToolRegistry(
+            await buildBaseBuiltinToolBundles({
+              ...params,
+              workdir,
+              fileState: createFileToolState(),
+              skillsEnabled: false,
+              applyMcpOps: undefined,
+              selectedSystemToolIds: [],
+              mcpLoadFailureMode: "continue",
+              memoryToolMode: "ro",
+            }),
+            { workdir, approval: params.approval },
+          ),
+      }),
+    ],
+    { workdir: params.workdir, approval: params.approval },
+  );
 }

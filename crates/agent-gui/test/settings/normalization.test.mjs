@@ -8,6 +8,36 @@ const normalize = loader.loadModule("src/lib/settings/normalize.ts");
 const sync = loader.loadModule("src/lib/settings/sync.ts");
 const RIGHT_DOCK_TAB_IDS = settings.RIGHT_DOCK_SINGLETON_TAB_IDS;
 
+test("system approval settings normalize custom rules and migrate legacy execution modes", () => {
+  const legacyAsk = settings.normalizeSystemSettings({ executionMode: "text" });
+  assert.equal(legacyAsk.approvalPolicy, "ask");
+  assert.equal(legacyAsk.executionMode, "tools");
+
+  const normalized = settings.normalizeSystemSettings({
+    executionMode: "tools",
+    approvalPolicy: "custom",
+    customApprovalRules: {
+      allowWorkspaceWrites: true,
+      allowCommands: 1,
+      allowNetwork: true,
+      allowMcp: false,
+      allowOutsideWorkspace: true,
+    },
+  });
+  assert.equal(normalized.executionMode, "tools");
+  assert.equal(normalized.approvalPolicy, "custom");
+  assert.deepEqual(normalized.customApprovalRules, {
+    allowWorkspaceWrites: true,
+    allowCommands: false,
+    allowNetwork: true,
+    allowMcp: false,
+    allowOutsideWorkspace: true,
+  });
+
+  const defaults = settings.getDefaultSettings();
+  assert.equal(defaults.system.approvalPolicy, "agent");
+});
+
 test("basic provider field normalizers trim values and remove duplicate models", () => {
   assert.equal(normalize.normalizeBaseUrl(" https://api.example.com/v1/// "), "https://api.example.com/v1//");
   assert.equal(normalize.normalizeBaseUrl(" https:/api.example.com/v1/ "), "https://api.example.com/v1");

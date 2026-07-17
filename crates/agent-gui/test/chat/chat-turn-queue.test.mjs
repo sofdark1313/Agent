@@ -25,6 +25,14 @@ function turn(id, conversationId, text) {
     draft: draft(text),
     uploadedFiles: [],
     executionMode: "tools",
+    approvalPolicy: "ask",
+    customApprovalRules: {
+      allowWorkspaceWrites: false,
+      allowCommands: false,
+      allowNetwork: false,
+      allowMcp: false,
+      allowOutsideWorkspace: false,
+    },
     workdir: "/workspace",
     selectedSystemToolIds: ["shell"],
     runtimeControls: {
@@ -54,6 +62,7 @@ test("queued chat turns append, promote, remove, and take the next turn", () => 
 
   const taken = queue.takeNextQueuedChatTurn(promoted, "conversation-a");
   assert.equal(taken.item.id, "a2");
+  assert.equal(taken.item.approvalPolicy, "ask");
   assert.deepEqual(
     taken.queue.map((item) => item.id),
     ["a1"],

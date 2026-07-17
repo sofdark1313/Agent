@@ -29,7 +29,6 @@ import {
   Paperclip,
   Play,
   Plus,
-  Shield,
   Square,
   SquarePen,
   Trash2,
@@ -61,12 +60,16 @@ import type { GitClient } from "../../../lib/git/types";
 import type { ModelOption } from "../../../lib/providers/llm";
 import {
   type AppSettings,
+  type ApprovalPolicy,
   type ChatRuntimeControls,
   DEFAULT_CHAT_RUNTIME_CONTROLS,
+  type ExecutionMode,
   type ReasoningLevel,
 } from "../../../lib/settings";
 import { cn } from "../../../lib/shared/utils";
 import type { WorkspaceActivityClient } from "../../../lib/workspace-activity/types";
+import type { SectionId } from "../../settings/types";
+import { ChatAccessSelector } from "./ChatAccessSelector";
 import { ChatModelSelector } from "./ChatModelSelector";
 
 const REASONING_I18N_KEYS: Record<ReasoningLevel, string> = {
@@ -236,6 +239,8 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   workdir: string;
   enabledSkills: MentionComposerSkill[];
   isAgentMode: boolean;
+  executionMode: ExecutionMode;
+  approvalPolicy: ApprovalPolicy;
   hasModels: boolean;
   currentModelLabel: string;
   modelOptions: ModelOption[];
@@ -248,6 +253,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   gitDisabledMessage?: string;
   workspaceActivityClient?: WorkspaceActivityClient | null;
   setSettings: (updater: (prev: AppSettings) => AppSettings) => void;
+  onOpenSettings: (section?: SectionId) => void;
   onSend: () => void;
   onStop: () => void;
   onComposerBusyChange: (isBusy: boolean) => void;
@@ -272,6 +278,8 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     workdir,
     enabledSkills,
     isAgentMode,
+    executionMode,
+    approvalPolicy,
     hasModels,
     currentModelLabel,
     modelOptions,
@@ -284,6 +292,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     gitDisabledMessage,
     workspaceActivityClient,
     setSettings,
+    onOpenSettings,
     onSend,
     onStop,
     onComposerBusyChange,
@@ -831,23 +840,12 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <div
-                data-agent-composer-access={isAgentMode ? "agent" : "chat"}
-                title={
-                  isAgentMode
-                    ? t("chat.composer.agentAccessTooltip")
-                    : t("chat.composer.chatAccessTooltip")
-                }
-                className={cn(
-                  "inline-flex h-8 min-w-0 shrink-0 items-center gap-1.5 rounded-full px-2 text-[calc(12px*var(--zone-font-scale,1))] font-medium",
-                  isAgentMode ? "text-orange-600 dark:text-orange-300" : "text-muted-foreground",
-                )}
-              >
-                <Shield className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {isAgentMode ? t("chat.composer.agentAccess") : t("chat.composer.chatAccess")}
-                </span>
-              </div>
+              <ChatAccessSelector
+                executionMode={executionMode}
+                approvalPolicy={approvalPolicy}
+                setSettings={setSettings}
+                onOpenSettings={onOpenSettings}
+              />
             </div>
 
             <div className="flex min-w-0 shrink-0 items-center justify-end gap-1">

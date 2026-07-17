@@ -12,7 +12,6 @@ export type SectionId =
   | "ssh"
   | "memory"
   | "hooks"
-  | "cron"
   | "remote"
   | "about";
 

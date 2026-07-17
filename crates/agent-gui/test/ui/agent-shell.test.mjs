@@ -35,6 +35,7 @@ test("global sidebar exposes task, project, management, and app-menu regions", (
   assert.match(sidebar, /data-agent-nav="new-task"/);
   assert.match(sidebar, /data-agent-nav="skills"/);
   assert.match(sidebar, /data-agent-nav="mcp"/);
+  assert.match(sidebar, /data-agent-nav="cron"/);
   assert.match(sidebar, /AgentAppMenu/);
 });
 
@@ -55,6 +56,9 @@ test("task workspace uses compact topbar, document transcript, and floating comp
 test("chat composer follows the Codex input surface and action hierarchy", () => {
   const composer = read("src/pages/chat/components/ChatComposerBar.tsx");
   const header = read("src/pages/chat/components/ChatHeader.tsx");
+  const accessSelectorPath = path.join(root, "src/pages/chat/components/ChatAccessSelector.tsx");
+  assert.equal(fs.existsSync(accessSelectorPath), true, "composer access selector is required");
+  const accessSelector = read("src/pages/chat/components/ChatAccessSelector.tsx");
   const modelSelectorPath = path.join(root, "src/pages/chat/components/ChatModelSelector.tsx");
   assert.equal(fs.existsSync(modelSelectorPath), true, "composer model selector component is required");
   const modelSelector = read("src/pages/chat/components/ChatModelSelector.tsx");
@@ -63,7 +67,12 @@ test("chat composer follows the Codex input surface and action hierarchy", () =>
   assert.match(composer, /data-agent-composer-surface/);
   assert.match(composer, /data-agent-composer-attachments/);
   assert.match(composer, /data-agent-composer-add/);
-  assert.match(composer, /data-agent-composer-access/);
+  assert.match(composer, /<ChatAccessSelector/);
+  assert.match(accessSelector, /data-agent-composer-access/);
+  assert.match(accessSelector, /DropdownMenuItem/);
+  assert.match(accessSelector, /updateSystem/);
+  assert.match(accessSelector, /executionMode/);
+  assert.match(accessSelector, /onOpenSettings\("systemTools"\)/);
   assert.match(composer, /data-agent-composer-tool="upload"/);
   assert.match(composer, /data-agent-composer-tool="thinking"/);
   assert.match(composer, /data-agent-composer-tool="web-search"/);
@@ -96,6 +105,31 @@ test("settings uses Agent management navigation and content regions", () => {
   assert.match(settings, /data-agent-settings/);
   assert.match(settings, /data-agent-settings-nav/);
   assert.match(settings, /data-agent-settings-content/);
+  assert.match(settings, /settings\.groupPersonal/);
+  assert.match(settings, /settings\.groupIntegrationsCoding/);
+  assert.doesNotMatch(settings, /settings\.groupOther/);
+  assert.doesNotMatch(settings, /items:\s*\[\{ id: "about"/);
+  assert.doesNotMatch(settings, /\{ id: "cron"/);
+  assert.equal(
+    fs.existsSync(path.join(root, "src/pages/cron-hub/CronHubPage.tsx")),
+    true,
+    "Cron Hub page is required",
+  );
+  assert.match(read("src/pages/cron-hub/CronHubPage.tsx"), /<CronSection/);
+});
+
+test("Windows title bar exposes functional Codex-style application menus", () => {
+  const titleBar = read("src/components/WindowsTitleBar.tsx");
+  const appMenu = read("src/components/app-shell/AgentAppMenu.tsx");
+
+  assert.match(titleBar, /data-agent-window-menu=\{props\.id\}/);
+  assert.match(titleBar, /<TitleBarMenu id="file"/);
+  assert.match(titleBar, /<TitleBarMenu id="edit"/);
+  assert.match(titleBar, /<TitleBarMenu id="view"/);
+  assert.match(titleBar, /<TitleBarMenu id="help"/);
+  assert.match(titleBar, /dispatchAppCommand/);
+  assert.match(titleBar, /onOpenSettings.*"about"/);
+  assert.doesNotMatch(appMenu, /onOpenSettings\("about"\)/);
 });
 
 test("settings follows the flat Codex document and neutral control model", () => {

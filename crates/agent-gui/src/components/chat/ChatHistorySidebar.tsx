@@ -23,6 +23,7 @@ import {
   Cable,
   ChevronRight,
   CirclePlus,
+  Clock3,
   Edit3,
   FolderClosed,
   FolderOpen,
@@ -69,7 +70,7 @@ type ChatHistorySidebarProps = {
   renameDraft: string;
   isOpen: boolean;
   fontScale?: number;
-  activeView?: "chat" | "skills-hub" | "mcp-hub";
+  activeView?: "chat" | "skills-hub" | "mcp-hub" | "cron-hub";
   showProjects?: boolean;
   // Pre-sorted by the container (activity/running/pinned) — rendered as-is.
   projects?: WorkspaceProject[];
@@ -113,6 +114,7 @@ type ChatHistorySidebarProps = {
   appUpdate?: AppUpdateController;
   onOpenSkillsHub?: () => void;
   onOpenMcpHub?: () => void;
+  onOpenCronHub?: () => void;
 };
 
 const HISTORY_ROW_ESTIMATED_HEIGHT = 30;
@@ -913,6 +915,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     onOpenSettings,
     onOpenSkillsHub,
     onOpenMcpHub,
+    onOpenCronHub,
   } = props;
   const { t } = useLocale();
 
@@ -1419,6 +1422,28 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                 )}
               />
               <span className="truncate">MCP</span>
+            </Button>
+            <Button
+              data-agent-nav="cron"
+              data-active={activeView === "cron-hub"}
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenCronHub?.()}
+              className={cn(
+                "agent-nav-item sidebar-hub-menu-item h-8 w-full justify-start gap-2.5 px-3 text-[calc(13px*var(--zone-font-scale,1))] font-normal leading-5 shadow-none",
+                activeView === "cron-hub"
+                  ? "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]"
+                  : "text-foreground/80 hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]",
+              )}
+              title={t("settings.cronTitle")}
+            >
+              <Clock3
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  activeView === "cron-hub" ? "text-amber-500" : "text-foreground/85",
+                )}
+              />
+              <span className="truncate">{t("settings.cronTitle")}</span>
             </Button>
           </div>
         </div>

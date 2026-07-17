@@ -34,37 +34,48 @@
     color-scheme: light;
 
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 12%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 30 6% 96%;
+    --secondary-foreground: 0 0% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 6% 96%;
+    --muted-foreground: 0 0% 43%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 30 6% 94%;
+    --accent-foreground: 0 0% 12%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 30 5% 88%;
+    --input: 30 5% 84%;
+    --ring: 0 0% 35%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+
+    --agent-canvas: 0 0% 100%;
+    --agent-sidebar: 36 8% 96%;
+    --agent-surface-raised: 0 0% 100%;
+    --agent-surface-subtle: 30 6% 97%;
+    --agent-sidebar-width: 260px;
+    --agent-topbar-height: 44px;
+    --agent-content-width: 780px;
+    --agent-dock-width: 420px;
+    --agent-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.05);
+    --agent-shadow-menu: 0 16px 40px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
 
     /* Sidebar */
-    --sidebar-bg: 220 14% 96%;
+    --sidebar-bg: var(--agent-sidebar);
 
     /* Hub pages (MCP/Skills) canvas — in dark it sits below --background so
        background-tinted glass panels read as elevated surfaces. */
@@ -77,8 +88,8 @@
     --send-disabled-bg: 220 13% 91%;
 
     /* Chat-specific tokens */
-    --chat-user-bg: 220 9% 91%;
-    --chat-user-fg: 222 84% 5%;
+    --chat-user-bg: 30 5% 93%;
+    --chat-user-fg: 0 0% 12%;
     --chat-assistant-bg: 0 0% 100%;
     --chat-assistant-fg: 222.2 84% 4.9%;
     --chat-tool-bg: 0 0% 100%;
@@ -113,33 +124,40 @@
   .dark {
     color-scheme: dark;
 
-    --background: 224 22% 9%;
-    --foreground: 210 30% 96%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 92%;
 
-    --card: 224 22% 10%;
-    --card-foreground: 210 30% 96%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 224 20% 12%;
-    --popover-foreground: 210 30% 96%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 210 30% 96%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 92%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 18% 17%;
-    --secondary-foreground: 210 30% 96%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 220 18% 17%;
-    --muted-foreground: 215 18% 76%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 64%;
 
-    --accent: 220 18% 17%;
-    --accent-foreground: 210 30% 96%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 94%;
 
     --destructive: 0 62.8% 36%;
     --destructive-foreground: 210 30% 96%;
 
-    --border: 220 14% 26%;
-    --input: 220 14% 26%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 0 0% 22%;
+    --input: 0 0% 28%;
+    --ring: 0 0% 62%;
+
+    --agent-canvas: 0 0% 8%;
+    --agent-sidebar: 0 0% 10.5%;
+    --agent-surface-raised: 0 0% 12%;
+    --agent-surface-subtle: 0 0% 11%;
+    --agent-shadow-float: 0 16px 40px rgba(0, 0, 0, 0.42), 0 2px 10px rgba(0, 0, 0, 0.32);
+    --agent-shadow-menu: 0 20px 48px rgba(0, 0, 0, 0.56), 0 4px 12px rgba(0, 0, 0, 0.36);
 
     /* Chip / pill buttons (dark) */
     --chip-bg: 220 16% 24%;
@@ -151,15 +169,15 @@
     --hub-canvas: 224 24% 6.5%;
 
     /* Chat-specific tokens (dark) */
-    --sidebar-bg: 224 22% 11%;
-    --chat-user-bg: 220 14% 28%;
-    --chat-user-fg: 210 30% 96%;
-    --chat-assistant-bg: 224 22% 9%;
-    --chat-assistant-fg: 210 30% 96%;
-    --chat-tool-bg: 224 22% 9%;
-    --chat-tool-border: 220 14% 24%;
-    --chat-thinking-bg: 220 18% 13%;
-    --chat-thinking-border: 220 14% 22%;
+    --sidebar-bg: var(--agent-sidebar);
+    --chat-user-bg: 0 0% 18%;
+    --chat-user-fg: 0 0% 94%;
+    --chat-assistant-bg: 0 0% 8%;
+    --chat-assistant-fg: 0 0% 92%;
+    --chat-tool-bg: 0 0% 10%;
+    --chat-tool-border: 0 0% 22%;
+    --chat-thinking-bg: 0 0% 11%;
+    --chat-thinking-border: 0 0% 20%;
     --chat-success: 152 56% 52%;
     --chat-error: 0 75% 65%;
     --chat-running: 252 60% 70%;
@@ -2754,6 +2772,72 @@ body > div:not(#root) [data-streamdown="mermaid"] svg {
 }
 [data-project-tools-resizing="true"] .git-review-diff-selectable > * {
   display: none;
+}
+
+/* Agent application shell */
+.agent-shell {
+  background: hsl(var(--agent-canvas));
+}
+
+.agent-sidebar {
+  width: var(--agent-sidebar-width);
+  background: hsl(var(--agent-sidebar));
+}
+
+.agent-topbar {
+  min-height: var(--agent-topbar-height);
+}
+
+.agent-floating-surface {
+  border: 1px solid hsl(var(--border) / 0.72);
+  background: hsl(var(--agent-surface-raised) / 0.97);
+  box-shadow: var(--agent-shadow-float);
+}
+
+.agent-nav-item {
+  border-radius: 8px;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.agent-nav-item:hover {
+  background: hsl(var(--foreground) / 0.045);
+}
+
+.agent-nav-item[data-active="true"] {
+  background: hsl(var(--foreground) / 0.065);
+  color: hsl(var(--foreground));
+}
+
+@media (max-width: 1100px) {
+  .project-tools-panel {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    z-index: 45;
+    max-width: min(var(--agent-dock-width), calc(100vw - 48px));
+    box-shadow: -20px 0 48px hsl(0 0% 0% / 0.16);
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --agent-sidebar-width: min(280px, calc(100vw - 40px));
+  }
+
+  .chat-history-sidebar {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: 50;
+    box-shadow: 20px 0 48px hsl(0 0% 0% / 0.15);
+  }
+
+  .chat-history-sidebar-inner {
+    width: var(--agent-sidebar-width);
+    min-width: var(--agent-sidebar-width);
+  }
 }
 
 @keyframes editorContextMenuIn {

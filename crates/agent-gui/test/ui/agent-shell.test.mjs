@@ -15,3 +15,15 @@ test("Agent brand primitives are stable and independent from compatibility ident
   assert.match(mark, /viewBox="0 0 32 32"/);
   assert.match(mark, /aria-hidden/);
 });
+
+test("Agent shell defines neutral themes and responsive panel contracts", () => {
+  const css = read("src/index.css");
+
+  assert.match(css, /--agent-sidebar:/);
+  assert.match(css, /--agent-canvas:/);
+  assert.match(css, /--agent-surface-raised:/);
+  assert.match(css, /--agent-sidebar-width: 260px/);
+  assert.match(css, /--agent-topbar-height: 44px/);
+  assert.match(css, /@media \(max-width: 900px\)/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+});

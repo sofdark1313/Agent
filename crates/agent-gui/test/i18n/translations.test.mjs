@@ -35,6 +35,6 @@ test("all locales expose the same translation keys", () => {
 });
 
 test("translation lookup falls back to the key for unknown entries", () => {
-  assert.equal(i18n.t("app.name", "en-US"), "LiveAgent");
+  assert.equal(i18n.t("app.name", "en-US"), "Agent");
   assert.equal(i18n.t("missing.key", "en-US"), "missing.key");
 });

@@ -36,7 +36,7 @@ type CronPromptRunnerProps = {
 };
 
 function buildCronSystemPrompt(taskName: string) {
-  const lines = ["You are running a scheduled Auto Prompt task in LiveAgent."];
+  const lines = ["You are running a scheduled Auto Prompt task in Agent."];
   const normalizedTaskName = taskName.trim();
   if (normalizedTaskName) {
     lines.push(`Task: ${normalizedTaskName}`);

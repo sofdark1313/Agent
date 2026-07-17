@@ -1,9 +1,9 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import iconSimpleUrl from "../../src-tauri/icons/icon-simple.png";
 import { useLocale } from "../i18n";
 import { cn } from "../lib/shared/utils";
+import { AgentMark } from "./brand/AgentMark";
 import { Maximize2, Minimize2, Minus, X } from "./icons";
 
 type TauriRuntimeWindow = Window & {
@@ -26,7 +26,7 @@ function isWindowsTauriRuntime() {
 }
 
 function reportWindowChromeError(action: string, error: unknown) {
-  console.error(`failed to ${action} LiveAgent window`, error);
+  console.error(`failed to ${action} Agent window`, error);
 }
 
 export function WindowsTitleBar() {
@@ -184,12 +184,9 @@ export function WindowsTitleBar() {
         onDoubleClick={handleTitleDoubleClick}
         onMouseDown={startDragging}
       >
-        <img
-          src={iconSimpleUrl}
-          alt=""
-          className="h-[15px] w-[15px] shrink-0 rounded-[3.5px]"
-          draggable={false}
-        />
+        <span className="flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-[4px] bg-foreground text-background">
+          <AgentMark className="h-[12px] w-[12px]" />
+        </span>
         <span className="truncate text-[12px] font-medium leading-[1.45] tracking-[0.01em] text-foreground/80">
           {t("app.name")}
         </span>

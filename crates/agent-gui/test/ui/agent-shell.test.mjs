@@ -69,3 +69,15 @@ test("Skills and MCP share the restrained Agent management chrome", () => {
   assert.doesNotMatch(hub, /radial-gradient/);
   assert.match(hub, /rounded-xl border/);
 });
+
+test("visible desktop branding uses Agent while compatibility identifiers stay out of scope", () => {
+  const html = read("index.html");
+  const tauri = read("src-tauri/tauri.conf.json");
+  const titleBar = read("src/components/WindowsTitleBar.tsx");
+  const locale = read("src/i18n/config.ts");
+
+  assert.match(html, /<title>Agent<\/title>/);
+  assert.match(tauri, /"productName": "Agent"/);
+  assert.doesNotMatch(titleBar, /LiveAgent|Live Agent/);
+  assert.doesNotMatch(locale, /"app\.name": "LiveAgent"/);
+});

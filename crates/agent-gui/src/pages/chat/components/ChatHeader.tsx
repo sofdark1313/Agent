@@ -133,7 +133,11 @@ export const ChatHeader = memo(function ChatHeader(props: {
     }));
 
   return (
-    <header data-tauri-drag-region className="flex items-center justify-between gap-2 px-4 py-2.5">
+    <header
+      data-agent-topbar
+      data-tauri-drag-region
+      className="agent-topbar flex h-11 items-center justify-between gap-2 border-b border-border/55 bg-background/96 px-3"
+    >
       <div className="flex min-w-0 items-center gap-1.5">
         {!sidebarOpen && !isMacOsTauri() ? (
           <Button
@@ -154,8 +158,8 @@ export const ChatHeader = memo(function ChatHeader(props: {
                 variant="ghost"
                 disabled={!hasModels}
                 className={cn(
-                  "model-selector-trigger h-9 max-w-[min(20rem,calc(100vw-8.5rem))] justify-between gap-1.5 overflow-hidden rounded-lg px-3 cursor-pointer text-xs font-normal text-foreground transition-all duration-200 ease-out hover:bg-muted/60 dark:text-white",
-                  isModelMenuOpen && "bg-muted/70 shadow-sm",
+                  "model-selector-trigger h-8 max-w-[min(20rem,calc(100vw-8.5rem))] cursor-pointer justify-between gap-1.5 overflow-hidden rounded-lg px-2.5 text-xs font-normal text-foreground hover:bg-foreground/[0.055] dark:text-white",
+                  isModelMenuOpen && "bg-foreground/[0.065]",
                 )}
               />
             }
@@ -177,7 +181,7 @@ export const ChatHeader = memo(function ChatHeader(props: {
             align="start"
             sideOffset={8}
             collisionPadding={8}
-            className="model-selector-dropdown w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-border/40 bg-popover/70 p-0 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)] ring-1 ring-white/10 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-popover/55"
+            className="model-selector-dropdown w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-border/70 bg-popover/98 p-0 shadow-[var(--agent-shadow-menu)]"
           >
             <DropdownMenuLabel className="model-selector-menu-title px-3 py-2 text-[calc(11px*var(--zone-font-scale,1))] font-medium uppercase tracking-wider text-muted-foreground/80 dark:text-white/80">
               {t("chat.selectModel")}

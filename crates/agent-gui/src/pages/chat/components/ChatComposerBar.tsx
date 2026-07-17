@@ -509,6 +509,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
 
   return (
     <div
+      data-agent-composer
       ref={rootRef}
       className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-4"
     >
@@ -690,18 +691,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
           </div>
         ) : null}
 
-        <div className="composer-glass-card relative z-10 overflow-hidden rounded-[24px] border border-black/[0.055] bg-white/70 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22),0_2px_6px_-2px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.74)] backdrop-blur-2xl backdrop-saturate-[165%] transition-all focus-within:border-black/[0.075] focus-within:bg-white/74 focus-within:shadow-[0_16px_46px_-14px_rgba(15,23,42,0.26),0_4px_12px_-4px_rgba(15,23,42,0.10),inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-white/[0.10] dark:bg-white/[0.06] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.72),0_2px_6px_-2px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.08)] dark:focus-within:border-white/[0.15] dark:focus-within:bg-white/[0.08]">
-          {/* macOS material rim-light */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-5 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-white/85 to-transparent dark:via-white/15"
-          />
-          {/* subtle inner gloss gradient */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-gradient-to-b from-white/18 to-transparent opacity-70 dark:from-white/[0.04] dark:opacity-100"
-          />
-
+        <div className="composer-glass-card agent-floating-surface relative z-10 overflow-hidden rounded-[14px] transition-[border-color,box-shadow,background-color] focus-within:border-foreground/20 focus-within:bg-[hsl(var(--agent-surface-raised))]">
           <div className="relative px-4 pt-3.5">
             <MentionComposer
               ref={composerRef}

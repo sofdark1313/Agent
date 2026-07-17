@@ -75,10 +75,10 @@ export const UserMessageRow = memo(function UserMessageRow(props: UserMessageRow
 
   return (
     <div
-      className={`chat-user-bubble-wrap group relative ml-auto max-w-[min(85%,calc(50em+2rem))] ${compactedClass}`}
+      className={`chat-user-bubble-wrap group relative ml-auto max-w-[min(82%,calc(48em+2rem))] ${compactedClass}`}
     >
       <div
-        className={`${animateEntrance ? "chat-bubble-enter " : ""}chat-user-bubble ml-auto w-fit max-w-full rounded-2xl rounded-br-md bg-[hsl(var(--chat-user-bg))] px-4 py-2.5 font-openai-chat text-[calc(14.5px*var(--zone-font-scale,1))] leading-relaxed text-[hsl(var(--chat-user-fg))]`}
+        className={`${animateEntrance ? "chat-bubble-enter " : ""}chat-user-bubble ml-auto w-fit max-w-full rounded-xl bg-[hsl(var(--chat-user-bg))] px-3.5 py-2.5 text-[calc(14px*var(--zone-font-scale,1))] leading-relaxed text-[hsl(var(--chat-user-fg))]`}
       >
         <UserAttachmentCards files={visibleFiles} workspaceRoot={workspaceRoot} />
         {item.text ? (

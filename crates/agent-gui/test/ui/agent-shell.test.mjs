@@ -37,3 +37,10 @@ test("global sidebar exposes task, project, management, and app-menu regions", (
   assert.match(sidebar, /data-agent-nav="mcp"/);
   assert.match(sidebar, /AgentAppMenu/);
 });
+
+test("task workspace uses compact topbar, document transcript, and floating composer", () => {
+  assert.match(read("src/pages/chat/components/ChatHeader.tsx"), /data-agent-topbar/);
+  assert.match(read("src/pages/chat/transcript/ChatTranscript.tsx"), /data-agent-transcript/);
+  assert.match(read("src/pages/chat/components/ChatComposerBar.tsx"), /data-agent-composer/);
+  assert.match(read("src/pages/chat/transcript/ChatEmptyState.tsx"), /data-agent-empty-state/);
+});

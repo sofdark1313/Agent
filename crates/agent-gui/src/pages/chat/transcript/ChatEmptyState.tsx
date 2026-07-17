@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 
-import iconSimpleUrl from "../../../../src-tauri/icons/icon-simple.png";
+import { AgentMark } from "../../../components/brand/AgentMark";
 import { FolderTree, Lightbulb, Settings, Wrench } from "../../../components/icons";
 import { useLocale } from "../../../i18n";
 import type { SectionId } from "../../settings/types";
@@ -49,8 +49,7 @@ const SUGGESTION_CARDS = [
     key: "explore",
     icon: FolderTree,
     accent: "199 89% 48%",
-    chipClassName:
-      "bg-sky-500/10 text-sky-600 group-hover:bg-sky-500/20 dark:bg-sky-400/10 dark:text-sky-400 dark:group-hover:bg-sky-400/20",
+    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
     titleKey: "chat.suggestExploreTitle",
     hintKey: "chat.suggestExploreHint",
     promptKey: "chat.suggestExplorePrompt",
@@ -59,8 +58,7 @@ const SUGGESTION_CARDS = [
     key: "fix",
     icon: Wrench,
     accent: "38 92% 50%",
-    chipClassName:
-      "bg-amber-500/10 text-amber-600 group-hover:bg-amber-500/20 dark:bg-amber-400/10 dark:text-amber-400 dark:group-hover:bg-amber-400/20",
+    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
     titleKey: "chat.suggestFixTitle",
     hintKey: "chat.suggestFixHint",
     promptKey: "chat.suggestFixPrompt",
@@ -69,8 +67,7 @@ const SUGGESTION_CARDS = [
     key: "ideate",
     icon: Lightbulb,
     accent: "160 84% 39%",
-    chipClassName:
-      "bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500/20 dark:bg-emerald-400/10 dark:text-emerald-400 dark:group-hover:bg-emerald-400/20",
+    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
     titleKey: "chat.suggestIdeateTitle",
     hintKey: "chat.suggestIdeateHint",
     promptKey: "chat.suggestIdeatePrompt",
@@ -103,23 +100,14 @@ export function ChatEmptyState({
   }, []);
 
   return (
-    <div className="relative flex w-full flex-col items-center">
-      <div className="hero-entrance relative mb-6 flex h-[88px] w-[88px] items-center justify-center">
-        <div className="hero-aura" aria-hidden="true" />
-        <div className="hero-icon-float relative z-[1] flex items-center justify-center">
-          <img
-            src={iconSimpleUrl}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            className="h-16 w-16 select-none object-contain"
-          />
-        </div>
+    <div data-agent-empty-state className="relative flex w-full flex-col items-center">
+      <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
+        <AgentMark className="h-7 w-7" />
       </div>
 
       {variant === "no-models" ? (
         <>
-          <div className="hero-entrance-delay-1 mb-2 bg-gradient-to-b from-foreground to-foreground/65 bg-clip-text text-center text-[calc(26px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-tight text-transparent">
+          <div className="mb-2 text-center text-[calc(24px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-[-0.02em] text-foreground">
             {t("chat.welcome")}
           </div>
           <div className="hero-entrance-delay-2 mb-1 text-center text-sm leading-relaxed text-muted-foreground">
@@ -132,7 +120,7 @@ export function ChatEmptyState({
             <button
               type="button"
               onClick={() => onOpenSettings("providers")}
-              className="hero-entrance-delay-3 group inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/65 px-5 py-2 text-sm font-medium text-foreground/85 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-[1px] hover:bg-white/80 hover:text-foreground hover:shadow-[0_2px_4px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-white/[0.1] dark:bg-white/[0.06] dark:text-foreground/90 dark:shadow-[0_1px_2px_rgba(0,0,0,0.2),0_8px_24px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-white/[0.1]"
+              className="group inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground/85 shadow-xs transition-colors hover:bg-accent/70 hover:text-foreground"
             >
               <Settings className="h-3.5 w-3.5 text-foreground/55 transition-colors group-hover:text-foreground/80" />
               {t("chat.goToSettings")}
@@ -141,7 +129,7 @@ export function ChatEmptyState({
         </>
       ) : (
         <>
-          <div className="hero-entrance-delay-1 mb-2.5 bg-gradient-to-b from-foreground to-foreground/65 bg-clip-text text-center text-[calc(26px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-tight text-transparent">
+          <div className="mb-2.5 text-center text-[calc(24px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-[-0.02em] text-foreground">
             {t(GREETING_KEYS[period])}
           </div>
           <div className="hero-entrance-delay-2 flex items-center justify-center gap-1.5 text-center text-sm leading-relaxed text-muted-foreground">
@@ -152,7 +140,7 @@ export function ChatEmptyState({
             {t("chat.greetingSubtitle")}
           </div>
           {onSuggestionSelect ? (
-            <div className="mt-9 grid w-full max-w-[640px] grid-cols-1 gap-2.5 px-6 sm:grid-cols-3 sm:px-4">
+            <div className="mt-8 grid w-full max-w-[640px] grid-cols-1 gap-2 px-6 sm:grid-cols-3 sm:px-4">
               {SUGGESTION_CARDS.map((card, index) => (
                 <button
                   key={card.key}
@@ -166,10 +154,10 @@ export function ChatEmptyState({
                       "--card-accent": card.accent,
                     } as CSSProperties
                   }
-                  className="hero-card-entrance hero-suggest-card group flex items-center gap-3 rounded-xl px-3.5 py-3 text-left backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-55"
+                  className="group flex items-center gap-3 rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:bg-accent/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-55"
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200 group-hover:-rotate-3 group-hover:scale-110 ${card.chipClassName}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 ${card.chipClassName}`}
                   >
                     <card.icon className="h-4 w-4" />
                   </span>

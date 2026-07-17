@@ -170,12 +170,13 @@ export const ChatTranscript = memo(function ChatTranscript(props: ChatTranscript
 
   return (
     <div
+      data-agent-transcript
       ref={transcriptRootRef}
       className="relative min-h-0 flex-1"
       onContextMenu={handleTranscriptContextMenu}
     >
       <ScrollArea ref={setScrollAreaRoot} viewportRef={setScrollViewport} className="h-full">
-        <div className="mx-auto w-full max-w-[768px] px-5 py-4">
+        <div className="mx-auto w-full max-w-[var(--agent-content-width)] px-6 py-5">
           {showNoModelsState || showStartChatState ? (
             <div className="flex min-h-[calc(100vh-220px)] flex-col items-center justify-center">
               <ChatEmptyState

@@ -27,3 +27,13 @@ test("Agent shell defines neutral themes and responsive panel contracts", () => 
   assert.match(css, /@media \(max-width: 900px\)/);
   assert.match(css, /prefers-reduced-motion: reduce/);
 });
+
+test("global sidebar exposes task, project, management, and app-menu regions", () => {
+  const sidebar = read("src/components/chat/ChatHistorySidebar.tsx");
+
+  assert.match(sidebar, /data-agent-sidebar/);
+  assert.match(sidebar, /data-agent-nav="new-task"/);
+  assert.match(sidebar, /data-agent-nav="skills"/);
+  assert.match(sidebar, /data-agent-nav="mcp"/);
+  assert.match(sidebar, /AgentAppMenu/);
+});

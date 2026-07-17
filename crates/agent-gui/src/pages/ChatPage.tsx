@@ -5057,7 +5057,9 @@ export function ChatPage(props: ChatPageProps) {
           onShareConversation={handleOpenShareModal}
           onOpenSharedConversations={handleOpenSharedHistoryManager}
           onCloseSidebar={handleCloseSidebar}
-          onOpenSettings={() => onOpenSettings()}
+          theme={effectiveTheme}
+          onToggleTheme={onToggleTheme}
+          onOpenSettings={onOpenSettings}
           appUpdate={appUpdate}
           onOpenSkillsHub={() => {
             cacheActiveComposerDraft();

@@ -9,6 +9,7 @@ import { useLocale } from "../../../i18n";
 import type { AppUpdateController } from "../../../lib/appUpdates";
 import { normalizeConversationTitle } from "../../../lib/chat/page/chatPageHelpers";
 import type { WorkspaceProject } from "../../../lib/settings";
+import type { SectionId } from "../../settings/types";
 import {
   selectConversations,
   selectListState,
@@ -60,7 +61,9 @@ type ChatSidebarContainerProps = {
   onShareConversation: (item: SidebarConversation) => void;
   onOpenSharedConversations: () => void;
   onCloseSidebar: () => void;
-  onOpenSettings: () => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+  onOpenSettings: (section?: SectionId) => void;
   appUpdate?: AppUpdateController;
   onOpenSkillsHub: () => void;
   onOpenMcpHub: () => void;
@@ -225,6 +228,8 @@ export function ChatSidebarContainer(props: ChatSidebarContainerProps) {
       onDeleteConversation={handleDeleteConversation}
       onLoadMore={handleLoadMore}
       onCloseSidebar={props.onCloseSidebar}
+      theme={props.theme}
+      onToggleTheme={props.onToggleTheme}
       onOpenSettings={props.onOpenSettings}
       appUpdate={props.appUpdate}
       onOpenSkillsHub={props.onOpenSkillsHub}

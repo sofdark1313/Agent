@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := dev
 
-AGENT_GUI_DIR := crates/agent-gui
-AGENT_GATEWAY_DIR := crates/agent-gateway
+AGENT_GUI_DIR := agent-gui
+AGENT_GATEWAY_DIR := agent-gateway
 AGENT_GATEWAY_WEB_DIR := $(AGENT_GATEWAY_DIR)/web
 AGENT_GATEWAY_PROTO_FILE := proto/v1/gateway.proto
 

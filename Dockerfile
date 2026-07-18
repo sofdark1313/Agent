@@ -2,13 +2,13 @@
 
 FROM node:22.17.1-bookworm-slim AS webui
 
-WORKDIR /src/crates/agent-gateway/web
+WORKDIR /src/agent-gateway/web
 RUN npm install -g pnpm@10.32.1
 
-COPY crates/agent-gateway/web/package.json crates/agent-gateway/web/pnpm-lock.yaml ./
+COPY agent-gateway/web/package.json agent-gateway/web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-COPY crates/agent-gateway/web ./
+COPY agent-gateway/web ./
 RUN pnpm build
 
 FROM golang:1.25-bookworm AS gateway-builder
@@ -16,13 +16,13 @@ FROM golang:1.25-bookworm AS gateway-builder
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 
-WORKDIR /src/crates/agent-gateway
+WORKDIR /src/agent-gateway
 
-COPY crates/agent-gateway/go.mod crates/agent-gateway/go.sum ./
+COPY agent-gateway/go.mod agent-gateway/go.sum ./
 RUN go mod download
 
-COPY crates/agent-gateway ./
-COPY --from=webui /src/crates/agent-gateway/web/dist ./web/dist
+COPY agent-gateway ./
+COPY --from=webui /src/agent-gateway/web/dist ./web/dist
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -trimpath -ldflags="-s -w" -o /out/agent-gateway ./cmd/gateway

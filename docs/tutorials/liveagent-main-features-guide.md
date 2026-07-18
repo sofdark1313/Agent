@@ -56,10 +56,10 @@ LiveAgent 不是一个单纯的聊天网页，而是由桌面应用、桌面后�
 
 | 运行单元 | 技术栈与主要路径 | 核心职责 | 权限边界 |
 |---|---|---|---|
-| 桌面 GUI | React、TypeScript；`crates/agent-gui/src` | Chat 页面、设置、Skills/MCP Hub、Transcript、模型请求编排和工具循环 | 能通过 Tauri invoke 请求本地能力，但不直接操作 Rust 内部状态 |
-| Tauri/Rust | Rust、Tauri、SQLite、Tokio；`crates/agent-gui/src-tauri/src` | 文件与进程能力、历史持久化、MemoryStore、MCP Runtime、Skills 管理、Gateway Bridge | 本地高权限真相源，直接接触操作系统、数据库和用户目录 |
-| Go Gateway | Go、gRPC、HTTP、WebSocket；`crates/agent-gateway` | 认证、桌面连接、WebUI 请求转发、事件广播、有界恢复缓冲、静态资源和分享页 | 不直接访问用户文件系统，也不执行 Agent 的业务工具 |
-| Browser WebUI | React、TypeScript；`crates/agent-gateway/web` | 远程 Chat、Settings、Skills/MCP Hub 和历史浏览 | 通过 Gateway 间接操作桌面端，不直接拥有本地文件、Shell 或 Tauri 权限 |
+| 桌面 GUI | React、TypeScript；`agent-gui/src` | Chat 页面、设置、Skills/MCP Hub、Transcript、模型请求编排和工具循环 | 能通过 Tauri invoke 请求本地能力，但不直接操作 Rust 内部状态 |
+| Tauri/Rust | Rust、Tauri、SQLite、Tokio；`agent-gui/src-tauri/src` | 文件与进程能力、历史持久化、MemoryStore、MCP Runtime、Skills 管理、Gateway Bridge | 本地高权限真相源，直接接触操作系统、数据库和用户目录 |
+| Go Gateway | Go、gRPC、HTTP、WebSocket；`agent-gateway` | 认证、桌面连接、WebUI 请求转发、事件广播、有界恢复缓冲、静态资源和分享页 | 不直接访问用户文件系统，也不执行 Agent 的业务工具 |
+| Browser WebUI | React、TypeScript；`agent-gateway/web` | 远程 Chat、Settings、Skills/MCP Hub 和历史浏览 | 通过 Gateway 间接操作桌面端，不直接拥有本地文件、Shell 或 Tauri 权限 |
 
 ### 2.2 进程与数据关系
 
@@ -98,8 +98,8 @@ flowchart TB
 
 | 模式 | 主要入口 | 是否暴露本地工具 | 可观测性 | 适合场景 |
 |---|---|---:|---|---|
-| `text` | `crates/agent-gui/src/pages/chat/turns/runTextConversationTurn.ts` | 否 | 基础流式输出 | 纯文本问答、低权限聊天 |
-| `tools` | `crates/agent-gui/src/pages/chat/turns/runAgentConversationTurn.ts` | 是 | 工具调用、结果和基础 usage | 日常 Agent 开发任务 |
+| `text` | `agent-gui/src/pages/chat/turns/runTextConversationTurn.ts` | 否 | 基础流式输出 | 纯文本问答、低权限聊天 |
+| `tools` | `agent-gui/src/pages/chat/turns/runAgentConversationTurn.ts` | 是 | 工具调用、结果和基础 usage | 日常 Agent 开发任务 |
 | `agent-dev` | 同样进入 `runAgentConversationTurn.ts` | 是 | 展示更多 debug、usage 和静默 Memory 状态 | 开发、调试和运行时观察 |
 
 `text` 与 `tools` 的区别不只是 UI 开关。`text` 模式不会构造本地工具注册表；`tools` 和 `agent-dev` 则会进入模型与工具之间的循环。
@@ -189,7 +189,7 @@ Chat Runtime 位于 React/TypeScript 层，是“用户请求如何变成模型�
 
 | 关注点 | 主要路径 | 作用 |
 |---|---|---|
-| 页面与输入 | `crates/agent-gui/src/pages/ChatPage.tsx`、`src/pages/chat/components/ChatComposerBar.tsx` | 收集输入、模型、模式、附件和 workdir |
+| 页面与输入 | `agent-gui/src/pages/ChatPage.tsx`、`src/pages/chat/components/ChatComposerBar.tsx` | 收集输入、模型、模式、附件和 workdir |
 | Text Turn | `src/pages/chat/turns/runTextConversationTurn.ts` | 不带本地工具的模型流式调用 |
 | Agent Turn | `src/pages/chat/turns/runAgentConversationTurn.ts` | 构建工具注册表、控制 compaction、运行工具循环和回合收尾 |
 | 上下文构造 | `src/pages/chat/runtime/conversationContextBuilders.ts` | 组装模型请求需要的消息与系统上下文 |
@@ -197,7 +197,7 @@ Chat Runtime 位于 React/TypeScript 层，是“用户请求如何变成模型�
 | Agent Runner | `src/lib/chat/runner/agentRunner.ts` | provider 流式适配、round 推进、工具调用执行和 toolResult 汇总 |
 | Provider 层 | `src/lib/providers/llm.ts` | 将统一请求映射为 Anthropic、OpenAI、Gemini 或自定义 Provider API |
 
-表中的 `src/...` 都相对于 `crates/agent-gui/`。
+表中的 `src/...` 都相对于 `agent-gui/`。
 
 ### 4.2 模型请求由哪些上下文块组成
 
@@ -286,7 +286,7 @@ LLM 本身只能生成内容。LiveAgent 的工具系统把“模型提出一个
 
 ### 5.1 Builtin Registry 是组合中心
 
-`crates/agent-gui/src/lib/tools/builtinRegistry.ts` 中的 `buildBuiltinToolRegistry()` 接收 workdir、provider、Skills/MCP 设置、runtime scope、系统工具选择、Todo 状态和 Subagent Runtime 等依赖，返回四项关键能力：
+`agent-gui/src/lib/tools/builtinRegistry.ts` 中的 `buildBuiltinToolRegistry()` 接收 workdir、provider、Skills/MCP 设置、runtime scope、系统工具选择、Todo 状态和 Subagent Runtime 等依赖，返回四项关键能力：
 
 | 返回值 | 含义 | 使用者 |
 |---|---|---|
@@ -664,7 +664,7 @@ History 和 Compaction 解决两个相关但不同的问题：
 | Message FTS | `chatHistoryMessageFts` | 精确定位包含关键词的单条消息 |
 | FTS Index Metadata | `chatHistoryFtsSegmentIndex` | 判断索引是否陈旧、是否需要刷新 |
 
-当前 Rust 实现已经按职责拆分到 `crates/agent-gui/src-tauri/src/commands/history/chat_history/`，其中 `segments.rs` 管分段写入和校验，`fts.rs`/`search.rs` 管搜索，`share.rs` 管分享，`db.rs`/`repository.rs` 管数据库查询与映射。
+当前 Rust 实现已经按职责拆分到 `agent-gui/src-tauri/src/commands/history/chat_history/`，其中 `segments.rs` 管分段写入和校验，`fts.rs`/`search.rs` 管搜索，`share.rs` 管分享，`db.rs`/`repository.rs` 管数据库查询与映射。
 
 ### 8.2 Active Segment 是什么
 
@@ -857,7 +857,7 @@ sequenceDiagram
 ### 10.2 Chat Runtime 路线
 
 ```text
-crates/agent-gui/src/pages/ChatPage.tsx
+agent-gui/src/pages/ChatPage.tsx
   → src/pages/chat/components/ChatComposerBar.tsx
   → src/pages/chat/turns/runAgentConversationTurn.ts
   → src/pages/chat/runtime/conversationContextBuilders.ts
@@ -941,9 +941,9 @@ src/lib/chat/history/chatHistory.ts
 ### 10.7 WebUI 远程链路
 
 ```text
-crates/agent-gateway/web/src/lib/gatewaySocket.ts
+agent-gateway/web/src/lib/gatewaySocket.ts
   → WebSocket chat command
-  → crates/agent-gateway/internal/server/websocket_chat_handlers.go
+  → agent-gateway/internal/server/websocket_chat_handlers.go
   → internal/server/chat_commands.go
   → Desktop gRPC AgentConnect
   → Desktop Gateway Bridge
@@ -1168,10 +1168,10 @@ WebUI command
 
 | 触达模块 | 建议验证 |
 |---|---|
-| GUI TypeScript | `pnpm -C crates/agent-gui test:frontend`，必要时 `pnpm -C crates/agent-gui build` |
-| Tauri/Rust | 对应 Rust 单测，必要时 `cargo test --manifest-path crates/agent-gui/src-tauri/Cargo.toml` |
-| Gateway | `go -C crates/agent-gateway test ./...` |
-| WebUI | `pnpm -C crates/agent-gateway/web test` 和 build |
+| GUI TypeScript | `pnpm -C agent-gui test:frontend`，必要时 `pnpm -C agent-gui build` |
+| Tauri/Rust | 对应 Rust 单测，必要时 `cargo test --manifest-path agent-gui/src-tauri/Cargo.toml` |
+| Gateway | `go -C agent-gateway test ./...` |
+| WebUI | `pnpm -C agent-gateway/web test` 和 build |
 | Mirror 文件 | 检查 `scripts/mirror-manifest.json` 及相关镜像测试 |
 | 文档 | 路径存在性、Mermaid/Markdown、`git diff --check` |
 

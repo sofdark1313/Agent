@@ -43,8 +43,8 @@ import { subscribeAppCommand } from "../lib/appCommands";
 import type { AppUpdateController } from "../lib/appUpdates";
 import { getAutomationState } from "../lib/automation";
 import { createHookRunScope } from "../lib/automation/hookRunner";
-import type { CompactionStatus } from "../lib/chat/compaction/types";
 import { ToolApprovalBroker } from "../lib/chat/approval/toolApprovalBroker";
+import type { CompactionStatus } from "../lib/chat/compaction/types";
 import { buildPersistableMessagesFromSnapshot } from "../lib/chat/conversation/chatAbort";
 import {
   appendMessagesToConversation,
@@ -108,9 +108,9 @@ import {
   toModelValue,
 } from "../lib/providers/llm";
 import {
+  type ApprovalPolicy,
   type AppSettings,
   applyMcpOpsToAppSettings,
-  type ApprovalPolicy,
   type ChatRuntimeControls,
   type CustomApprovalRules,
   DEFAULT_WORKSPACE_PROJECT_ID,
@@ -220,6 +220,9 @@ import {
   useLiveTranscriptController,
   usePendingUploads,
 } from "./chat";
+import { ConversationTodoPanel } from "./chat/components/ConversationTodoPanel";
+import { ConversationUsagePanel } from "./chat/components/ConversationUsagePanel";
+import { ToolApprovalCard } from "./chat/components/ToolApprovalCard";
 import {
   buildGatewayRuntimeSnapshotEntries,
   type GatewayRuntimeSnapshotState,
@@ -229,7 +232,6 @@ import {
   normalizeGatewayExecutionMode,
   normalizeGatewayWorkdir,
 } from "./chat/gateway/gatewayBridgeTypes";
-import { CronHubPage } from "./cron-hub/CronHubPage";
 import {
   appendQueuedChatTurn,
   buildQueuedChatTurnPreview,
@@ -249,9 +251,7 @@ import {
   takeNextQueuedChatTurn,
 } from "./chat/queue/chatTurnQueue";
 import { ChatSidebarContainer } from "./chat/sidebar/ChatSidebarContainer";
-import { ConversationTodoPanel } from "./chat/components/ConversationTodoPanel";
-import { ConversationUsagePanel } from "./chat/components/ConversationUsagePanel";
-import { ToolApprovalCard } from "./chat/components/ToolApprovalCard";
+import { CronHubPage } from "./cron-hub/CronHubPage";
 import { McpHubPage } from "./mcp-hub/McpHubPage";
 import type { SectionId } from "./settings/types";
 import { SkillsHubPage } from "./skills-hub/SkillsHubPage";
@@ -647,9 +647,7 @@ export function ChatPage(props: ChatPageProps) {
   );
   const visibleToolApprovals = useMemo(
     () =>
-      pendingToolApprovals.filter(
-        (request) => request.conversationId === currentConversationId,
-      ),
+      pendingToolApprovals.filter((request) => request.conversationId === currentConversationId),
     [currentConversationId, pendingToolApprovals],
   );
   const [currentConversationSessionId, setCurrentConversationSessionId] = useState<string>(
@@ -738,9 +736,9 @@ export function ChatPage(props: ChatPageProps) {
   }, [sidebarScope, sidebarStore]);
   const historyScopeKey = sidebarScopeKey(sidebarScope);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<
-    "chat" | "skills-hub" | "mcp-hub" | "cron-hub"
-  >("chat");
+  const [activeView, setActiveView] = useState<"chat" | "skills-hub" | "mcp-hub" | "cron-hub">(
+    "chat",
+  );
   const [rightDockOpen, setRightDockOpen] = useState(false);
   const previousRightDockFileTreeOpenRef = useRef(false);
   const [workspaceEditorMounted, setWorkspaceEditorMounted] = useState(false);
@@ -4343,8 +4341,7 @@ export function ChatPage(props: ChatPageProps) {
               policy: effectiveApprovalPolicy,
               customRules: effectiveCustomApprovalRules,
               sessionId: gatewayBridgeRequestId,
-              requestApproval: (input) =>
-                approvalBroker.request({ ...input, conversationId }),
+              requestApproval: (input) => approvalBroker.request({ ...input, conversationId }),
             },
             getMcpSettings,
             applyMcpOps: (ops) => {

@@ -19,6 +19,8 @@ cert/
 node_modules
 dist
 dist-ssr
+.vite/
+**/src-tauri/gen/
 target
 *.local
 .vscode

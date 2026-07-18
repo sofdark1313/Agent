@@ -40,11 +40,7 @@ import {
 } from "../../components/icons";
 import { Button } from "../../components/ui/button";
 import { useLocale } from "../../i18n";
-import {
-  type ApprovalPolicy,
-  type CustomApprovalRules,
-  updateSystem,
-} from "../../lib/settings";
+import { type ApprovalPolicy, type CustomApprovalRules, updateSystem } from "../../lib/settings";
 import { useModalMotion } from "../../lib/shared/modalMotion";
 import {
   BUILTIN_TOOL_CATALOG,
@@ -315,9 +311,8 @@ export function SystemToolsSection(props: SettingsSectionProps) {
           </div>
           <span className="rounded-full bg-orange-500/10 px-2.5 py-1 text-[11px] font-medium text-orange-600 dark:text-orange-300">
             {t(
-              APPROVAL_POLICY_OPTIONS.find(
-                (option) => option.id === settings.system.approvalPolicy,
-              )?.labelKey ?? "chat.access.agentAutomatic",
+              APPROVAL_POLICY_OPTIONS.find((option) => option.id === settings.system.approvalPolicy)
+                ?.labelKey ?? "chat.access.agentAutomatic",
             )}
           </span>
         </div>
@@ -350,9 +345,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
             {CUSTOM_APPROVAL_RULE_OPTIONS.map((rule) => (
               <div key={rule.id} className="flex items-center gap-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-medium text-foreground">
-                    {t(rule.labelKey)}
-                  </div>
+                  <div className="text-[13px] font-medium text-foreground">{t(rule.labelKey)}</div>
                   <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
                     {t(rule.descriptionKey)}
                   </p>

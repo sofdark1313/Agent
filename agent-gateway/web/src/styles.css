@@ -1271,9 +1271,7 @@ html[data-agent-webui="gateway"] .external-link-modal-panel {
   will-change: opacity, transform;
 }
 
-html[data-agent-webui="gateway"]
-  .settings-modal-overlay[data-state="open"]
-  .settings-modal-panel,
+html[data-agent-webui="gateway"] .settings-modal-overlay[data-state="open"] .settings-modal-panel,
 html[data-agent-webui="gateway"]
   .history-share-modal-overlay[data-state="open"]
   .history-share-modal-panel,
@@ -1284,9 +1282,7 @@ html[data-agent-webui="gateway"]
   transform: translateY(0) scale(1);
 }
 
-html[data-agent-webui="gateway"]
-  .settings-modal-overlay[data-state="closed"]
-  .settings-modal-panel,
+html[data-agent-webui="gateway"] .settings-modal-overlay[data-state="closed"] .settings-modal-panel,
 html[data-agent-webui="gateway"]
   .history-share-modal-overlay[data-state="closed"]
   .history-share-modal-panel,
@@ -3266,10 +3262,7 @@ html[data-agent-webui="gateway"]
     gap: 8px;
   }
 
-  html[data-agent-webui="gateway"]
-    .settings-modal-subheader
-    .settings-field-row
-    > div:first-child {
+  html[data-agent-webui="gateway"] .settings-modal-subheader .settings-field-row > div:first-child {
     width: auto;
   }
 

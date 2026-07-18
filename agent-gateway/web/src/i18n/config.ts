@@ -1020,8 +1020,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.noSystemTools": "暂无可用的系统工具",
     "settings.systemToolsTabBuiltin": "内置工具",
     "settings.systemToolsTabCustom": "自定义工具",
-    "settings.systemToolsBuiltinDesc":
-      "Agent 在 Agent 模式下自动注册的内置工具，此处仅供查阅。",
+    "settings.systemToolsBuiltinDesc": "Agent 在 Agent 模式下自动注册的内置工具，此处仅供查阅。",
     "settings.systemToolsCustomDesc":
       "可按需启用的自定义系统工具；启用后会在 Agent 模式下注册，供模型在对话中调用。",
     "settings.systemToolsViewDetail": "查看详情",

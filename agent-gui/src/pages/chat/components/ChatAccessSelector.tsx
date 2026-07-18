@@ -16,8 +16,8 @@ import {
 } from "../../../components/ui/dropdown-menu";
 import { useLocale } from "../../../i18n";
 import {
-  type AppSettings,
   type ApprovalPolicy,
+  type AppSettings,
   type ExecutionMode,
   updateSystem,
 } from "../../../lib/settings";

@@ -61,8 +61,8 @@ import {
   type SubagentTemplate,
 } from "../../../lib/subagents";
 import {
-  buildBuiltinToolRegistry,
   type BuiltinToolApprovalOptions,
+  buildBuiltinToolRegistry,
 } from "../../../lib/tools/builtinRegistry";
 import type { BuiltinToolExecutionContext } from "../../../lib/tools/builtinTypes";
 import { createFileToolState } from "../../../lib/tools/fileToolState";

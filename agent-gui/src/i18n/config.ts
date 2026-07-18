@@ -1149,11 +1149,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.systemToolsViewDetail": "查看详情",
     "settings.approval.title": "执行与审批",
     "settings.approval.description": "控制 Agent 何时可以直接执行工具，以及何时必须等待你的确认。",
-    "settings.approval.mode.ask": "工作区读取自动进行；写入、命令、网络、MCP 和工作区外访问需要确认。",
-    "settings.approval.mode.agent": "工作区内普通写入自动进行；删除、命令、网络、MCP 和越界访问需要确认。",
+    "settings.approval.mode.ask":
+      "工作区读取自动进行；写入、命令、网络、MCP 和工作区外访问需要确认。",
+    "settings.approval.mode.agent":
+      "工作区内普通写入自动进行；删除、命令、网络、MCP 和越界访问需要确认。",
     "settings.approval.mode.full": "所有已启用工具自动执行，包括工作区外访问。",
     "settings.approval.allowWorkspaceWrites": "自动允许工作区写入",
-    "settings.approval.allowWorkspaceWritesDesc": "Write 与 Edit 可直接修改当前项目；Delete 仍然要求确认。",
+    "settings.approval.allowWorkspaceWritesDesc":
+      "Write 与 Edit 可直接修改当前项目；Delete 仍然要求确认。",
     "settings.approval.allowCommands": "自动允许运行命令",
     "settings.approval.allowCommandsDesc": "Bash 与托管进程无需逐次确认。",
     "settings.approval.allowNetwork": "自动允许网络访问",
@@ -2012,16 +2015,19 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.mode.agentDescription": "Code, use tools, and run tasks",
     "chat.access.menuTitle": "How should Agent run?",
     "chat.access.askApproval": "Ask for approval",
-    "chat.access.askApprovalDesc": "Read automatically; confirm edits, commands, and external access",
+    "chat.access.askApprovalDesc":
+      "Read automatically; confirm edits, commands, and external access",
     "chat.access.agentAutomatic": "Agent automatic",
     "chat.access.agentAutomaticDesc": "Allow Agent to use the currently enabled project tools",
     "chat.access.fullAccess": "Full access",
-    "chat.access.fullAccessDesc": "Run all enabled tools automatically and record complete debug traffic",
+    "chat.access.fullAccessDesc":
+      "Run all enabled tools automatically and record complete debug traffic",
     "chat.access.custom": "Custom",
     "chat.access.customDesc": "Configure approval categories and workspace boundaries in Settings",
     "chat.approval.title": "Agent wants to run an action",
     "chat.approval.queueCount": "{count} requests waiting",
-    "chat.approval.outsideWorkspace": "This action accesses a location outside the current workspace",
+    "chat.approval.outsideWorkspace":
+      "This action accesses a location outside the current workspace",
     "chat.approval.category.read": "Read files or project information",
     "chat.approval.category.write": "Modify workspace content",
     "chat.approval.category.command": "Run a local command or process",

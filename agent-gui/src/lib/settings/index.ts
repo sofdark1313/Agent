@@ -1299,9 +1299,7 @@ export function normalizeSystemSettings(input: unknown): SystemSettings {
     obj.approvalPolicy === "full" ||
     obj.approvalPolicy === "custom";
   const executionMode =
-    legacyExecutionMode === "text" && !hasExplicitApprovalPolicy
-      ? "tools"
-      : legacyExecutionMode;
+    legacyExecutionMode === "text" && !hasExplicitApprovalPolicy ? "tools" : legacyExecutionMode;
   return {
     executionMode,
     approvalPolicy: normalizeApprovalPolicy(obj.approvalPolicy, legacyExecutionMode),

@@ -58,10 +58,7 @@ function AppChrome(props: {
         event.preventDefault();
       }}
     >
-      <WindowsTitleBar
-        onOpenSettings={props.onOpenSettings}
-        onToggleTheme={props.onToggleTheme}
-      />
+      <WindowsTitleBar onOpenSettings={props.onOpenSettings} onToggleTheme={props.onToggleTheme} />
       <div className="relative min-h-0 flex-1 overflow-hidden bg-background">{props.children}</div>
     </div>
   );

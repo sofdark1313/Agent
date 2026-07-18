@@ -59,8 +59,8 @@ import {
 import type { GitClient } from "../../../lib/git/types";
 import type { ModelOption } from "../../../lib/providers/llm";
 import {
-  type AppSettings,
   type ApprovalPolicy,
+  type AppSettings,
   type ChatRuntimeControls,
   DEFAULT_CHAT_RUNTIME_CONTROLS,
   type ExecutionMode,

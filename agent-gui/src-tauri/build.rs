@@ -1,5 +1,16 @@
 fn main() {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    if target_os == "windows" {
+        let windows_manifest = std::path::Path::new(&manifest_dir).join("windows-app-manifest.xml");
+        println!("cargo:rerun-if-changed={}", windows_manifest.display());
+        println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
+        println!(
+            "cargo:rustc-link-arg=/MANIFESTINPUT:{}",
+            windows_manifest.display()
+        );
+    }
+
     let package_json = std::path::Path::new(&manifest_dir)
         .join("..")
         .join("package.json");
@@ -40,5 +51,10 @@ fn main() {
         .compile_protos(&[proto_file], &[proto_dir])
         .expect("compile gateway proto");
 
-    tauri_build::build()
+    let mut attributes = tauri_build::Attributes::new();
+    if target_os == "windows" {
+        attributes = attributes
+            .windows_attributes(tauri_build::WindowsAttributes::new_without_app_manifest());
+    }
+    tauri_build::try_build(attributes).expect("failed to build Tauri application resources");
 }

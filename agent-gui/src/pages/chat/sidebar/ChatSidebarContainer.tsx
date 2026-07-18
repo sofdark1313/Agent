@@ -36,7 +36,7 @@ type ChatSidebarContainerProps = {
   approvalPolicy: ApprovalPolicy;
   setSettings: (updater: (prev: AppSettings) => AppSettings) => void;
   fontScale?: number;
-  activeView: "chat" | "skills-hub" | "mcp-hub" | "cron-hub";
+  activeView: "chat" | "skills-hub" | "mcp-hub" | "cron-hub" | "rag-hub";
   showProjects: boolean;
   // Merged (settings ∪ history workdirs) but unsorted — the container sorts
   // with the store's activity/running inputs.
@@ -75,6 +75,7 @@ type ChatSidebarContainerProps = {
   onOpenSkillsHub: () => void;
   onOpenMcpHub: () => void;
   onOpenCronHub: () => void;
+  onOpenRagHub: () => void;
 };
 
 function selectMutations(snapshot: SidebarSnapshot) {
@@ -248,6 +249,7 @@ export function ChatSidebarContainer(props: ChatSidebarContainerProps) {
       onOpenSkillsHub={props.onOpenSkillsHub}
       onOpenMcpHub={props.onOpenMcpHub}
       onOpenCronHub={props.onOpenCronHub}
+      onOpenRagHub={props.onOpenRagHub}
     />
   );
 }

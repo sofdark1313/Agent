@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use super::{RagCapabilities, RagServiceConfig, RagServiceStore};
+use super::gateway::filter_agent_knowledge_bases;
+use super::{RagAccessMode, RagCapabilities, RagKnowledgeBase, RagServiceConfig, RagServiceStore};
 
 fn service(id: &str, is_default: bool) -> RagServiceConfig {
     RagServiceConfig {
@@ -61,4 +62,36 @@ fn deleting_the_default_service_does_not_guess_a_replacement() {
         .expect("list services")
         .iter()
         .all(|item| !item.is_default));
+}
+
+#[test]
+fn resolve_uses_the_enabled_default_service_for_agent_calls() {
+    let store = RagServiceStore::open_in_memory().expect("open RAG service store");
+    store.save(&service("a", true)).expect("save service a");
+
+    let resolved = store
+        .resolve(None, RagAccessMode::Agent)
+        .expect("resolve default service");
+
+    assert_eq!(resolved.id, "a");
+}
+
+#[test]
+fn agent_knowledge_base_filter_keeps_only_the_local_allowlist() {
+    let service = service("company", true);
+    let remote = vec![
+        RagKnowledgeBase {
+            id: "hr".to_string(),
+            name: "HR".to_string(),
+        },
+        RagKnowledgeBase {
+            id: "engineering".to_string(),
+            name: "Engineering".to_string(),
+        },
+    ];
+
+    let filtered = filter_agent_knowledge_bases(&service, remote);
+
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].id, "hr");
 }

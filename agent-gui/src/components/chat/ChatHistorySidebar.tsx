@@ -27,6 +27,7 @@ import type { SectionId } from "../../pages/settings/types";
 import { AgentAppMenu } from "../app-shell/AgentAppMenu";
 import {
   Blend,
+  BookOpen,
   Cable,
   ChevronRight,
   CirclePlus,
@@ -78,7 +79,7 @@ type ChatHistorySidebarProps = {
   isOpen: boolean;
   headerModeSelector: ReactNode;
   fontScale?: number;
-  activeView?: "chat" | "skills-hub" | "mcp-hub" | "cron-hub";
+  activeView?: "chat" | "skills-hub" | "mcp-hub" | "cron-hub" | "rag-hub";
   showProjects?: boolean;
   // Pre-sorted by the container (activity/running/pinned) — rendered as-is.
   projects?: WorkspaceProject[];
@@ -121,6 +122,7 @@ type ChatHistorySidebarProps = {
   onOpenSkillsHub?: () => void;
   onOpenMcpHub?: () => void;
   onOpenCronHub?: () => void;
+  onOpenRagHub?: () => void;
 };
 
 const HISTORY_ROW_ESTIMATED_HEIGHT = 30;
@@ -921,6 +923,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     onOpenSkillsHub,
     onOpenMcpHub,
     onOpenCronHub,
+    onOpenRagHub,
   } = props;
   const { t } = useLocale();
 
@@ -1422,6 +1425,28 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                 )}
               />
               <span className="truncate">MCP</span>
+            </Button>
+            <Button
+              data-agent-nav="rag"
+              data-active={activeView === "rag-hub"}
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenRagHub?.()}
+              className={cn(
+                "agent-nav-item sidebar-hub-menu-item h-8 w-full justify-start gap-2.5 px-3 text-[calc(13px*var(--zone-font-scale,1))] font-normal leading-5 shadow-none",
+                activeView === "rag-hub"
+                  ? "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]"
+                  : "text-foreground/80 hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]",
+              )}
+              title="RAG Hub"
+            >
+              <BookOpen
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  activeView === "rag-hub" ? "text-cyan-500" : "text-foreground/85",
+                )}
+              />
+              <span className="truncate">RAG</span>
             </Button>
             <Button
               data-agent-nav="cron"

@@ -110,6 +110,18 @@ macro_rules! app_invoke_handler {
             commands::memory::memory_today_daily,
             commands::memory::memory_quota_summary,
             commands::memory::memory_wipe_all,
+            // RAG
+            commands::rag::rag_list_services,
+            commands::rag::rag_save_service,
+            commands::rag::rag_delete_service,
+            commands::rag::rag_test_service,
+            commands::rag::rag_hub_list_knowledge_bases,
+            commands::rag::rag_hub_list_documents,
+            commands::rag::rag_hub_upload_document,
+            commands::rag::rag_hub_get_document,
+            commands::rag::rag_hub_search,
+            commands::rag::rag_agent_list_knowledge_bases,
+            commands::rag::rag_agent_search,
             // Settings
             commands::settings::settings_load_all,
             commands::settings::settings_save_providers,

@@ -2,6 +2,46 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RagAccessMode {
+    Management,
+    Agent,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagKnowledgeBase {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagSearchHit {
+    pub knowledge_base_id: String,
+    pub chunk_id: String,
+    pub content: String,
+    pub score: f64,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagSearchResponse {
+    pub results: Vec<RagSearchHit>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RagSearchRequest {
+    pub service_id: Option<String>,
+    pub query: String,
+    pub knowledge_base_ids: Vec<String>,
+    pub top_k: Option<u32>,
+    pub rerank: Option<bool>,
+    pub top_n: Option<u32>,
+}
+
 /// 外部 RAG 服务声明的协议能力快照。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]

@@ -253,6 +253,7 @@ import {
 import { ChatSidebarContainer } from "./chat/sidebar/ChatSidebarContainer";
 import { CronHubPage } from "./cron-hub/CronHubPage";
 import { McpHubPage } from "./mcp-hub/McpHubPage";
+import { RagHubPage } from "./rag-hub/RagHubPage";
 import type { SectionId } from "./settings/types";
 import { SkillsHubPage } from "./skills-hub/SkillsHubPage";
 
@@ -736,9 +737,9 @@ export function ChatPage(props: ChatPageProps) {
   }, [sidebarScope, sidebarStore]);
   const historyScopeKey = sidebarScopeKey(sidebarScope);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<"chat" | "skills-hub" | "mcp-hub" | "cron-hub">(
-    "chat",
-  );
+  const [activeView, setActiveView] = useState<
+    "chat" | "skills-hub" | "mcp-hub" | "cron-hub" | "rag-hub"
+  >("chat");
   const [rightDockOpen, setRightDockOpen] = useState(false);
   const previousRightDockFileTreeOpenRef = useRef(false);
   const [workspaceEditorMounted, setWorkspaceEditorMounted] = useState(false);
@@ -5184,6 +5185,11 @@ export function ChatPage(props: ChatPageProps) {
             setRightDockOpen(false);
             setActiveView("cron-hub");
           }}
+          onOpenRagHub={() => {
+            cacheActiveComposerDraft();
+            setRightDockOpen(false);
+            setActiveView("rag-hub");
+          }}
         />
 
         {shareConversation ? (
@@ -5261,6 +5267,8 @@ export function ChatPage(props: ChatPageProps) {
               sidebarOpen={sidebarOpen}
               onOpenSidebar={handleOpenSidebar}
             />
+          ) : activeView === "rag-hub" ? (
+            <RagHubPage sidebarOpen={sidebarOpen} onOpenSidebar={handleOpenSidebar} />
           ) : (
             <>
               <MacOsTitleBarSpacer />

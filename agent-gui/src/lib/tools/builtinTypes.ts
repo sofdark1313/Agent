@@ -14,7 +14,8 @@ export type BuiltinToolGroupId =
   | "system"
   | "mcp"
   | "subagent"
-  | "memory";
+  | "memory"
+  | "rag";
 
 export type BuiltinToolDisplayCategory =
   | "file"

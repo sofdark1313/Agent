@@ -5,7 +5,7 @@ use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 
 use crate::commands::settings;
 
-use super::{RagCapabilities, RagError, RagServiceConfig};
+use super::{RagAccessMode, RagCapabilities, RagError, RagServiceConfig};
 
 const RAG_STORE_ERROR: &str = "RAG_STORE_ERROR";
 
@@ -135,6 +135,29 @@ impl RagServiceStore {
             )
             .map(|affected| affected > 0)
             .map_err(store_error)
+    }
+
+    pub fn resolve(
+        &self,
+        service_id: Option<&str>,
+        access_mode: RagAccessMode,
+    ) -> Result<RagServiceConfig, RagError> {
+        let service = match service_id.map(str::trim).filter(|id| !id.is_empty()) {
+            Some(id) => self.get(id)?,
+            None => self.list()?.into_iter().find(|item| item.is_default),
+        }
+        .ok_or_else(|| RagError::new("RAG_SERVICE_NOT_FOUND", "未找到可用的 RAG 服务"))?;
+
+        if !service.enabled {
+            return Err(RagError::new("RAG_SERVICE_DISABLED", "RAG 服务已禁用"));
+        }
+        if access_mode == RagAccessMode::Agent && !service.agent_enabled {
+            return Err(RagError::new(
+                "RAG_AGENT_ACCESS_DISABLED",
+                "RAG 服务未向 Agent 开放",
+            ));
+        }
+        Ok(service)
     }
 
     fn lock_connection(&self) -> Result<MutexGuard<'_, Connection>, RagError> {

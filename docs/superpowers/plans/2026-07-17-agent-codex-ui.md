@@ -12,31 +12,31 @@
 
 ## File structure and responsibilities
 
-- `crates/agent-gui/src/components/brand/AgentMark.tsx`: reusable monochrome Agent mark.
-- `crates/agent-gui/src/components/brand/brand.ts`: visible brand constants without changing compatibility identifiers.
-- `crates/agent-gui/src/components/app-shell/AgentAppMenu.tsx`: bottom-left application menu for settings, theme, updates, and about.
-- `crates/agent-gui/src/index.css`: Agent light/dark tokens, shell metrics, shared surface classes, responsive rules, and removal of decorative legacy effects.
-- `crates/agent-gui/src/components/chat/ChatHistorySidebar.tsx`: global navigation, projects, recent tasks, Skills/MCP entry points, and app menu placement.
-- `crates/agent-gui/src/pages/chat/components/ChatHeader.tsx`: compact project/task/model/status toolbar.
-- `crates/agent-gui/src/pages/chat/components/ChatComposerBar.tsx`: restrained floating task composer.
-- `crates/agent-gui/src/pages/chat/transcript/*`: document-flow messages, task empty state, and compact message actions.
-- `crates/agent-gui/src/components/project-tools/*`: shared contextual dock styling and responsive drawer behavior.
-- `crates/agent-gui/src/pages/SettingsPage.tsx`: Agent-style two-column settings shell.
-- `crates/agent-gui/src/components/hub/HubChrome.tsx`: shared management surface for Skills and MCP.
-- `crates/agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`: restrained Skills management visuals.
-- `crates/agent-gui/src/pages/mcp-hub/McpHubPage.tsx`: restrained MCP management visuals.
-- `crates/agent-gui/src/components/workspace-editor/*Overlay.tsx`: consistent editor workspace chrome.
-- `crates/agent-gui/test/ui/agent-shell.test.mjs`: source-level shell, token, responsive, and branding contracts.
-- `crates/agent-gui/src-tauri/icons/*`: generated Agent desktop icon set.
-- `crates/agent-gui/src-tauri/tauri*.conf.json`, `crates/agent-gui/index.html`, `crates/agent-gui/src/i18n/config.ts`: visible Agent branding.
+- `agent-gui/src/components/brand/AgentMark.tsx`: reusable monochrome Agent mark.
+- `agent-gui/src/components/brand/brand.ts`: visible brand constants without changing compatibility identifiers.
+- `agent-gui/src/components/app-shell/AgentAppMenu.tsx`: bottom-left application menu for settings, theme, updates, and about.
+- `agent-gui/src/index.css`: Agent light/dark tokens, shell metrics, shared surface classes, responsive rules, and removal of decorative legacy effects.
+- `agent-gui/src/components/chat/ChatHistorySidebar.tsx`: global navigation, projects, recent tasks, Skills/MCP entry points, and app menu placement.
+- `agent-gui/src/pages/chat/components/ChatHeader.tsx`: compact project/task/model/status toolbar.
+- `agent-gui/src/pages/chat/components/ChatComposerBar.tsx`: restrained floating task composer.
+- `agent-gui/src/pages/chat/transcript/*`: document-flow messages, task empty state, and compact message actions.
+- `agent-gui/src/components/project-tools/*`: shared contextual dock styling and responsive drawer behavior.
+- `agent-gui/src/pages/SettingsPage.tsx`: Agent-style two-column settings shell.
+- `agent-gui/src/components/hub/HubChrome.tsx`: shared management surface for Skills and MCP.
+- `agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`: restrained Skills management visuals.
+- `agent-gui/src/pages/mcp-hub/McpHubPage.tsx`: restrained MCP management visuals.
+- `agent-gui/src/components/workspace-editor/*Overlay.tsx`: consistent editor workspace chrome.
+- `agent-gui/test/ui/agent-shell.test.mjs`: source-level shell, token, responsive, and branding contracts.
+- `agent-gui/src-tauri/icons/*`: generated Agent desktop icon set.
+- `agent-gui/src-tauri/tauri*.conf.json`, `agent-gui/index.html`, `agent-gui/src/i18n/config.ts`: visible Agent branding.
 
 ### Task 1: Add brand contracts and the Agent mark
 
 **Files:**
-- Create: `crates/agent-gui/test/ui/agent-shell.test.mjs`
-- Create: `crates/agent-gui/src/components/brand/brand.ts`
-- Create: `crates/agent-gui/src/components/brand/AgentMark.tsx`
-- Modify: `crates/agent-gui/src/components/icons.tsx`
+- Create: `agent-gui/test/ui/agent-shell.test.mjs`
+- Create: `agent-gui/src/components/brand/brand.ts`
+- Create: `agent-gui/src/components/brand/AgentMark.tsx`
+- Modify: `agent-gui/src/components/icons.tsx`
 
 - [ ] **Step 1: Write the failing brand contract test**
 
@@ -88,18 +88,18 @@ Expected: PASS.
 - [ ] **Step 5: Commit the brand primitives**
 
 ```bash
-git add crates/agent-gui/test/ui/agent-shell.test.mjs crates/agent-gui/src/components/brand crates/agent-gui/src/components/icons.tsx
+git add agent-gui/test/ui/agent-shell.test.mjs agent-gui/src/components/brand agent-gui/src/components/icons.tsx
 git commit -m "feat(ui): add Agent brand primitives"
 ```
 
 ### Task 2: Establish the Agent design system and shell metrics
 
 **Files:**
-- Modify: `crates/agent-gui/src/index.css`
-- Modify: `crates/agent-gui/src/components/ui/button.tsx`
-- Modify: `crates/agent-gui/src/components/ui/input.tsx`
-- Modify: `crates/agent-gui/src/components/ui/textarea.tsx`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/index.css`
+- Modify: `agent-gui/src/components/ui/button.tsx`
+- Modify: `agent-gui/src/components/ui/input.tsx`
+- Modify: `agent-gui/src/components/ui/textarea.tsx`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing token and responsive assertions**
 
@@ -149,18 +149,18 @@ Expected: PASS with no Biome errors.
 - [ ] **Step 5: Commit the design system**
 
 ```bash
-git add crates/agent-gui/src/index.css crates/agent-gui/src/components/ui crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src/index.css agent-gui/src/components/ui agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): establish Agent design system"
 ```
 
 ### Task 3: Rebuild the global sidebar and application menu
 
 **Files:**
-- Create: `crates/agent-gui/src/components/app-shell/AgentAppMenu.tsx`
-- Modify: `crates/agent-gui/src/components/chat/ChatHistorySidebar.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/sidebar/ChatSidebarContainer.tsx`
-- Modify: `crates/agent-gui/src/pages/ChatPage.tsx`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Create: `agent-gui/src/components/app-shell/AgentAppMenu.tsx`
+- Modify: `agent-gui/src/components/chat/ChatHistorySidebar.tsx`
+- Modify: `agent-gui/src/pages/chat/sidebar/ChatSidebarContainer.tsx`
+- Modify: `agent-gui/src/pages/ChatPage.tsx`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing navigation contract assertions**
 
@@ -196,21 +196,21 @@ Expected: PASS.
 - [ ] **Step 5: Commit the shell navigation**
 
 ```bash
-git add crates/agent-gui/src/components/app-shell crates/agent-gui/src/components/chat/ChatHistorySidebar.tsx crates/agent-gui/src/pages/chat/sidebar/ChatSidebarContainer.tsx crates/agent-gui/src/pages/ChatPage.tsx crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src/components/app-shell agent-gui/src/components/chat/ChatHistorySidebar.tsx agent-gui/src/pages/chat/sidebar/ChatSidebarContainer.tsx agent-gui/src/pages/ChatPage.tsx agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): rebuild Agent global navigation"
 ```
 
 ### Task 4: Recompose the task workspace, transcript, and composer
 
 **Files:**
-- Modify: `crates/agent-gui/src/pages/chat/components/ChatHeader.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/components/ChatComposerBar.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/transcript/ChatTranscript.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/transcript/ChatEmptyState.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/transcript/UserMessageRow.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/transcript/AssistantRow.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/components/AssistantBubble.tsx`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/pages/chat/components/ChatHeader.tsx`
+- Modify: `agent-gui/src/pages/chat/components/ChatComposerBar.tsx`
+- Modify: `agent-gui/src/pages/chat/transcript/ChatTranscript.tsx`
+- Modify: `agent-gui/src/pages/chat/transcript/ChatEmptyState.tsx`
+- Modify: `agent-gui/src/pages/chat/transcript/UserMessageRow.tsx`
+- Modify: `agent-gui/src/pages/chat/transcript/AssistantRow.tsx`
+- Modify: `agent-gui/src/pages/chat/components/AssistantBubble.tsx`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing workspace contracts**
 
@@ -248,23 +248,23 @@ Expected: all tests PASS and Vite build completes.
 - [ ] **Step 5: Commit the task workspace**
 
 ```bash
-git add crates/agent-gui/src/pages/chat crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src/pages/chat agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): reshape the Agent task workspace"
 ```
 
 ### Task 5: Unify the contextual tool dock and editor overlays
 
 **Files:**
-- Modify: `crates/agent-gui/src/components/project-tools/RightDockPanel.tsx`
-- Modify: `crates/agent-gui/src/components/project-tools/RightDockTabStrip.tsx`
-- Modify: `crates/agent-gui/src/components/project-tools/RightDockLauncher.tsx`
-- Modify: `crates/agent-gui/src/components/project-tools/RightDockContent.tsx`
-- Modify: `crates/agent-gui/src/components/workspace-editor/WorkspaceCodeEditorOverlay.tsx`
-- Modify: `crates/agent-gui/src/components/workspace-editor/WorkspaceFilePreviewOverlay.tsx`
-- Modify: `crates/agent-gui/src/components/workspace-editor/WorkspaceImagePreviewOverlay.tsx`
-- Modify: `crates/agent-gui/src/components/workspace-editor/WorkspaceSshTerminalOverlay.tsx`
-- Modify: `crates/agent-gui/test/settings/right-dock-model.test.mjs`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/components/project-tools/RightDockPanel.tsx`
+- Modify: `agent-gui/src/components/project-tools/RightDockTabStrip.tsx`
+- Modify: `agent-gui/src/components/project-tools/RightDockLauncher.tsx`
+- Modify: `agent-gui/src/components/project-tools/RightDockContent.tsx`
+- Modify: `agent-gui/src/components/workspace-editor/WorkspaceCodeEditorOverlay.tsx`
+- Modify: `agent-gui/src/components/workspace-editor/WorkspaceFilePreviewOverlay.tsx`
+- Modify: `agent-gui/src/components/workspace-editor/WorkspaceImagePreviewOverlay.tsx`
+- Modify: `agent-gui/src/components/workspace-editor/WorkspaceSshTerminalOverlay.tsx`
+- Modify: `agent-gui/test/settings/right-dock-model.test.mjs`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing dock presentation assertions**
 
@@ -289,17 +289,17 @@ Expected: PASS.
 - [ ] **Step 5: Commit contextual tools**
 
 ```bash
-git add crates/agent-gui/src/components/project-tools crates/agent-gui/src/components/workspace-editor crates/agent-gui/test
+git add agent-gui/src/components/project-tools agent-gui/src/components/workspace-editor agent-gui/test
 git commit -m "feat(ui): unify Agent contextual tools"
 ```
 
 ### Task 6: Rebuild Settings as a unified management surface
 
 **Files:**
-- Modify: `crates/agent-gui/src/pages/SettingsPage.tsx`
-- Modify: `crates/agent-gui/src/pages/settings/shared.tsx`
-- Modify: `crates/agent-gui/src/pages/settings/*.tsx`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/pages/SettingsPage.tsx`
+- Modify: `agent-gui/src/pages/settings/shared.tsx`
+- Modify: `agent-gui/src/pages/settings/*.tsx`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing settings shell assertions**
 
@@ -331,18 +331,18 @@ Expected: PASS.
 - [ ] **Step 5: Commit settings**
 
 ```bash
-git add crates/agent-gui/src/pages/SettingsPage.tsx crates/agent-gui/src/pages/settings crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src/pages/SettingsPage.tsx agent-gui/src/pages/settings agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): rebuild Agent settings"
 ```
 
 ### Task 7: Unify Skills and MCP management pages
 
 **Files:**
-- Modify: `crates/agent-gui/src/components/hub/HubChrome.tsx`
-- Modify: `crates/agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`
-- Modify: `crates/agent-gui/src/pages/mcp-hub/McpHubPage.tsx`
-- Modify: `crates/agent-gui/src/index.css`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/components/hub/HubChrome.tsx`
+- Modify: `agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`
+- Modify: `agent-gui/src/pages/mcp-hub/McpHubPage.tsx`
+- Modify: `agent-gui/src/index.css`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing management-page assertions**
 
@@ -367,26 +367,26 @@ Expected: PASS.
 - [ ] **Step 5: Commit management pages**
 
 ```bash
-git add crates/agent-gui/src/components/hub crates/agent-gui/src/pages/skills-hub crates/agent-gui/src/pages/mcp-hub crates/agent-gui/src/index.css crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src/components/hub agent-gui/src/pages/skills-hub agent-gui/src/pages/mcp-hub agent-gui/src/index.css agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): unify Agent management pages"
 ```
 
 ### Task 8: Apply visible rebrand and generate desktop icons
 
 **Files:**
-- Modify: `crates/agent-gui/src/i18n/config.ts`
-- Modify: `crates/agent-gui/src/components/WindowsTitleBar.tsx`
-- Modify: `crates/agent-gui/src/components/chat/ChatHistorySidebar.tsx`
-- Modify: `crates/agent-gui/src/pages/chat/transcript/ChatEmptyState.tsx`
-- Modify: `crates/agent-gui/src/pages/ChatPage.tsx`
-- Modify: `crates/agent-gui/index.html`
-- Modify: `crates/agent-gui/src-tauri/tauri.conf.json`
-- Modify: `crates/agent-gui/src-tauri/tauri.windows.conf.json`
-- Modify: `crates/agent-gui/src-tauri/tauri.windows.release.conf.json`
-- Modify: `crates/agent-gui/src-tauri/tauri.macos.conf.json`
-- Modify: `crates/agent-gui/src-tauri/tauri.macos.release.conf.json`
-- Replace: `crates/agent-gui/src-tauri/icons/*`
-- Modify: `crates/agent-gui/test/ui/agent-shell.test.mjs`
+- Modify: `agent-gui/src/i18n/config.ts`
+- Modify: `agent-gui/src/components/WindowsTitleBar.tsx`
+- Modify: `agent-gui/src/components/chat/ChatHistorySidebar.tsx`
+- Modify: `agent-gui/src/pages/chat/transcript/ChatEmptyState.tsx`
+- Modify: `agent-gui/src/pages/ChatPage.tsx`
+- Modify: `agent-gui/index.html`
+- Modify: `agent-gui/src-tauri/tauri.conf.json`
+- Modify: `agent-gui/src-tauri/tauri.windows.conf.json`
+- Modify: `agent-gui/src-tauri/tauri.windows.release.conf.json`
+- Modify: `agent-gui/src-tauri/tauri.macos.conf.json`
+- Modify: `agent-gui/src-tauri/tauri.macos.release.conf.json`
+- Replace: `agent-gui/src-tauri/icons/*`
+- Modify: `agent-gui/test/ui/agent-shell.test.mjs`
 
 - [ ] **Step 1: Add failing visible-brand assertions**
 
@@ -413,22 +413,22 @@ Expected: PASS.
 - [ ] **Step 5: Commit the rebrand**
 
 ```bash
-git add crates/agent-gui/src crates/agent-gui/index.html crates/agent-gui/src-tauri crates/agent-gui/test/ui/agent-shell.test.mjs
+git add agent-gui/src agent-gui/index.html agent-gui/src-tauri agent-gui/test/ui/agent-shell.test.mjs
 git commit -m "feat(ui): rebrand desktop app as Agent"
 ```
 
 ### Task 9: Complete regression, responsive, and visual verification
 
 **Files:**
-- Update: `crates/agent-gui/test/ui/agent-shell.test.mjs`
-- Verify: `crates/agent-gui/src/index.css`
-- Verify: `crates/agent-gui/src/components/chat/ChatHistorySidebar.tsx`
-- Verify: `crates/agent-gui/src/pages/chat/components/ChatHeader.tsx`
-- Verify: `crates/agent-gui/src/pages/chat/components/ChatComposerBar.tsx`
-- Verify: `crates/agent-gui/src/components/project-tools/RightDockPanel.tsx`
-- Verify: `crates/agent-gui/src/pages/SettingsPage.tsx`
-- Verify: `crates/agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`
-- Verify: `crates/agent-gui/src/pages/mcp-hub/McpHubPage.tsx`
+- Update: `agent-gui/test/ui/agent-shell.test.mjs`
+- Verify: `agent-gui/src/index.css`
+- Verify: `agent-gui/src/components/chat/ChatHistorySidebar.tsx`
+- Verify: `agent-gui/src/pages/chat/components/ChatHeader.tsx`
+- Verify: `agent-gui/src/pages/chat/components/ChatComposerBar.tsx`
+- Verify: `agent-gui/src/components/project-tools/RightDockPanel.tsx`
+- Verify: `agent-gui/src/pages/SettingsPage.tsx`
+- Verify: `agent-gui/src/pages/skills-hub/SkillsHubPage.tsx`
+- Verify: `agent-gui/src/pages/mcp-hub/McpHubPage.tsx`
 
 - [ ] **Step 1: Run the complete frontend test suite**
 
@@ -466,14 +466,14 @@ Expected: debug desktop build succeeds; Agent window title and icon appear corre
 
 - [ ] **Step 5: Run final diff and compatibility checks**
 
-Run: `git diff --check && rg -n 'LiveAgent|Live Agent' crates/agent-gui/src crates/agent-gui/index.html crates/agent-gui/src-tauri/tauri*.conf.json`
+Run: `git diff --check && rg -n 'LiveAgent|Live Agent' agent-gui/src agent-gui/index.html agent-gui/src-tauri/tauri*.conf.json`
 
 Expected: no whitespace errors. Any remaining old-name occurrence must be a documented compatibility identifier, internal protocol term, persisted storage key, debug directory, or bundled Skill documentation—not visible application branding.
 
 - [ ] **Step 6: Commit final polish**
 
 ```bash
-git add crates/agent-gui
+git add agent-gui
 git commit -m "fix(ui): polish Agent responsive workspace"
 ```
 

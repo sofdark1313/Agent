@@ -1,7 +1,7 @@
 {
   "$comment": "Byte-identical mirror manifest between the desktop GUI and gateway WebUI source trees. Paths are relative to each root. Files listed here MUST be byte-identical on both ends; platform differences belong in the ends' adapter files (ChatPage/GatewayApp, the workspace-activity clients, SshTunnelPanel), never in mirrored files.",
-  "guiRoot": "crates/agent-gui/src",
-  "webRoot": "crates/agent-gateway/web/src",
+  "guiRoot": "agent-gui/src",
+  "webRoot": "agent-gateway/web/src",
   "files": [
     "components/project-tools/BackgroundTasksPanel.tsx",
     "components/project-tools/rightDockModel.ts",

@@ -612,11 +612,6 @@
     @apply my-2 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6] text-foreground;
   }
 
-  .agent-answer-markdown > p,
-  .agent-answer-markdown > div[dir] > p {
-    text-indent: 0.1em;
-  }
-
   .chat-markdown strong,
   .chat-markdown [data-streamdown="strong"] {
     @apply font-semibold text-foreground;
@@ -687,13 +682,13 @@
 
   /* Lists */
   .chat-markdown [data-streamdown="unordered-list"] {
-    @apply my-2 ml-1 list-disc space-y-0.5 pl-5;
+    @apply my-2 ml-0 list-disc space-y-0.5 pl-0;
   }
   .chat-markdown [data-streamdown="ordered-list"] {
-    @apply my-2 ml-1 list-decimal space-y-0.5 pl-5;
+    @apply my-2 ml-0 list-decimal space-y-0.5 pl-0;
   }
   .chat-markdown [data-streamdown="list-item"] {
-    @apply pl-1 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6];
+    @apply pl-0 text-[calc(15px*var(--zone-font-scale,1))] leading-[1.6];
   }
   .chat-markdown .contains-task-list {
     @apply list-none pl-0;

@@ -72,6 +72,13 @@ test("task workspace uses compact topbar, document transcript, and floating comp
   assert.match(read("src/pages/chat/transcript/ChatEmptyState.tsx"), /data-agent-empty-state/);
 });
 
+test("browser chat skips Tauri-only webview file-drop listeners", () => {
+  const chatPage = read("src/pages/ChatPage.tsx");
+
+  assert.match(chatPage, /import \{[^}]*isTauri[^}]*\} from "@tauri-apps\/api\/core"/);
+  assert.match(chatPage, /if \(!isTauri\(\)\) return;[\s\S]{0,180}getCurrentWebview\(\)/);
+});
+
 test("assistant answers use compact Codex document flow with collapsed thinking", () => {
   const bubble = read("src/pages/chat/components/AssistantBubble.tsx");
   const assistantRow = read("src/pages/chat/transcript/AssistantRow.tsx");
@@ -102,6 +109,9 @@ test("assistant answers render without first-line indentation", () => {
   assert.match(utils, /export function normalizeAssistantLeadingIndent/);
   assert.match(utils, /[\\u3000\\u00a0]/i);
   assert.doesNotMatch(css, /\.agent-answer-markdown[\s\S]{0,180}text-indent/);
+  assert.match(css, /data-streamdown="unordered-list"[\s\S]{0,120}ml-0[\s\S]{0,120}pl-0/);
+  assert.match(css, /data-streamdown="ordered-list"[\s\S]{0,120}ml-0[\s\S]{0,120}pl-0/);
+  assert.match(css, /data-streamdown="list-item"[\s\S]{0,120}pl-0/);
 });
 
 test("chat composer follows the Codex input surface and action hierarchy", () => {

@@ -1,5 +1,5 @@
 import type { Context, Message, UserMessage } from "@earendil-works/pi-ai";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
@@ -5055,6 +5055,8 @@ export function ChatPage(props: ChatPageProps) {
   const fileDropLimitHint = t("chat.upload.dropLimit").replace("{max}", String(MAX_UPLOAD_FILES));
 
   useEffect(() => {
+    if (!isTauri()) return;
+
     let cancelled = false;
     let unlisten: (() => void) | null = null;
 

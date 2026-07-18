@@ -33,6 +33,7 @@ mod tests {
             MEMORY_SETTINGS_TABLE,
             SSH_PROJECT_HOST_ASSOCIATIONS_TABLE,
             SSH_KNOWN_HOSTS_TABLE,
+            "rag_services",
         ] {
             let exists = conn
                 .query_row(
@@ -43,6 +44,36 @@ mod tests {
                 .expect("query sqlite_master");
             assert_eq!(exists, 1, "table {table} should exist");
         }
+    }
+
+    #[test]
+    fn initialize_schema_creates_non_sensitive_rag_services_table() {
+        let conn = open_memory_db();
+        let columns = table_columns(&conn, "rag_services");
+
+        for column in [
+            "service_id",
+            "name",
+            "adapter_type",
+            "base_url",
+            "enabled",
+            "is_default",
+            "agent_enabled",
+            "agent_knowledge_base_ids_json",
+            "timeout_ms",
+            "management_credential_configured",
+            "agent_credential_configured",
+            "capabilities_snapshot_json",
+            "updated_at",
+        ] {
+            assert!(
+                columns.iter().any(|item| item == column),
+                "rag_services.{column} should exist"
+            );
+        }
+
+        assert!(!columns.iter().any(|item| item.contains("api_key")));
+        assert!(!columns.iter().any(|item| item.contains("secret")));
     }
 
     #[test]

@@ -100,6 +100,26 @@ pub(crate) fn initialize_schema(conn: &Connection) -> Result<(), String> {
             payload_json TEXT NOT NULL,
             updated_at INTEGER NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS rag_services (
+            service_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            adapter_type TEXT NOT NULL,
+            base_url TEXT NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
+            is_default INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
+            agent_enabled INTEGER NOT NULL DEFAULT 0 CHECK (agent_enabled IN (0, 1)),
+            agent_knowledge_base_ids_json TEXT NOT NULL DEFAULT '[]',
+            timeout_ms INTEGER NOT NULL,
+            management_credential_configured INTEGER NOT NULL DEFAULT 0
+                CHECK (management_credential_configured IN (0, 1)),
+            agent_credential_configured INTEGER NOT NULL DEFAULT 0
+                CHECK (agent_credential_configured IN (0, 1)),
+            capabilities_snapshot_json TEXT,
+            updated_at INTEGER NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_rag_services_single_default
+            ON rag_services(is_default)
+            WHERE is_default = 1;
         -- 'agent' 登录方式已移除，遗留配置回退为密码登录（与前端 normalize 的未知值兜底一致）
         UPDATE ssh_settings SET auth_type = 'password' WHERE auth_type = 'agent';
         ",

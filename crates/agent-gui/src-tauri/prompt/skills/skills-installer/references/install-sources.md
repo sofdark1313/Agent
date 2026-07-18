@@ -42,9 +42,9 @@ repo-root/
         └── SKILL.md
 ```
 
-The installer copies complete skill directories into the destination root. `README.md` is only a fallback when the same directory does not contain `SKILL.md`, `skill.md`, or `skill.json`; if the README has no metadata, LiveAgent loads the full README when that skill is enabled.
+The installer copies complete skill directories into the destination root. `README.md` is only a fallback when the same directory does not contain `SKILL.md`, `skill.md`, or `skill.json`; if the README has no metadata, Agent loads the full README when that skill is enabled.
 
-When the local source lives in the current chat workspace, pass it as a workspace-relative path such as `./my-skill`, `skills/my-skill`, or `./dist/my-skill.skill`. LiveAgent resolves workspace-relative paths, absolute workspace paths, `~/...`, `file://`, and `pathRef` values before copying the source into the fixed runtime Skills root.
+When the local source lives in the current chat workspace, pass it as a workspace-relative path such as `./my-skill`, `skills/my-skill`, or `./dist/my-skill.skill`. Agent resolves workspace-relative paths, absolute workspace paths, `~/...`, `file://`, and `pathRef` values before copying the source into the fixed runtime Skills root.
 
 ## Archive
 
@@ -60,7 +60,7 @@ Use a GitHub tree URL when possible:
 https://github.com/owner/repo/tree/main/skills/my-skill
 ```
 
-The installer first downloads the repository zip for public repositories. If download fails because the repository is private or inaccessible, `method=auto` falls back to git sparse checkout. Existing git credentials or environment-based credentials are reused; LiveAgent does not manage tokens.
+The installer first downloads the repository zip for public repositories. If download fails because the repository is private or inaccessible, `method=auto` falls back to git sparse checkout. Existing git credentials or environment-based credentials are reused; Agent does not manage tokens.
 
 Use `method=git` when download mode is not appropriate.
 
@@ -70,4 +70,4 @@ HTTP(S) sources must point to a `.zip` / `.skill` archive or to a single `SKILL.
 
 ## Destination
 
-Runtime installation always targets LiveAgent's fixed user Skills root through `SkillsManager`. File tools do not use a `root` argument; when you need to inspect enabled Skill files, pass `skill://<baseDir>/...`, an absolute path returned by a tool, or the exact `pathRef` returned by a prior tool. Use separate staging roots only in tests or implementation validation, not in normal user workflows.
+Runtime installation always targets Agent's fixed user Skills root through `SkillsManager`. File tools do not use a `root` argument; when you need to inspect enabled Skill files, pass `skill://<baseDir>/...`, an absolute path returned by a tool, or the exact `pathRef` returned by a prior tool. Use separate staging roots only in tests or implementation validation, not in normal user workflows.

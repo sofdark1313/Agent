@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { sortSkillsForDisplay } from "./builtin";
 import type { ClawHubSkillCard } from "./clawHub";
 
-const SKILLS_DISCOVERY_UPDATED_EVENT = "liveagent:skills-discovery-updated";
+const SKILLS_DISCOVERY_UPDATED_EVENT = "agent:skills-discovery-updated";
 
 export {
   isAlwaysEnabledSkillName,

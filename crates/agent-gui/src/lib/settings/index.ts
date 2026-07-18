@@ -4,9 +4,15 @@ import { DEFAULT_LOCALE, type Locale, normalizeLocale } from "../../i18n/config"
 import { getAvailableThinkingLevelsForModel } from "../providers/runtime/modelFactory";
 import { mergeAlwaysEnabledSkillNames } from "../skills/builtin";
 import { SYSTEM_TOOL_OPTIONS, type SystemToolId } from "../tools/systemToolOptions";
+import {
+  type ApprovalPolicy,
+  type CustomApprovalRules,
+  DEFAULT_CUSTOM_APPROVAL_RULES,
+} from "../tools/toolApprovalPolicy";
 import { normalizeApiKey, normalizeBaseUrl, normalizeModels } from "./normalize";
 
 export type { SystemToolId } from "../tools/systemToolOptions";
+export type { ApprovalPolicy, CustomApprovalRules } from "../tools/toolApprovalPolicy";
 
 export type ProviderId = "codex" | "claude_code" | "gemini";
 
@@ -133,6 +139,8 @@ export type UpdateSettings = {
 
 export type SystemSettings = {
   executionMode: ExecutionMode;
+  approvalPolicy: ApprovalPolicy;
+  customApprovalRules: CustomApprovalRules;
   workdir: string;
   selectedSystemTools: SystemToolId[];
   workspaceProjects: WorkspaceProject[];
@@ -395,6 +403,47 @@ function normalizeExecutionMode(input: unknown): ExecutionMode {
     default:
       return "tools";
   }
+}
+
+function normalizeApprovalPolicy(
+  input: unknown,
+  legacyExecutionMode: ExecutionMode,
+): ApprovalPolicy {
+  switch (input) {
+    case "ask":
+    case "agent":
+    case "full":
+    case "custom":
+      return input;
+    default:
+      if (legacyExecutionMode === "text") return "ask";
+      if (legacyExecutionMode === "agent-dev") return "full";
+      return "agent";
+  }
+}
+
+function normalizeCustomApprovalRules(input: unknown): CustomApprovalRules {
+  const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  return {
+    allowWorkspaceWrites:
+      typeof obj.allowWorkspaceWrites === "boolean"
+        ? obj.allowWorkspaceWrites
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowWorkspaceWrites,
+    allowCommands:
+      typeof obj.allowCommands === "boolean"
+        ? obj.allowCommands
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowCommands,
+    allowNetwork:
+      typeof obj.allowNetwork === "boolean"
+        ? obj.allowNetwork
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowNetwork,
+    allowMcp:
+      typeof obj.allowMcp === "boolean" ? obj.allowMcp : DEFAULT_CUSTOM_APPROVAL_RULES.allowMcp,
+    allowOutsideWorkspace:
+      typeof obj.allowOutsideWorkspace === "boolean"
+        ? obj.allowOutsideWorkspace
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowOutsideWorkspace,
+  };
 }
 
 export function isAgentExecutionMode(mode: ExecutionMode): boolean {
@@ -1243,8 +1292,20 @@ function normalizeSshProjectHostAssociations(
 
 export function normalizeSystemSettings(input: unknown): SystemSettings {
   const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const legacyExecutionMode = normalizeExecutionMode(obj.executionMode);
+  const hasExplicitApprovalPolicy =
+    obj.approvalPolicy === "ask" ||
+    obj.approvalPolicy === "agent" ||
+    obj.approvalPolicy === "full" ||
+    obj.approvalPolicy === "custom";
+  const executionMode =
+    legacyExecutionMode === "text" && !hasExplicitApprovalPolicy
+      ? "tools"
+      : legacyExecutionMode;
   return {
-    executionMode: normalizeExecutionMode(obj.executionMode),
+    executionMode,
+    approvalPolicy: normalizeApprovalPolicy(obj.approvalPolicy, legacyExecutionMode),
+    customApprovalRules: normalizeCustomApprovalRules(obj.customApprovalRules),
     workdir: normalizeWorkdir(obj.workdir),
     selectedSystemTools: normalizeSystemToolSelection(obj.selectedSystemTools),
     workspaceProjects: normalizeWorkspaceProjects(obj.workspaceProjects),
@@ -1336,10 +1397,8 @@ export function resolveEffectiveTheme(theme: Theme): EffectiveTheme {
   return window.matchMedia(SYSTEM_THEME_MEDIA_QUERY).matches ? "dark" : "light";
 }
 
-export function getNextTheme(theme: Theme): Theme {
-  if (theme === "light") return "dark";
-  if (theme === "dark") return "system";
-  return "light";
+export function getNextTheme(theme: Theme): EffectiveTheme {
+  return resolveEffectiveTheme(theme) === "dark" ? "light" : "dark";
 }
 
 export function subscribeToSystemThemePreference(listener: () => void): () => void {
@@ -1756,6 +1815,8 @@ export function getDefaultSettings(): AppSettings {
   return {
     system: {
       executionMode: "tools",
+      approvalPolicy: "agent",
+      customApprovalRules: { ...DEFAULT_CUSTOM_APPROVAL_RULES },
       workdir: "",
       selectedSystemTools: [],
       workspaceProjects: [],
@@ -1972,7 +2033,7 @@ export function updateCustomSettings(
   });
 }
 
-const RIGHT_DOCK_WRITER_ID_STORAGE_KEY = "liveagent.client-id";
+const RIGHT_DOCK_WRITER_ID_STORAGE_KEY = "agent.client-id";
 
 let cachedRightDockWriterId = "";
 

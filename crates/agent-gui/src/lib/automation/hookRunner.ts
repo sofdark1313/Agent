@@ -60,10 +60,10 @@ async function runHook(
       timeout_ms: hook.timeoutMs ?? null,
       scope_id: scopeId,
       context: {
-        LIVEAGENT_HOOK_EVENT: event,
-        LIVEAGENT_HOOK_NAME: hook.name,
-        LIVEAGENT_CONVERSATION_ID: conversationId,
-        LIVEAGENT_WORKDIR: workdir?.trim() ?? "",
+        AGENT_HOOK_EVENT: event,
+        AGENT_HOOK_NAME: hook.name,
+        AGENT_CONVERSATION_ID: conversationId,
+        AGENT_WORKDIR: workdir?.trim() ?? "",
       },
     });
     return;

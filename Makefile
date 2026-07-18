@@ -17,18 +17,18 @@ endif
 DESKTOP_WINDOWS_TARGET ?= x86_64-pc-windows-msvc
 DESKTOP_LINUX_TARGET ?= x86_64-unknown-linux-gnu
 DESKTOP_LINUX_BUNDLES ?= appimage deb rpm
-DESKTOP_MACOS_APP_NAME ?= LiveAgent
-DESKTOP_MACOS_NOTARY_PROFILE ?= liveagent-notary
+DESKTOP_MACOS_APP_NAME ?= Agent
+DESKTOP_MACOS_NOTARY_PROFILE ?= agent-notary
 DESKTOP_MACOS_TAURI_CONFIG ?= src-tauri/tauri.macos.conf.json
 DESKTOP_WINDOWS_TAURI_CONFIG ?= src-tauri/tauri.windows.conf.json
 DESKTOP_RELEASE_TAURI_CONFIG ?= src-tauri/tauri.macos.release.conf.json
-DESKTOP_RELEASE_TAURI_CONFIG_FLAGS ?= --config $(DESKTOP_RELEASE_TAURI_CONFIG) $(if $(LIVEAGENT_TAURI_VERSION_CONFIG),--config $(LIVEAGENT_TAURI_VERSION_CONFIG))
+DESKTOP_RELEASE_TAURI_CONFIG_FLAGS ?= --config $(DESKTOP_RELEASE_TAURI_CONFIG) $(if $(AGENT_TAURI_VERSION_CONFIG),--config $(AGENT_TAURI_VERSION_CONFIG))
 
 DEV_GATEWAY_TOKEN ?= dev-token
 DEV_GATEWAY_HTTP_ADDR ?= :50052
 DEV_GATEWAY_GRPC_ADDR ?= :50051
 DEV_WEBUI_PROXY_API ?= http://localhost:50052
-GATEWAY_DOCKER_IMAGE ?= liveagent-gateway:local
+GATEWAY_DOCKER_IMAGE ?= agent-gateway:local
 RELEASE_TAG ?=
 
 .PHONY: all dev build desktop-build-macos desktop-build-macos-release desktop-build-macos-intel desktop-build-macos-m desktop-build-windows desktop-build-linux github-release-main check-github-release-tag help
@@ -100,7 +100,7 @@ github-release-main: check-github-release-tag
 	pnpm --dir $(AGENT_GUI_DIR) test:release
 	cargo check --manifest-path $(AGENT_GUI_DIR)/src-tauri/Cargo.toml --tests
 	node scripts/release/prepare-app-version-from-tag.mjs "$(RELEASE_TAG)" --json
-	git tag -a "$(RELEASE_TAG)" -m "LiveAgent $(RELEASE_TAG)"
+	git tag -a "$(RELEASE_TAG)" -m "Agent $(RELEASE_TAG)"
 	git push origin "$(RELEASE_TAG)"
 
 check-github-release-tag:
@@ -122,9 +122,9 @@ proto:
 	protoc \
 		--proto_path=$(AGENT_GATEWAY_DIR) \
 		--go_out=$(AGENT_GATEWAY_DIR) \
-		--go_opt=module=github.com/liveagent/agent-gateway \
+		--go_opt=module=github.com/agent/agent-gateway \
 		--go-grpc_out=$(AGENT_GATEWAY_DIR) \
-		--go-grpc_opt=module=github.com/liveagent/agent-gateway \
+		--go-grpc_opt=module=github.com/agent/agent-gateway \
 		$(AGENT_GATEWAY_PROTO_FILE)
 
 webui:
@@ -132,19 +132,19 @@ webui:
 	pnpm --dir $(AGENT_GATEWAY_WEB_DIR) build
 
 gateway-build: proto webui
-	CGO_ENABLED=0 go -C $(AGENT_GATEWAY_DIR) build -o bin/liveagent-gateway ./cmd/gateway
+	CGO_ENABLED=0 go -C $(AGENT_GATEWAY_DIR) build -o bin/agent-gateway ./cmd/gateway
 
 gateway-docker-build:
 	docker build -t $(GATEWAY_DOCKER_IMAGE) .
 
 gateway-docker-run:
-	docker run --rm -p 8080:8080 -p 50051:50051 -e LIVEAGENT_GATEWAY_TOKEN=$(DEV_GATEWAY_TOKEN) $(GATEWAY_DOCKER_IMAGE)
+	docker run --rm -p 8080:8080 -p 50051:50051 -e AGENT_GATEWAY_TOKEN=$(DEV_GATEWAY_TOKEN) $(GATEWAY_DOCKER_IMAGE)
 
 gateway-docker-smoke: gateway-docker-build
 	@set -e; \
-	name="liveagent-gateway-smoke"; \
+	name="agent-gateway-smoke"; \
 	docker rm -f "$$name" >/dev/null 2>&1 || true; \
-	docker run -d --name "$$name" -p 18080:8080 -e LIVEAGENT_GATEWAY_TOKEN=$(DEV_GATEWAY_TOKEN) $(GATEWAY_DOCKER_IMAGE) >/dev/null; \
+	docker run -d --name "$$name" -p 18080:8080 -e AGENT_GATEWAY_TOKEN=$(DEV_GATEWAY_TOKEN) $(GATEWAY_DOCKER_IMAGE) >/dev/null; \
 	trap 'docker rm -f "$$name" >/dev/null 2>&1 || true' EXIT; \
 	for _ in $$(seq 1 30); do \
 		if curl -fsS http://127.0.0.1:18080/healthz | grep -q '"ok":true'; then \
@@ -158,15 +158,15 @@ gateway-docker-smoke: gateway-docker-build
 	exit 1
 
 build-linux: proto webui
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go -C $(AGENT_GATEWAY_DIR) build -o bin/liveagent-gateway-linux-amd64 ./cmd/gateway
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go -C $(AGENT_GATEWAY_DIR) build -o bin/agent-gateway-linux-amd64 ./cmd/gateway
 
 build-linux-amd: build-linux
 
 build-linux-arm: proto webui
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go -C $(AGENT_GATEWAY_DIR) build -o bin/liveagent-gateway-linux-arm64 ./cmd/gateway
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go -C $(AGENT_GATEWAY_DIR) build -o bin/agent-gateway-linux-arm64 ./cmd/gateway
 
 build-windows: proto webui
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go -C $(AGENT_GATEWAY_DIR) build -o bin/liveagent-gateway-windows-amd64.exe ./cmd/gateway
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go -C $(AGENT_GATEWAY_DIR) build -o bin/agent-gateway-windows-amd64.exe ./cmd/gateway
 
 gateway-build-windows: build-windows
 

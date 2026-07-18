@@ -138,8 +138,8 @@ test("compaction checkpoint creates a summarized segment and carries summary int
   });
 
   const checkpoint = assistant("Compressed facts", 3, {
-    api: "liveagent-compaction",
-    provider: "liveagent",
+    api: "agent-compaction",
+    provider: "agent",
     model: "summary",
     responseId: "summary-1",
     promptVersion: "summary-v2",
@@ -200,8 +200,8 @@ test("uploaded file metadata is stripped from request context but preserved for 
     role: "user",
     content: "Please inspect file.txt\n\nSelected files are available...",
     timestamp: 1,
-    liveAgentDisplayContent: "Please inspect file.txt",
-    liveAgentAttachments: [
+    agentDisplayContent: "Please inspect file.txt",
+    agentAttachments: [
       {
         relativePath: "file.txt",
         fileName: "file.txt",
@@ -218,8 +218,8 @@ test("uploaded file metadata is stripped from request context but preserved for 
   assert.equal(state.historyRenderItems[0].attachments[0].relativePath, "file.txt");
 
   const requestContext = conversationState.buildRequestContext(state);
-  assert.equal(requestContext.messages[0].liveAgentDisplayContent, undefined);
-  assert.equal(requestContext.messages[0].liveAgentAttachments, undefined);
+  assert.equal(requestContext.messages[0].agentDisplayContent, undefined);
+  assert.equal(requestContext.messages[0].agentAttachments, undefined);
   assert.equal(requestContext.messages[0].content, uploadedMessage.content);
 });
 

@@ -19,12 +19,12 @@ function writeAssetPair(dir, name, signature) {
 }
 
 test("release updater manifest embeds generated notes and platform signatures", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "liveagent-release-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "agent-release-"));
   try {
-    writeAssetPair(dir, "LiveAgent-v9.9.9-macOS-aarch64.app.tar.gz", "sig-mac-arm");
-    writeAssetPair(dir, "LiveAgent-v9.9.9-macOS-x64.app.tar.gz", "sig-mac-x64");
-    writeAssetPair(dir, "LiveAgent-v9.9.9-Windows-x64-Setup.exe", "sig-win");
-    writeAssetPair(dir, "LiveAgent-v9.9.9-Linux-x86_64.AppImage", "sig-linux");
+    writeAssetPair(dir, "Agent-v9.9.9-macOS-aarch64.app.tar.gz", "sig-mac-arm");
+    writeAssetPair(dir, "Agent-v9.9.9-macOS-x64.app.tar.gz", "sig-mac-x64");
+    writeAssetPair(dir, "Agent-v9.9.9-Windows-x64-Setup.exe", "sig-win");
+    writeAssetPair(dir, "Agent-v9.9.9-Linux-x86_64.AppImage", "sig-linux");
 
     const notesPath = path.join(dir, "release-notes.md");
     const outputPath = path.join(dir, "latest.json");
@@ -37,7 +37,7 @@ test("release updater manifest embeds generated notes and platform signatures", 
         cwd: repoRoot,
         env: {
           ...process.env,
-          GITHUB_REPOSITORY: "Stack-Cairn/LiveAgent",
+          GITHUB_REPOSITORY: "Stack-Cairn/Agent",
           RELEASE_TAG: "v9.9.9",
         },
         encoding: "utf8",
@@ -55,7 +55,7 @@ test("release updater manifest embeds generated notes and platform signatures", 
     assert.equal(manifest.notes, "## What's Changed\n\n- Fix updater checks.");
     assert.equal(
       manifest.platforms["darwin-aarch64-app"].url,
-      "https://github.com/Stack-Cairn/LiveAgent/releases/download/v9.9.9/LiveAgent-v9.9.9-macOS-aarch64.app.tar.gz",
+      "https://github.com/Stack-Cairn/Agent/releases/download/v9.9.9/Agent-v9.9.9-macOS-aarch64.app.tar.gz",
     );
     assert.equal(manifest.platforms["darwin-aarch64-app"].signature, "sig-mac-arm");
     assert.deepEqual(
@@ -79,9 +79,9 @@ test("release updater manifest embeds generated notes and platform signatures", 
 });
 
 test("release updater manifest omits generic Linux fallback without an AppImage", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "liveagent-release-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "agent-release-"));
   try {
-    writeAssetPair(dir, "LiveAgent-v9.9.9-Linux-x86_64.deb", "sig-linux-deb");
+    writeAssetPair(dir, "Agent-v9.9.9-Linux-x86_64.deb", "sig-linux-deb");
 
     const outputPath = path.join(dir, "latest.json");
     const result = spawnSync(
@@ -91,7 +91,7 @@ test("release updater manifest omits generic Linux fallback without an AppImage"
         cwd: repoRoot,
         env: {
           ...process.env,
-          GITHUB_REPOSITORY: "Stack-Cairn/LiveAgent",
+          GITHUB_REPOSITORY: "Stack-Cairn/Agent",
           RELEASE_TAG: "v9.9.9",
         },
         encoding: "utf8",
@@ -115,9 +115,9 @@ test("release updater manifest omits generic Linux fallback without an AppImage"
 });
 
 test("release updater manifest uses MSI for generic Windows fallback when NSIS is missing", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "liveagent-release-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "agent-release-"));
   try {
-    writeAssetPair(dir, "LiveAgent-v9.9.9-Windows-x64.msi", "sig-win-msi");
+    writeAssetPair(dir, "Agent-v9.9.9-Windows-x64.msi", "sig-win-msi");
 
     const outputPath = path.join(dir, "latest.json");
     const result = spawnSync(
@@ -127,7 +127,7 @@ test("release updater manifest uses MSI for generic Windows fallback when NSIS i
         cwd: repoRoot,
         env: {
           ...process.env,
-          GITHUB_REPOSITORY: "Stack-Cairn/LiveAgent",
+          GITHUB_REPOSITORY: "Stack-Cairn/Agent",
           RELEASE_TAG: "v9.9.9",
         },
         encoding: "utf8",

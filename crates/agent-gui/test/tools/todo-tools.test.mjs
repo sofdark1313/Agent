@@ -257,9 +257,9 @@ function createRegistryHarness() {
           if (command === "subagent_worktree_create") {
             return {
               repoRoot: "/repo",
-              worktreeRoot: "/tmp/liveagent-subagents/agent-a",
-              workdir: "/tmp/liveagent-subagents/agent-a",
-              branchName: "liveagent/subagent/agent-a",
+              worktreeRoot: "/tmp/agent-subagents/agent-a",
+              workdir: "/tmp/agent-subagents/agent-a",
+              branchName: "agent/subagent/agent-a",
             };
           }
           if (command === "subagent_worktree_status") {
@@ -298,7 +298,7 @@ async function buildRegistry(
   const { createTodoToolState } = loader.loadModule("src/lib/tools/todoTools.ts");
   const mcpSettingsHolder = { value: { selected: [], servers: [DOCS_SERVER] } };
   const baseParams = {
-    workdir: "/tmp/liveagent-todo-registry-test",
+    workdir: "/tmp/agent-todo-registry-test",
     providerId: "codex",
     fileState: createFileToolState(),
     skillsEnabled: true,

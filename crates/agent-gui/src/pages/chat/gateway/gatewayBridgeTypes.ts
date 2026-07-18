@@ -3,7 +3,9 @@ import type { MentionComposerDraft } from "../../../components/chat/MentionCompo
 import type { HistoryMessageRef } from "../../../lib/chat/conversation/conversationState";
 import type { PendingUploadedFile } from "../../../lib/chat/messages/uploadedFiles";
 import type {
+  ApprovalPolicy,
   ChatRuntimeControls,
+  CustomApprovalRules,
   ExecutionMode,
   ProviderId,
   SystemToolId,
@@ -71,6 +73,8 @@ export type ActiveGatewayBridgeRequest = {
   selectedModelOverride?: GatewaySelectedModelEvent;
   runtimeControlsOverride?: ChatRuntimeControls;
   executionModeOverride?: ExecutionMode;
+  approvalPolicyOverride?: ApprovalPolicy;
+  customApprovalRulesOverride?: CustomApprovalRules;
   workdirOverride?: string;
   selectedSystemToolIdsOverride?: SystemToolId[];
 };
@@ -81,6 +85,8 @@ export type SendChatAction = (overrides?: {
   uploadedFilesOverride?: PendingUploadedFile[];
   conversationIdOverride?: string;
   executionModeOverride?: ExecutionMode;
+  approvalPolicyOverride?: ApprovalPolicy;
+  customApprovalRulesOverride?: CustomApprovalRules;
   workdirOverride?: string;
   selectedSystemToolIdsOverride?: SystemToolId[];
   runtimeControlsOverride?: ChatRuntimeControls;

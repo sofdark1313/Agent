@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 func TestFirstNonEmptyRawPreservesSftpPathWhitespace(t *testing.T) {

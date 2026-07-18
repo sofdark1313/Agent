@@ -1280,7 +1280,7 @@ mod tests {
             .unwrap_or_default()
             .as_nanos();
         let workdir = std::env::temp_dir().join(format!(
-            "liveagent-upload-root-test-{}-{unique}",
+            "agent-upload-root-test-{}-{unique}",
             std::process::id()
         ));
         fs::create_dir_all(&workdir).expect("create test workdir");
@@ -1293,8 +1293,8 @@ mod tests {
             root.display()
         );
         assert!(
-            !root.starts_with(workdir.join(".liveagent")),
-            "upload root must not use workdir/.liveagent: {}",
+            !root.starts_with(workdir.join(".agent")),
+            "upload root must not use workdir/.agent: {}",
             root.display()
         );
         assert!(root.exists(), "upload root should be created");
@@ -1378,7 +1378,7 @@ mod tests {
             .unwrap_or_default()
             .as_nanos();
         let workdir = std::env::temp_dir().join(format!(
-            "liveagent-upload-multiple-test-{}-{unique}",
+            "agent-upload-multiple-test-{}-{unique}",
             std::process::id()
         ));
         fs::create_dir_all(&workdir).expect("create test workdir");
@@ -1434,7 +1434,7 @@ mod tests {
             .unwrap_or_default()
             .as_nanos();
         let workdir = std::env::temp_dir().join(format!(
-            "liveagent-upload-base64-test-{}-{unique}",
+            "agent-upload-base64-test-{}-{unique}",
             std::process::id()
         ));
         fs::create_dir_all(&workdir).expect("create test workdir");
@@ -1519,7 +1519,7 @@ mod tests {
             .unwrap_or_default()
             .as_nanos();
         let temp_root = std::env::temp_dir().join(format!(
-            "liveagent-upload-paths-test-{}-{unique}",
+            "agent-upload-paths-test-{}-{unique}",
             std::process::id()
         ));
         let workdir = temp_root.join("workspace");

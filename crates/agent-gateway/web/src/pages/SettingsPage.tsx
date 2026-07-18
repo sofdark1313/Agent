@@ -232,7 +232,7 @@ export function SettingsPage(props: SettingsPageProps) {
             </div>
             <div>
               <div className="text-sm font-semibold tracking-tight">{t("settings.title")}</div>
-              <div className="text-[11px] text-muted-foreground">LiveAgent</div>
+              <div className="text-[11px] text-muted-foreground">Agent</div>
             </div>
           </div>
         </div>

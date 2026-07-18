@@ -59,7 +59,7 @@ function fallbackNotes() {
       // Fall through to a minimal note.
     }
   }
-  return `# LiveAgent ${releaseVersion.releaseTag}\n\nRelease ${releaseVersion.releaseTag}.`;
+  return `# Agent ${releaseVersion.releaseTag}\n\nRelease ${releaseVersion.releaseTag}.`;
 }
 
 function writeFallback(reason) {
@@ -87,7 +87,7 @@ function normalizeMarkdown(markdown) {
   let output = stripCodeFence(markdown);
   if (!output) return "";
   if (!output.startsWith("#")) {
-    output = `# LiveAgent ${releaseVersion.releaseTag}\n\n${output}`;
+    output = `# Agent ${releaseVersion.releaseTag}\n\n${output}`;
   }
   return `${output.trim()}\n`;
 }
@@ -102,7 +102,7 @@ function collectContext() {
   const releaseCommit = runGit(["rev-list", "-n", "1", releaseVersion.releaseTag]);
   const previousTag = previousTagFor(releaseCommit);
   const range = previousTag ? `${previousTag}..${releaseCommit}` : releaseCommit;
-  const repository = process.env.GITHUB_REPOSITORY?.trim() || "Stack-Cairn/LiveAgent";
+  const repository = process.env.GITHUB_REPOSITORY?.trim() || "Stack-Cairn/Agent";
 
   const commitLog = runGit([
     "log",
@@ -149,7 +149,7 @@ function buildPrompt(context) {
     "- Do not invent features, fixes, metrics, dates, warnings, contributors, or compatibility claims.",
     "- Use only the provided GitHub notes, commit log, diff stat, and changed files.",
     "- Write for end users first, developers second.",
-    "- Start with exactly this H1: # LiveAgent " + context.releaseTag,
+    "- Start with exactly this H1: # Agent " + context.releaseTag,
     "- Add a one-sentence blockquote summary after the H1.",
     "- Use concise sections: Overview, Highlights, Added, Changed, Fixed, Internal.",
     "- Omit a section if there is no evidence for it.",

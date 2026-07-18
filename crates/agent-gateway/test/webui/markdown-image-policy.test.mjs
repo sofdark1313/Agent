@@ -50,7 +50,7 @@ test("webui markdown image syntax also falls back to alt text", () => {
 
   assert.ok(node);
   assert.equal(node.type, "span");
-  assert.equal(node.props["data-liveagent-markdown-image"], "text-fallback");
+  assert.equal(node.props["data-agent-markdown-image"], "text-fallback");
   assert.equal(node.props.title, "东门老街");
   assert.equal(node.props.children, "东门老街");
 

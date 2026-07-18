@@ -9,7 +9,7 @@ import "react-complex-tree/lib/style-modern.css";
 import "streamdown/styles.css";
 import "./styles.css";
 
-document.documentElement.dataset.liveagentWebui = "gateway";
+document.documentElement.dataset.agentWebui = "gateway";
 
 const dashboardPaths = new Set(["/dashboard", "/status-board", "/observatory"]);
 const Root = dashboardPaths.has(window.location.pathname) ? StatusDashboardPage : App;

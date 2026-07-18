@@ -9,9 +9,9 @@ import (
 )
 
 func TestLoadNormalizesTokenAndTLSPaths(t *testing.T) {
-	t.Setenv("LIVEAGENT_GATEWAY_TOKEN", "  secret-token\r\n")
-	t.Setenv("LIVEAGENT_GATEWAY_TLS_CERT", " cert.pem ")
-	t.Setenv("LIVEAGENT_GATEWAY_TLS_KEY", "\tkey.pem\r\n")
+	t.Setenv("AGENT_GATEWAY_TOKEN", "  secret-token\r\n")
+	t.Setenv("AGENT_GATEWAY_TLS_CERT", " cert.pem ")
+	t.Setenv("AGENT_GATEWAY_TLS_KEY", "\tkey.pem\r\n")
 	resetFlagsForTest(t)
 	cfg := Load()
 	if cfg.Token != "secret-token" {
@@ -26,21 +26,21 @@ func TestLoadNormalizesTokenAndTLSPaths(t *testing.T) {
 }
 
 func TestLoadWebSocketHeartbeatGrace(t *testing.T) {
-	t.Setenv("LIVEAGENT_GATEWAY_TOKEN", "dev-token")
+	t.Setenv("AGENT_GATEWAY_TOKEN", "dev-token")
 	resetFlagsForTest(t)
 	cfg := Load()
 	if cfg.WebSocketHeartbeatGrace != 5*time.Second {
 		t.Fatalf("WebSocketHeartbeatGrace default = %s, want 5s", cfg.WebSocketHeartbeatGrace)
 	}
 
-	t.Setenv("LIVEAGENT_GATEWAY_WS_HEARTBEAT_GRACE", "45s")
+	t.Setenv("AGENT_GATEWAY_WS_HEARTBEAT_GRACE", "45s")
 	resetFlagsForTest(t)
 	cfg = Load()
 	if cfg.WebSocketHeartbeatGrace != 45*time.Second {
 		t.Fatalf("WebSocketHeartbeatGrace = %s, want 45s", cfg.WebSocketHeartbeatGrace)
 	}
 
-	t.Setenv("LIVEAGENT_GATEWAY_WS_HEARTBEAT_GRACE", "-3s")
+	t.Setenv("AGENT_GATEWAY_WS_HEARTBEAT_GRACE", "-3s")
 	resetFlagsForTest(t)
 	cfg = Load()
 	if cfg.WebSocketHeartbeatGrace != 5*time.Second {
@@ -49,7 +49,7 @@ func TestLoadWebSocketHeartbeatGrace(t *testing.T) {
 }
 
 func TestLoadChatTimeouts(t *testing.T) {
-	t.Setenv("LIVEAGENT_GATEWAY_TOKEN", "dev-token")
+	t.Setenv("AGENT_GATEWAY_TOKEN", "dev-token")
 	resetFlagsForTest(t)
 	cfg := Load()
 	if cfg.ChatPrepareTimeout != 2*time.Second {
@@ -65,10 +65,10 @@ func TestLoadChatTimeouts(t *testing.T) {
 		t.Fatalf("ChatRenderStartTimeout default = %s, want 10s", cfg.ChatRenderStartTimeout)
 	}
 
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_PREPARE_TIMEOUT", "750ms")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_DELIVERY_TIMEOUT", "3s")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_START_TIMEOUT", "4s")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_RENDER_START_TIMEOUT", "8s")
+	t.Setenv("AGENT_GATEWAY_CHAT_PREPARE_TIMEOUT", "750ms")
+	t.Setenv("AGENT_GATEWAY_CHAT_DELIVERY_TIMEOUT", "3s")
+	t.Setenv("AGENT_GATEWAY_CHAT_START_TIMEOUT", "4s")
+	t.Setenv("AGENT_GATEWAY_CHAT_RENDER_START_TIMEOUT", "8s")
 	resetFlagsForTest(t)
 	cfg = Load()
 	if cfg.ChatPrepareTimeout != 750*time.Millisecond ||
@@ -83,10 +83,10 @@ func TestLoadChatTimeouts(t *testing.T) {
 		)
 	}
 
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_PREPARE_TIMEOUT", "-1s")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_DELIVERY_TIMEOUT", "0s")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_START_TIMEOUT", "-1s")
-	t.Setenv("LIVEAGENT_GATEWAY_CHAT_RENDER_START_TIMEOUT", "-1s")
+	t.Setenv("AGENT_GATEWAY_CHAT_PREPARE_TIMEOUT", "-1s")
+	t.Setenv("AGENT_GATEWAY_CHAT_DELIVERY_TIMEOUT", "0s")
+	t.Setenv("AGENT_GATEWAY_CHAT_START_TIMEOUT", "-1s")
+	t.Setenv("AGENT_GATEWAY_CHAT_RENDER_START_TIMEOUT", "-1s")
 	resetFlagsForTest(t)
 	cfg = Load()
 	if cfg.ChatPrepareTimeout != 2*time.Second ||
@@ -104,7 +104,7 @@ func TestLoadChatTimeouts(t *testing.T) {
 
 func TestLoadUsesRailwayPortForHTTPDefault(t *testing.T) {
 	t.Setenv("PORT", "8080")
-	t.Setenv("LIVEAGENT_GATEWAY_TOKEN", "dev-token")
+	t.Setenv("AGENT_GATEWAY_TOKEN", "dev-token")
 
 	resetFlagsForTest(t)
 	cfg := Load()

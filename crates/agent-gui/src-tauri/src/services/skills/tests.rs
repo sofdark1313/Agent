@@ -51,7 +51,7 @@ fn github_tree_url_parses_ref_and_subpath() {
 
 #[test]
 fn discover_skill_dirs_supports_repo_skills_folder() {
-    let tmp = TempDir::new("liveagent-skill-discover-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-discover-test").expect("temp dir");
     let skills_root = tmp.path().join("repo").join("skills");
     write_skill(&skills_root, "first-skill", "First");
     write_skill(&skills_root, "second-skill", "Second");
@@ -67,7 +67,7 @@ fn discover_skill_dirs_supports_repo_skills_folder() {
 
 #[test]
 fn discover_skill_dirs_does_not_let_root_readme_override_skills_folder() {
-    let tmp = TempDir::new("liveagent-readme-root-discover-test").expect("temp dir");
+    let tmp = TempDir::new("agent-readme-root-discover-test").expect("temp dir");
     let repo = tmp.path().join("repo");
     fs::create_dir_all(&repo).expect("create repo");
     fs::write(repo.join("README.md"), "# Repo README\n").expect("write repo readme");
@@ -84,7 +84,7 @@ fn discover_skill_dirs_does_not_let_root_readme_override_skills_folder() {
 
 #[test]
 fn readme_frontmatter_is_used_as_skill_metadata_fallback() {
-    let tmp = TempDir::new("liveagent-readme-frontmatter-test").expect("temp dir");
+    let tmp = TempDir::new("agent-readme-frontmatter-test").expect("temp dir");
     let dir = tmp.path().join("readme-skill");
     fs::create_dir_all(&dir).expect("create skill dir");
     fs::write(
@@ -104,7 +104,7 @@ fn readme_frontmatter_is_used_as_skill_metadata_fallback() {
 
 #[test]
 fn readme_without_frontmatter_derives_metadata_for_management() {
-    let tmp = TempDir::new("liveagent-plain-readme-test").expect("temp dir");
+    let tmp = TempDir::new("agent-plain-readme-test").expect("temp dir");
     let dir = tmp.path().join("plain-readme-skill");
     fs::create_dir_all(&dir).expect("create skill dir");
     fs::write(
@@ -128,7 +128,7 @@ fn readme_without_frontmatter_derives_metadata_for_management() {
 
 #[test]
 fn readme_empty_frontmatter_derives_metadata_for_management() {
-    let tmp = TempDir::new("liveagent-empty-readme-frontmatter-test").expect("temp dir");
+    let tmp = TempDir::new("agent-empty-readme-frontmatter-test").expect("temp dir");
     let dir = tmp.path().join("empty-readme-metadata");
     fs::create_dir_all(&dir).expect("create skill dir");
     fs::write(
@@ -147,7 +147,7 @@ fn readme_empty_frontmatter_derives_metadata_for_management() {
 
 #[test]
 fn readme_partial_frontmatter_is_invalid_metadata() {
-    let tmp = TempDir::new("liveagent-partial-readme-frontmatter-test").expect("temp dir");
+    let tmp = TempDir::new("agent-partial-readme-frontmatter-test").expect("temp dir");
     let dir = tmp.path().join("partial-readme-metadata");
     fs::create_dir_all(&dir).expect("create skill dir");
     fs::write(
@@ -176,7 +176,7 @@ fn readme_partial_frontmatter_is_invalid_metadata() {
 
 #[test]
 fn readme_inside_existing_skill_is_not_a_discovery_candidate() {
-    let tmp = TempDir::new("liveagent-nested-readme-discovery-test").expect("temp dir");
+    let tmp = TempDir::new("agent-nested-readme-discovery-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let skill_dir = write_skill(&root, "documented-skill", "Documented");
     let reference_dir = skill_dir.join("references");
@@ -193,7 +193,7 @@ fn readme_inside_existing_skill_is_not_a_discovery_candidate() {
 
 #[test]
 fn install_skill_dir_with_backup_preserves_existing_target() {
-    let tmp = TempDir::new("liveagent-skill-backup-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-backup-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let source_a = tmp.path().join("source-a");
     let source_b = tmp.path().join("source-b");
@@ -225,7 +225,7 @@ fn install_skill_dir_with_backup_preserves_existing_target() {
 
 #[test]
 fn builtin_seed_backs_up_invalid_target_before_writing() {
-    let tmp = TempDir::new("liveagent-builtin-seed-test").expect("temp dir");
+    let tmp = TempDir::new("agent-builtin-seed-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let invalid_target = root.join("skills-installer");
     fs::create_dir_all(&invalid_target).expect("create invalid target");
@@ -247,7 +247,7 @@ fn builtin_seed_backs_up_invalid_target_before_writing() {
 
 #[test]
 fn builtin_seed_updates_changed_valid_target_before_writing() {
-    let tmp = TempDir::new("liveagent-builtin-update-test").expect("temp dir");
+    let tmp = TempDir::new("agent-builtin-update-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let old_target = root.join("skills-creator");
     fs::create_dir_all(&old_target).expect("create old target");
@@ -274,7 +274,7 @@ fn builtin_seed_updates_changed_valid_target_before_writing() {
 
 #[test]
 fn builtin_seed_removes_retired_builtin_files() {
-    let tmp = TempDir::new("liveagent-builtin-retired-file-test").expect("temp dir");
+    let tmp = TempDir::new("agent-builtin-retired-file-test").expect("temp dir");
     let root = tmp.path().join("skills");
 
     ensure_builtin_agent_skills_in_root(&root).expect("seed builtins");
@@ -298,7 +298,7 @@ fn builtin_seed_removes_retired_builtin_files() {
 
 #[test]
 fn list_installed_skills_skips_hidden_backup_dirs() {
-    let tmp = TempDir::new("liveagent-skill-list-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-list-test").expect("temp dir");
     let root = tmp.path().join("skills");
     write_skill(&root, "active-skill", "Active");
     write_skill(&root.join(".backups"), "backup-skill", "Backup");
@@ -317,7 +317,7 @@ fn list_installed_skills_skips_hidden_backup_dirs() {
 
 #[test]
 fn install_source_from_local_skill_archive_installs_skill() {
-    let tmp = TempDir::new("liveagent-skill-archive-install-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-archive-install-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let archive = tmp.path().join("archive-skill.skill");
     {
@@ -397,7 +397,7 @@ fn normalize_clawhub_skill_card_supports_search_shape() {
 
 #[test]
 fn install_source_persists_clawhub_metadata_when_slug_is_present() {
-    let tmp = TempDir::new("liveagent-skill-clawhub-meta-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-clawhub-meta-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let source = tmp.path().join("source");
     write_skill(&source, "clawhub-skill", "ClawHub install");
@@ -422,7 +422,7 @@ fn install_source_persists_clawhub_metadata_when_slug_is_present() {
 
 #[test]
 fn validate_and_package_round_trip() {
-    let tmp = TempDir::new("liveagent-skill-package-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-package-test").expect("temp dir");
     let root = tmp.path().join("skills");
     write_skill(&root, "package-skill", "Package test");
 
@@ -436,7 +436,7 @@ fn validate_and_package_round_trip() {
 
 #[test]
 fn delete_installed_skill_removes_user_skill() {
-    let tmp = TempDir::new("liveagent-skill-delete-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-delete-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let skill_dir = write_skill(&root, "delete-skill", "Delete test");
 
@@ -449,7 +449,7 @@ fn delete_installed_skill_removes_user_skill() {
 
 #[test]
 fn delete_installed_skill_rejects_builtin_skill() {
-    let tmp = TempDir::new("liveagent-skill-delete-builtin-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-delete-builtin-test").expect("temp dir");
     let root = tmp.path().join("skills");
     write_skill(&root, "skills-installer", "Built-in replacement");
 
@@ -465,7 +465,7 @@ fn delete_installed_skill_rejects_builtin_skill() {
 
 #[test]
 fn delete_installed_skill_rejects_missing_skill() {
-    let tmp = TempDir::new("liveagent-skill-delete-missing-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-delete-missing-test").expect("temp dir");
     let root = tmp.path().join("skills");
 
     let error = delete_installed_skill(&root, "missing-skill").expect_err("delete should fail");
@@ -478,7 +478,7 @@ fn delete_installed_skill_rejects_missing_skill() {
 
 #[test]
 fn delete_installed_skill_rejects_non_directory_target() {
-    let tmp = TempDir::new("liveagent-skill-delete-file-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-delete-file-test").expect("temp dir");
     let root = tmp.path().join("skills");
     fs::create_dir_all(&root).expect("create skills root");
     let file = root.join("file-skill");
@@ -495,7 +495,7 @@ fn delete_installed_skill_rejects_non_directory_target() {
 
 #[test]
 fn validate_allows_nested_metadata_frontmatter() {
-    let tmp = TempDir::new("liveagent-skill-frontmatter-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-frontmatter-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let dir = root.join("metadata-skill");
     fs::create_dir_all(&dir).expect("create skill dir");
@@ -512,7 +512,7 @@ fn validate_allows_nested_metadata_frontmatter() {
 
 #[test]
 fn validate_allows_single_line_frontmatter() {
-    let tmp = TempDir::new("liveagent-skill-inline-frontmatter-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-inline-frontmatter-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let dir = root.join("security-threat-model");
     fs::create_dir_all(&dir).expect("create skill dir");
@@ -536,7 +536,7 @@ fn validate_allows_single_line_frontmatter() {
 
 #[test]
 fn validate_accepts_non_english_markdown_documentation() {
-    let tmp = TempDir::new("liveagent-skill-language-doc-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-language-doc-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let dir = root.join("multilingual-skill");
     fs::create_dir_all(&dir).expect("create skill dir");
@@ -554,7 +554,7 @@ fn validate_accepts_non_english_markdown_documentation() {
 
 #[test]
 fn create_skill_accepts_non_english_body() {
-    let tmp = TempDir::new("liveagent-skill-create-language-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-create-language-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let payload = json!({
         "name": "multilingual-create-skill",
@@ -574,7 +574,7 @@ fn create_skill_accepts_non_english_body() {
 
 #[test]
 fn create_skill_rejects_builtin_skill_names() {
-    let tmp = TempDir::new("liveagent-skill-create-builtin-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-create-builtin-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let payload = json!({
         "name": "skills-creator",
@@ -594,7 +594,7 @@ fn create_skill_rejects_builtin_skill_names() {
 
 #[test]
 fn install_source_rejects_builtin_skill_names() {
-    let tmp = TempDir::new("liveagent-skill-install-builtin-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-install-builtin-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let source = tmp.path().join("source");
     write_skill(&source, "skills-installer", "Replacement");
@@ -614,7 +614,7 @@ fn install_source_rejects_builtin_skill_names() {
 
 #[test]
 fn safe_extract_zip_rejects_parent_traversal() {
-    let tmp = TempDir::new("liveagent-skill-zip-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-zip-test").expect("temp dir");
     let archive = tmp.path().join("bad.skill");
     {
         let file = fs::File::create(&archive).expect("archive file");
@@ -634,7 +634,7 @@ fn safe_extract_zip_rejects_parent_traversal() {
 
 #[test]
 fn install_skill_dir_stages_source_metadata_atomically_and_drains_staging() {
-    let tmp = TempDir::new("liveagent-skill-meta-atomic-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-meta-atomic-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let source = tmp.path().join("source");
     write_skill(&source, "meta-skill", "Meta");
@@ -668,7 +668,7 @@ fn install_skill_dir_stages_source_metadata_atomically_and_drains_staging() {
 
 #[test]
 fn install_skill_dir_failure_leaves_existing_target_untouched() {
-    let tmp = TempDir::new("liveagent-skill-fail-safe-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-fail-safe-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let good_source = tmp.path().join("good");
     write_skill(&good_source, "stable-skill", "Stable");
@@ -697,7 +697,7 @@ fn install_skill_dir_failure_leaves_existing_target_untouched() {
 #[test]
 fn concurrent_same_name_installs_serialize_into_one_target_and_complete_backups() {
     const WRITERS: usize = 4;
-    let tmp = TempDir::new("liveagent-skill-race-same-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-race-same-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let barrier = std::sync::Arc::new(std::sync::Barrier::new(WRITERS));
 
@@ -736,7 +736,7 @@ fn concurrent_same_name_installs_serialize_into_one_target_and_complete_backups(
 #[test]
 fn concurrent_distinct_installs_all_succeed_and_staging_is_drained() {
     const WRITERS: usize = 4;
-    let tmp = TempDir::new("liveagent-skill-race-distinct-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-race-distinct-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let barrier = std::sync::Arc::new(std::sync::Barrier::new(WRITERS));
 
@@ -768,7 +768,7 @@ fn concurrent_distinct_installs_all_succeed_and_staging_is_drained() {
 
 #[test]
 fn install_source_cancel_flag_aborts_before_touching_target() {
-    let tmp = TempDir::new("liveagent-skill-cancel-test").expect("temp dir");
+    let tmp = TempDir::new("agent-skill-cancel-test").expect("temp dir");
     let root = tmp.path().join("skills");
     let source = tmp.path().join("source");
     write_skill(&source, "cancel-skill", "Cancel");

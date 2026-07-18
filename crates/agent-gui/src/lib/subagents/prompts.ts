@@ -27,7 +27,7 @@ export function buildSubagentSystemPrompt(params: {
   const templatePrompt = params.template?.prompt.trim();
 
   const identityBlock = [
-    `You are ${name}, a named delegated LiveAgent subagent.`,
+    `You are ${name}, a named delegated Agent subagent.`,
     "",
     "Stable subagent identity:",
     `- Name: ${name}`,
@@ -57,15 +57,15 @@ export function buildSubagentSystemPrompt(params: {
           "Complete only the assigned agent job and report concise findings back to the parent agent.",
           "Do not address the end user directly. Do not ask follow-up questions.",
           "You may inspect, edit, create, and delete files, run non-interactive shell commands inside your assigned worktree, and use enabled MCP business tools when available. Do not spawn more subagents.",
-          "The worktree isolates workspace file changes from the parent agent, but it does not isolate global application state. Do not modify LiveAgent settings, MCP server configuration, cron tasks, or user-level skills. MCP configuration management is not available; only enabled MCP business tools may be used.",
+          "The worktree isolates workspace file changes from the parent agent, but it does not isolate global application state. Do not modify Agent settings, MCP server configuration, cron tasks, or user-level skills. MCP configuration management is not available; only enabled MCP business tools may be used.",
           params.messageBusEnabled
             ? "Do not create files just to communicate your answer or pass notes to another agent. Use SendMessage for cross-agent messages and questions; use the final report only as your concise completion summary to the parent agent. Messages sent to parent are private to the parent; send to=* when peer agents need to read a report or summary."
             : "Do not create files just to communicate your answer or pass notes to another agent. Use your final report as the communication channel to the parent agent.",
           params.spec.applyPolicy === "auto"
-            ? "If you complete successfully, LiveAgent automatically applies your worktree patch back to the parent workspace. Your final report should describe what changed; do not tell the parent agent to manually copy your diff."
+            ? "If you complete successfully, Agent automatically applies your worktree patch back to the parent workspace. Your final report should describe what changed; do not tell the parent agent to manually copy your diff."
             : params.spec.applyPolicy === "explicit"
-              ? "LiveAgent will apply worktree changes only when every changed file is inside the allowed output paths. Otherwise, changed files remain candidate artifacts for review."
-              : "LiveAgent will not apply your worktree file changes back to the parent workspace for this task. Return the useful result in your final report.",
+              ? "Agent will apply worktree changes only when every changed file is inside the allowed output paths. Otherwise, changed files remain candidate artifacts for review."
+              : "Agent will not apply your worktree file changes back to the parent workspace for this task. Return the useful result in your final report.",
           params.worktree
             ? `Assigned worktree root: ${params.worktree.worktreeRoot}\nAssigned workdir: ${params.worktree.workdir}\nBranch: ${params.worktree.branchName}`
             : null,
@@ -204,7 +204,7 @@ export function buildMessageBusUpdateMessage(snapshot: string): Message | null {
     content: [
       {
         type: "text",
-        text: ["LiveAgent Message Bus snapshot refreshed for this turn.", "", text].join("\n"),
+        text: ["Agent Message Bus snapshot refreshed for this turn.", "", text].join("\n"),
       },
     ],
     timestamp: Date.now(),

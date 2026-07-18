@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/liveagent/agent-gateway/internal/config"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/server"
-	"github.com/liveagent/agent-gateway/internal/session"
+	"github.com/agent/agent-gateway/internal/config"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/server"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 // fakeAgent emulates the desktop agent's data-plane behavior in-process: it
@@ -361,7 +361,7 @@ func TestTunnelHTMLRewriteInjectsShimAndDropsContentLength(t *testing.T) {
 	if resp.Header.Get("Content-Length") == "999" {
 		t.Fatal("stale Content-Length must be dropped for rewritten responses")
 	}
-	if !strings.Contains(string(body), "data-liveagent-tunnel-shim") {
+	if !strings.Contains(string(body), "data-agent-tunnel-shim") {
 		t.Fatalf("shim not injected: %q", body)
 	}
 	if !strings.Contains(string(body), "/t/"+slug+"/about") {

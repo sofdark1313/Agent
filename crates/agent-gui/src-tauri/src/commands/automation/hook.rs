@@ -103,13 +103,13 @@ fn normalize_timeout(timeout_ms: Option<u64>) -> u64 {
 }
 
 /// Context forwarded to hook scripts as environment variables. Keys are
-/// namespaced by the caller (e.g. LIVEAGENT_HOOK_EVENT); values are passed
+/// namespaced by the caller (e.g. AGENT_HOOK_EVENT); values are passed
 /// through verbatim.
 fn normalize_context(context: Option<HashMap<String, String>>) -> Vec<(String, String)> {
     context
         .unwrap_or_default()
         .into_iter()
-        .filter(|(key, _)| key.starts_with("LIVEAGENT_"))
+        .filter(|(key, _)| key.starts_with("AGENT_"))
         .collect()
 }
 
@@ -321,9 +321,9 @@ mod tests {
         let registry = HookScopeRegistry::default();
         let dir = temp_workdir();
         let script = if cfg!(windows) {
-            "Write-Output \"event=$env:LIVEAGENT_HOOK_EVENT\""
+            "Write-Output \"event=$env:AGENT_HOOK_EVENT\""
         } else {
-            "printf \"event=$LIVEAGENT_HOOK_EVENT\""
+            "printf \"event=$AGENT_HOOK_EVENT\""
         };
         let result = run_hook_script_sync(
             &registry,
@@ -332,7 +332,7 @@ mod tests {
             None,
             Some(format!("scope-{}", Uuid::new_v4())),
             vec![(
-                "LIVEAGENT_HOOK_EVENT".to_string(),
+                "AGENT_HOOK_EVENT".to_string(),
                 "agent_end".to_string(),
             )],
         )

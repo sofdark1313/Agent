@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 func TestEventPayloadPreservesHostedSearch(t *testing.T) {
@@ -69,7 +69,7 @@ func TestEventPayloadLeavesToolCallArgsUntouched(t *testing.T) {
 		ConversationId: "conversation-1",
 		Data: `{"type":"tool_call_delta","id":"call-write","name":"Write","arguments":{"path":"src/app.ts","content":"` +
 			longContent +
-			`","__liveagent_stream_preview":{"v":2,"progress":6000,"fields":{"content":{"chars":6000,"lines":12,"truncated":true}}}},"round":1}`,
+			`","__agent_stream_preview":{"v":2,"progress":6000,"fields":{"content":{"chars":6000,"lines":12,"truncated":true}}}},"round":1}`,
 	}, 9)
 
 	args, ok := payload["arguments"].(map[string]any)
@@ -79,7 +79,7 @@ func TestEventPayloadLeavesToolCallArgsUntouched(t *testing.T) {
 	if content := args["content"].(string); content != longContent {
 		t.Fatalf("content modified: len=%d, want %d", len(content), len(longContent))
 	}
-	meta, ok := args["__liveagent_stream_preview"].(map[string]any)
+	meta, ok := args["__agent_stream_preview"].(map[string]any)
 	if !ok {
 		t.Fatalf("expected producer preview meta preserved, got %#v", args)
 	}
@@ -105,7 +105,7 @@ func TestTrimLargeToolResultContentTruncatesToolResult(t *testing.T) {
 	if content := payload["content"].(string); len(content) != 200 {
 		t.Fatalf("trimmed result length = %d, want 200", len(content))
 	}
-	meta, ok := payload["__liveagent_stream_preview"].(map[string]any)
+	meta, ok := payload["__agent_stream_preview"].(map[string]any)
 	if !ok {
 		t.Fatalf("expected preview meta on tool_result payload")
 	}
@@ -132,7 +132,7 @@ func TestTrimLargeToolResultContentIsRuneSafe(t *testing.T) {
 	if len(content) > 200 {
 		t.Fatalf("trimmed result length = %d, want <= 200", len(content))
 	}
-	meta := payload["__liveagent_stream_preview"].(map[string]any)
+	meta := payload["__agent_stream_preview"].(map[string]any)
 	fields := meta["fields"].(map[string]any)
 	info := fields["content"].(map[string]any)
 	if info["chars"] != 100 {

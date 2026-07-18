@@ -46,6 +46,56 @@ dependencies = [
 ]
 
 [[package]]
+name = "agent"
+version = "0.0.0-dev"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "chrono",
+ "dirs",
+ "futures-util",
+ "globset",
+ "ignore",
+ "leveldb-core",
+ "lopdf",
+ "notify",
+ "objc2-app-kit 0.3.2",
+ "portable-pty",
+ "prost",
+ "quick-xml 0.41.0",
+ "regex",
+ "reqwest",
+ "rfd",
+ "rusqlite",
+ "russh",
+ "russh-sftp",
+ "rustls",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-mcp-bridge",
+ "tauri-plugin-opener",
+ "tauri-plugin-updater",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-cron-scheduler",
+ "tokio-stream",
+ "tokio-tungstenite 0.29.0",
+ "tonic",
+ "tonic-prost",
+ "tonic-prost-build",
+ "uuid",
+ "wait-timeout",
+ "walkdir",
+ "windows-sys 0.61.2",
+ "zip 8.6.0",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3173,56 +3223,6 @@ name = "litemap"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
-
-[[package]]
-name = "liveagent"
-version = "0.0.0-dev"
-dependencies = [
- "axum",
- "base64 0.22.1",
- "chrono",
- "dirs",
- "futures-util",
- "globset",
- "ignore",
- "leveldb-core",
- "lopdf",
- "notify",
- "objc2-app-kit 0.3.2",
- "portable-pty",
- "prost",
- "quick-xml 0.41.0",
- "regex",
- "reqwest",
- "rfd",
- "rusqlite",
- "russh",
- "russh-sftp",
- "rustls",
- "semver",
- "serde",
- "serde_json",
- "sha2 0.11.0",
- "tauri",
- "tauri-build",
- "tauri-plugin-mcp-bridge",
- "tauri-plugin-opener",
- "tauri-plugin-updater",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-cron-scheduler",
- "tokio-stream",
- "tokio-tungstenite 0.29.0",
- "tonic",
- "tonic-prost",
- "tonic-prost-build",
- "uuid",
- "wait-timeout",
- "walkdir",
- "windows-sys 0.61.2",
- "zip 8.6.0",
-]
 
 [[package]]
 name = "lock_api"

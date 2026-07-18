@@ -249,7 +249,7 @@ function editorModelUri(tabKey: string) {
     hexKey += byte.toString(16).padStart(2, "0");
   }
   return monaco.Uri.from({
-    scheme: "liveagent-editor",
+    scheme: "agent-editor",
     authority: "model",
     path: `/${hexKey}`,
   });
@@ -814,16 +814,17 @@ export function WorkspaceCodeEditorOverlay(props: WorkspaceCodeEditorOverlayProp
 
   return (
     <div
+      data-agent-editor-workspace
       ref={overlayRef}
       className={cn(
-        "absolute inset-0 z-50 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+        "absolute inset-0 z-50 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border/60 bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
         isVisible
           ? "pointer-events-auto translate-x-0 opacity-100 shadow-2xl"
           : "pointer-events-none -translate-x-2 opacity-0 shadow-lg",
       )}
     >
-      <MacOsTitleBarSpacer className="bg-muted/45" />
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-muted/45 px-3">
+      <MacOsTitleBarSpacer className="bg-[hsl(var(--agent-surface-subtle))]" />
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border/60 bg-[hsl(var(--agent-surface-subtle))] px-3">
         <FilePenLine className="h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold leading-tight">

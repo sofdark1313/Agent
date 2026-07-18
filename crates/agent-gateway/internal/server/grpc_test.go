@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/liveagent/agent-gateway/internal/config"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	"github.com/agent/agent-gateway/internal/config"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

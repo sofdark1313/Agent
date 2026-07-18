@@ -53,14 +53,14 @@ function buildCheckpointMessage(params: {
 }): CompactionCheckpointMessage {
   return {
     role: "assistant",
-    api: "liveagent-compaction",
+    api: "agent-compaction",
     provider: params.providerId,
     model: params.model,
     promptVersion: COMPACTION_PROMPT_VERSION,
     content: [{ type: "text", text: params.summaryText }],
     stopReason: "stop",
     timestamp: params.timestamp,
-    responseId: params.responseId || `liveagent-compaction-${params.timestamp}-${randomId()}`,
+    responseId: params.responseId || `agent-compaction-${params.timestamp}-${randomId()}`,
     // checkpoint 消息自身的 usage 恒为零：summarizer 请求的真实用量走 compactionStats，
     // 绝不冒充会话上下文规模（旧实现的 usage 污染即源于此）。
     usage: {

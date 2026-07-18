@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/liveagent/agent-gateway/internal/config"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/server"
-	"github.com/liveagent/agent-gateway/internal/session"
+	"github.com/agent/agent-gateway/internal/config"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/server"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 func newChatWebSocketTest(t *testing.T) (*session.Manager, *session.AgentSession, *websocket.Conn, func()) {

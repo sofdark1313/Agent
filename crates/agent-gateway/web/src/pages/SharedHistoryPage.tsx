@@ -72,7 +72,7 @@ export function SharedHistoryPage({ token }: SharedHistoryPageProps) {
               />
               <div className="min-w-0">
                 <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  LiveAgent Shared Conversation
+                  Agent Shared Conversation
                 </div>
                 <h1 className="mt-1 truncate text-lg font-semibold text-foreground" title={title}>
                   {title}

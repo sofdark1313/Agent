@@ -192,7 +192,7 @@ test("ToolPathResolver resolves enabled Skill paths and gates external paths by 
   const resolver = new pathUtils.ToolPathResolver({
     workdir: "/workspace/project",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     skillAccessPolicy: {
       allowedSkillNames: ["skills-creator"],
       allowedSkillBaseDirs: ["skills-creator"],
@@ -206,13 +206,13 @@ test("ToolPathResolver resolves enabled Skill paths and gates external paths by 
   });
   assert.equal(skillUrl.scope, "skill");
   assert.equal(skillUrl.relativePath, "skills-creator/SKILL.md");
-  assert.equal(skillUrl.absolutePath, "/Users/me/.liveagent/skills/skills-creator/SKILL.md");
+  assert.equal(skillUrl.absolutePath, "/Users/me/.agent/skills/skills-creator/SKILL.md");
   assert.equal(skillUrl.displayPath, "skill://skills-creator/SKILL.md");
-  assert.equal(skillUrl.root, "/Users/me/.liveagent/skills");
+  assert.equal(skillUrl.root, "/Users/me/.agent/skills");
   assert.ok(!("pathRef" in skillUrl));
 
   const absoluteSkill = await resolver.resolvePath(
-    "/Users/me/.liveagent/skills/skills-creator/SKILL.md",
+    "/Users/me/.agent/skills/skills-creator/SKILL.md",
     {
       label: "Read.path",
       intent: "read",
@@ -257,7 +257,7 @@ test("ToolPathResolver teaches the skill:// shape when the skill path is empty",
   const resolver = new pathUtils.ToolPathResolver({
     workdir: "/workspace/project",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
   });
 
   await assert.rejects(
@@ -278,18 +278,18 @@ test("ToolPathResolver teaches the skill:// shape when the skill path is empty",
   });
   assert.equal(skillsRoot.scope, "skill");
   assert.equal(skillsRoot.relativePath, undefined);
-  assert.equal(skillsRoot.root, "/Users/me/.liveagent/skills");
+  assert.equal(skillsRoot.root, "/Users/me/.agent/skills");
 });
 
 test("ToolPathResolver prefers the skill scope when the skills root nests inside the workspace", async () => {
   const resolver = new pathUtils.ToolPathResolver({
     workdir: "/workspace/project",
     skillsRootEnabled: true,
-    skillsRootDir: "/workspace/project/.liveagent/skills",
+    skillsRootDir: "/workspace/project/.agent/skills",
   });
 
   const nestedSkill = await resolver.resolvePath(
-    "/workspace/project/.liveagent/skills/demo/SKILL.md",
+    "/workspace/project/.agent/skills/demo/SKILL.md",
     {
       label: "Read.path",
       intent: "read",
@@ -298,7 +298,7 @@ test("ToolPathResolver prefers the skill scope when the skills root nests inside
   );
   assert.equal(nestedSkill.scope, "skill");
   assert.equal(nestedSkill.relativePath, "demo/SKILL.md");
-  assert.equal(nestedSkill.root, "/workspace/project/.liveagent/skills");
+  assert.equal(nestedSkill.root, "/workspace/project/.agent/skills");
   assert.equal(nestedSkill.displayPath, "skill://demo/SKILL.md");
 
   const workspaceFile = await resolver.resolvePath("/workspace/project/src/App.tsx", {
@@ -354,9 +354,9 @@ test("ToolPathResolver expands ~ only with an injected home directory", async ()
   const fixedSkills = new pathUtils.ToolPathResolver({
     workdir: "/workspace/project",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
   });
-  const skillViaHome = await fixedSkills.resolvePath("~/.liveagent/skills/demo/SKILL.md", {
+  const skillViaHome = await fixedSkills.resolvePath("~/.agent/skills/demo/SKILL.md", {
     label: "Read.path",
     intent: "read",
     required: true,
@@ -370,7 +370,7 @@ test("ToolPathResolver still accepts legacy workspace:/skill: prefixed inputs", 
   const resolver = new pathUtils.ToolPathResolver({
     workdir: "/workspace/project",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
   });
 
   const workspaceRef = await resolver.resolvePath("workspace:src/App.tsx", {
@@ -443,7 +443,7 @@ test("file tools can read enabled Skill files via skill URLs", async () => {
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -474,7 +474,7 @@ test("file tools can read enabled Skill files via skill URLs", async () => {
     {
       command: "fs_read_text",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         path: "skills-creator/SKILL.md",
         start_line: undefined,
         limit: 20,
@@ -543,7 +543,7 @@ test("file tools enforce enabled Skill allowlist for skill URLs", async () => {
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     skillAccessPolicy: {
       allowedSkillNames: ["skills-creator"],
       allowedSkillBaseDirs: ["skills-creator"],
@@ -612,7 +612,7 @@ test("file tools allow direct mutations inside enabled Skills when mutation is g
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     skillAccessPolicy: {
       allowedSkillNames: ["demo"],
       allowedSkillBaseDirs: ["demo"],
@@ -638,14 +638,14 @@ test("file tools allow direct mutations inside enabled Skills when mutation is g
     {
       command: "fs_path_status",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         path: "demo/SKILL.md",
       },
     },
     {
       command: "fs_write_text",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         path: "demo/SKILL.md",
         content: "---\nname: demo\ndescription: Demo\n---\n",
         mode: "rewrite",
@@ -1178,7 +1178,7 @@ test("file tools block direct mutations inside built-in Skills", async () => {
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     skillAccessPolicy: {
       allowedSkillNames: ["skills-creator", "skills-installer"],
       allowedSkillBaseDirs: ["skills-creator", "skills-installer"],
@@ -1232,7 +1232,7 @@ test("file tools normalize absolute enabled Skill paths", async () => {
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -1241,7 +1241,7 @@ test("file tools normalize absolute enabled Skill paths", async () => {
     id: "absolute-skill-read",
     name: "Read",
     arguments: {
-      path: "/Users/me/.liveagent/skills/skills-installer/SKILL.md",
+      path: "/Users/me/.agent/skills/skills-installer/SKILL.md",
     },
   });
 
@@ -1253,7 +1253,7 @@ test("file tools normalize absolute enabled Skill paths", async () => {
     {
       command: "fs_read_text",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         path: "skills-installer/SKILL.md",
         start_line: undefined,
         limit: undefined,
@@ -1283,7 +1283,7 @@ test("file tool runtime string errors surface the backend message with the displ
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -1306,7 +1306,7 @@ test("file tool runtime string errors surface the backend message with the displ
     {
       command: "fs_read_text",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         path: "demo/missing.md",
         start_line: undefined,
         limit: undefined,
@@ -1610,7 +1610,7 @@ test("SkillsManager read accepts explicit skill entry paths", async () => {
           assert.equal(command, "system_manage_skill");
           return {
             action: "read",
-            rootDir: "/Users/me/.liveagent/skills",
+            rootDir: "/Users/me/.agent/skills",
             path: args.payload.path,
             content: "line one\nline two\n",
             truncated: false,
@@ -1644,7 +1644,7 @@ test("SkillsManager read accepts explicit skill entry paths", async () => {
   assert.equal(result.details.path, "skills-installer/SKILL.md");
   assert.equal(result.details.startLine, 3);
   assert.equal(result.details.numLines, 2);
-  assert.match(result.content[0].text, /<LiveAgentSkillFileRules>/);
+  assert.match(result.content[0].text, /<AgentSkillFileRules>/);
   assert.match(result.content[0].text, /skill:\/\/skills-installer\/\.\.\./);
   assert.match(result.content[0].text, /path="skill:\/\/skills-installer\/\.\.\."/);
   assert.match(result.content[0].text, /Do not use Bash/);
@@ -1673,11 +1673,11 @@ test("SkillsManager install resolves local relative sources against the workspac
           assert.equal(command, "system_manage_skill");
           return {
             action: "install",
-            rootDir: "/Users/me/.liveagent/skills",
+            rootDir: "/Users/me/.agent/skills",
             installed: [
               {
                 name: "chart-image",
-                target: "/Users/me/.liveagent/skills/chart-image",
+                target: "/Users/me/.agent/skills/chart-image",
                 backup: null,
                 skillFile: "chart-image/SKILL.md",
               },
@@ -1850,11 +1850,11 @@ test("SkillsManager management can auto-enable installed Skills without exposing
           if (action === "install") {
             return {
               action: "install",
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               installed: [
                 {
                   name: "new-skill",
-                  target: "/Users/me/.liveagent/skills/new-skill",
+                  target: "/Users/me/.agent/skills/new-skill",
                   backup: null,
                   skillFile: "new-skill/SKILL.md",
                 },
@@ -1865,7 +1865,7 @@ test("SkillsManager management can auto-enable installed Skills without exposing
             assert.equal(args.payload.path, "new-skill/SKILL.md");
             return {
               action: "read",
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               path: "new-skill/SKILL.md",
               content: "---\nname: new-skill\ndescription: New Skill\n---\n",
               truncated: false,
@@ -1876,33 +1876,33 @@ test("SkillsManager management can auto-enable installed Skills without exposing
           if (action === "list") {
             return {
               action: "list",
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               skills: [
                 {
                   name: "skills-creator",
                   description: "Create Skills",
-                  target: "/Users/me/.liveagent/skills/skills-creator",
+                  target: "/Users/me/.agent/skills/skills-creator",
                   skillFile: "skills-creator/SKILL.md",
                   baseDir: "skills-creator",
                 },
                 {
                   name: "skills-installer",
                   description: "Install Skills",
-                  target: "/Users/me/.liveagent/skills/skills-installer",
+                  target: "/Users/me/.agent/skills/skills-installer",
                   skillFile: "skills-installer/SKILL.md",
                   baseDir: "skills-installer",
                 },
                 {
                   name: "new-skill",
                   description: "New Skill",
-                  target: "/Users/me/.liveagent/skills/new-skill",
+                  target: "/Users/me/.agent/skills/new-skill",
                   skillFile: "new-skill/SKILL.md",
                   baseDir: "new-skill",
                 },
                 {
                   name: "hidden-skill",
                   description: "Hidden Skill",
-                  target: "/Users/me/.liveagent/skills/hidden-skill",
+                  target: "/Users/me/.agent/skills/hidden-skill",
                   skillFile: "hidden-skill/SKILL.md",
                   baseDir: "hidden-skill",
                 },
@@ -1995,7 +1995,7 @@ test("SkillsManager management can auto-enable installed Skills without exposing
     });
     assert.equal(readResult.isError, false);
     assert.equal(readResult.details.path, "new-skill/SKILL.md");
-    assert.deepEqual(events, ["liveagent:skills-discovery-updated"]);
+    assert.deepEqual(events, ["agent:skills-discovery-updated"]);
   } finally {
     if (typeof previousWindow === "undefined") {
       delete globalThis.window;
@@ -2013,7 +2013,7 @@ test("SkillsManager list filters installed Skills when inventory is explicitly a
           assert.equal(command, "system_manage_skill");
           return {
             action: "list",
-            rootDir: "/Users/me/.liveagent/skills",
+            rootDir: "/Users/me/.agent/skills",
             skills: [
               {
                 name: "skills-creator",
@@ -2103,10 +2103,10 @@ test("SkillsManager create action builds payload and refreshes skill discovery",
           if (action === "create") {
             return {
               action,
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               created: {
                 name: "workflow-skill",
-                target: "/Users/me/.liveagent/skills/workflow-skill",
+                target: "/Users/me/.agent/skills/workflow-skill",
                 backup: null,
                 skillFile: "workflow-skill/SKILL.md",
               },
@@ -2115,10 +2115,10 @@ test("SkillsManager create action builds payload and refreshes skill discovery",
           if (action === "validate") {
             return {
               action,
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               validation: {
                 name: "workflow-skill",
-                target: "/Users/me/.liveagent/skills/workflow-skill",
+                target: "/Users/me/.agent/skills/workflow-skill",
                 ok: true,
                 errors: [],
               },
@@ -2127,11 +2127,11 @@ test("SkillsManager create action builds payload and refreshes skill discovery",
           if (action === "package") {
             return {
               action,
-              rootDir: "/Users/me/.liveagent/skills",
+              rootDir: "/Users/me/.agent/skills",
               package: {
                 name: "workflow-skill",
-                target: "/Users/me/.liveagent/skills/workflow-skill",
-                archive: "/Users/me/.liveagent/skills/.packages/workflow-skill.skill",
+                target: "/Users/me/.agent/skills/workflow-skill",
+                archive: "/Users/me/.agent/skills/.packages/workflow-skill.skill",
               },
             };
           }
@@ -2179,12 +2179,12 @@ test("SkillsManager create action builds payload and refreshes skill discovery",
     assert.equal(result.details.kind, "manage_skill");
     assert.equal(result.details.action, "create");
     assert.equal(result.details.createdName, "workflow-skill");
-    assert.equal(result.details.target, "/Users/me/.liveagent/skills/workflow-skill");
+    assert.equal(result.details.target, "/Users/me/.agent/skills/workflow-skill");
     assert.match(result.content[0].text, /pathScheme=skill:\/\/<baseDir>\/\.\.\./);
     assert.match(result.content[0].text, /target=skill:\/\/workflow-skill/);
     assert.match(result.content[0].text, /skillFile=workflow-skill\/SKILL\.md/);
     assert.match(result.content[0].text, /enabled=true/);
-    assert.doesNotMatch(result.content[0].text, /\/Users\/me\/\.liveagent\/skills/);
+    assert.doesNotMatch(result.content[0].text, /\/Users\/me\/\.agent\/skills/);
     assert.deepEqual(policy.allowedSkillNames, [
       "skills-creator",
       "skills-installer",
@@ -2226,7 +2226,7 @@ test("SkillsManager create action builds payload and refreshes skill discovery",
     });
     assert.equal(packageResult.isError, false);
     assert.match(packageResult.content[0].text, /archive=skill:\/\/\.packages\/workflow-skill\.skill/);
-    assert.deepEqual(events, ["liveagent:skills-discovery-updated"]);
+    assert.deepEqual(events, ["agent:skills-discovery-updated"]);
     assert.deepEqual(invocations, [
       {
         command: "system_manage_skill",
@@ -2369,7 +2369,7 @@ test("Image file tool reads installed Skill images through skill URLs", async ()
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -2396,7 +2396,7 @@ test("Image file tool reads installed Skill images through skill URLs", async ()
     {
       command: "fs_read_image_source",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         source: "demo/assets/logo.png",
         source_type: "path",
         mime_type: undefined,
@@ -2430,7 +2430,7 @@ test("Image file tool normalizes absolute workspace and Skill image paths", asyn
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -2448,7 +2448,7 @@ test("Image file tool normalizes absolute workspace and Skill image paths", asyn
     type: "toolCall",
     id: "absolute-skill-image",
     name: "Image",
-    arguments: { path: "/Users/me/.liveagent/skills/demo/assets/logo.png" },
+    arguments: { path: "/Users/me/.agent/skills/demo/assets/logo.png" },
   });
   assert.equal(skillsResult.isError, false);
   assert.equal(skillsResult.details.images[0].scope, "skill");
@@ -2458,7 +2458,7 @@ test("Image file tool normalizes absolute workspace and Skill image paths", asyn
     type: "toolCall",
     id: "home-skill-image",
     name: "Image",
-    arguments: { path: "~/.liveagent/skills/demo/assets/logo.png" },
+    arguments: { path: "~/.agent/skills/demo/assets/logo.png" },
   });
   assert.equal(homeSkillsResult.isError, false);
   assert.equal(homeSkillsResult.details.images[0].scope, "skill");
@@ -2467,8 +2467,8 @@ test("Image file tool normalizes absolute workspace and Skill image paths", asyn
     invocations.map((call) => [call.args.workdir, call.args.source]),
     [
       ["/workspace", "uploads/logo.png"],
-      ["/Users/me/.liveagent/skills", "demo/assets/logo.png"],
-      ["/Users/me/.liveagent/skills", "demo/assets/logo.png"],
+      ["/Users/me/.agent/skills", "demo/assets/logo.png"],
+      ["/Users/me/.agent/skills", "demo/assets/logo.png"],
     ],
   );
 });
@@ -2496,7 +2496,7 @@ test("Image file tool blocks fixed Skills root paths when Skills are disabled", 
     type: "toolCall",
     id: "blocked-disabled-skill-image",
     name: "Image",
-    arguments: { path: "~/.liveagent/skills/demo/assets/logo.png" },
+    arguments: { path: "~/.agent/skills/demo/assets/logo.png" },
   });
 
   assert.equal(result.isError, true);
@@ -2522,7 +2522,7 @@ test("Image runtime errors surface the backend message for resolved local paths"
   const bundle = fsTools.createFsTools({
     workdir: "/workspace",
     skillsRootEnabled: true,
-    skillsRootDir: "/Users/me/.liveagent/skills",
+    skillsRootDir: "/Users/me/.agent/skills",
     fileState: fileToolState.createFileToolState(),
   });
 
@@ -2543,7 +2543,7 @@ test("Image runtime errors surface the backend message for resolved local paths"
     {
       command: "fs_read_image_source",
       args: {
-        workdir: "/Users/me/.liveagent/skills",
+        workdir: "/Users/me/.agent/skills",
         source: "demo/assets/missing.png",
         source_type: "path",
         mime_type: undefined,

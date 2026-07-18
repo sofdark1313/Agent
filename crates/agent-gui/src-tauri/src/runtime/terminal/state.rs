@@ -33,7 +33,7 @@ pub(crate) enum TerminalSessionBackend {
 }
 
 pub(crate) struct SshSessionRuntime {
-    pub(crate) handle: tokio::sync::Mutex<Option<client::Handle<LiveAgentSshClient>>>,
+    pub(crate) handle: tokio::sync::Mutex<Option<client::Handle<AgentSshClient>>>,
     pub(crate) input_tx: Mutex<Option<tokio::sync::mpsc::Sender<SshSessionInput>>>,
     pub(crate) shutdown_tx: Mutex<Option<tokio::sync::mpsc::Sender<()>>>,
     pub(crate) connection_id: AtomicUsize,
@@ -55,7 +55,7 @@ impl SshSessionRuntime {
 
     pub(crate) async fn install_connection(
         &self,
-        handle: client::Handle<LiveAgentSshClient>,
+        handle: client::Handle<AgentSshClient>,
         input_tx: tokio::sync::mpsc::Sender<SshSessionInput>,
         shutdown_tx: tokio::sync::mpsc::Sender<()>,
     ) -> usize {
@@ -149,7 +149,7 @@ pub(crate) enum PendingSshPrompt {
         host_config: RuntimeSshHostConfig,
         title: String,
         size: TerminalSize,
-        handle: client::Handle<LiveAgentSshClient>,
+        handle: client::Handle<AgentSshClient>,
         answer_mode: SshPromptAnswerMode,
     },
 }

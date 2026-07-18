@@ -41,7 +41,7 @@ const activeFetchProbes = new Set<FetchProbe>();
 let originalFetch: typeof globalThis.fetch | null = null;
 let hostedSearchProbeSequence = 0;
 
-export const HOSTED_SEARCH_PROBE_HEADER = "x-liveagent-hosted-search-probe";
+export const HOSTED_SEARCH_PROBE_HEADER = "x-agent-hosted-search-probe";
 
 export function createHostedSearchProbeId(providerId: ProviderId) {
   const random =

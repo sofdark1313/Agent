@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "LiveAgent",
+  "productName": "Agent",
   "version": "../package.json",
-  "identifier": "com.xiaofei.liveagent",
+  "identifier": "com.xiaofei.agent",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",

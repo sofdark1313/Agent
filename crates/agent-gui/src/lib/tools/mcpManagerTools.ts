@@ -910,7 +910,7 @@ export function createMcpManagerTools(params: {
   const toolMcpManager: Tool = {
     name: "McpManager",
     description:
-      "Manage LiveAgent MCP Server configuration. Use this built-in tool for MCP server CRUD, enable/disable, static validation, connection tests, diagnostics, restart/stop, and tools/list. Enabled MCP servers are automatically loaded as dynamic mcp_* tools. It does not call arbitrary MCP business tools; use the dynamically loaded mcp_* tools for actual MCP tool execution.",
+      "Manage Agent MCP Server configuration. Use this built-in tool for MCP server CRUD, enable/disable, static validation, connection tests, diagnostics, restart/stop, and tools/list. Enabled MCP servers are automatically loaded as dynamic mcp_* tools. It does not call arbitrary MCP business tools; use the dynamically loaded mcp_* tools for actual MCP tool execution.",
     parameters: MCP_MANAGER_PARAMETERS,
   };
 

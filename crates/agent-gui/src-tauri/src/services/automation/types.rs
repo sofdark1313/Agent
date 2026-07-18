@@ -12,7 +12,7 @@ pub const PROMPT_EXPIRED_EVENT: &str = "automation:prompt-expired";
 /// desktop (gateway sync / web clients). Apply ops carrying this sentinel keep
 /// the currently stored value, so remote clients can edit a request without
 /// ever seeing or re-sending the secret.
-pub const MASKED_HEADER_VALUE: &str = "__liveagent-masked__";
+pub const MASKED_HEADER_VALUE: &str = "__agent-masked__";
 
 pub const CRON_TASK_KINDS: &[&str] = &["bash", "http", "prompt"];
 pub const HOOK_KINDS: &[&str] = &["command", "http"];

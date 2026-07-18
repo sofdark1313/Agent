@@ -117,7 +117,7 @@ test("markdown image syntax falls back to alt text instead of rendering a real i
 
   assert.ok(node);
   assert.equal(node.type, "span");
-  assert.equal(node.props["data-liveagent-markdown-image"], "text-fallback");
+  assert.equal(node.props["data-agent-markdown-image"], "text-fallback");
   assert.equal(node.props.title, "东门老街");
   assert.equal(node.props.children, "东门老街");
 
@@ -268,7 +268,7 @@ test("agent tool rules route installed Skill scripts through skill cwd", () => {
   ]);
   assert.match(suffix, /Bash\.cwd follows the path rules in \*\*Workspace & Paths\*\*/);
   assert.match(suffix, /use cwd="skill:\/\/<enabled-skill>\/scripts"/);
-  assert.match(suffix, /Do not cd into ~\/\.liveagent\/skills or workspace skills\/ guesses/);
+  assert.match(suffix, /Do not cd into ~\/\.agent\/skills or workspace skills\/ guesses/);
 });
 
 test("agent Bash rules are Windows-native when runtime platform is Windows", () => {

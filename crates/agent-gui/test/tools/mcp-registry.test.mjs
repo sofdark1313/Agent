@@ -18,7 +18,7 @@ function mockFetch(handler) {
   };
 }
 
-test("official registry npm stdio packages become LiveAgent MCP drafts", async () => {
+test("official registry npm stdio packages become Agent MCP drafts", async () => {
   const result = await registry.searchMcpRegistry({
     source: "official",
     query: "filesystem",

@@ -139,9 +139,9 @@ export function createGatewayBridgeEventController(
       queueEvent({
         type: "token",
         text: summary.content,
-        provider: "liveagent",
+        provider: "agent",
         model: "summary",
-        api: "liveagent-compaction",
+        api: "agent-compaction",
         conversation_id: params.conversationId,
         checkpoint: {
           summaryId: summary.id,

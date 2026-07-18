@@ -899,7 +899,7 @@ test("streamAssistantMessage replies to recovered DeepSeek DSML tool calls befor
       },
       [proxyModulePath]: {
         async prepareProxyRequest(_providerId, baseUrl) {
-          return { baseUrl, headers: { "x-liveagent-test": "1" } };
+          return { baseUrl, headers: { "x-agent-test": "1" } };
         },
       },
       [powerActivityModulePath]: {
@@ -982,7 +982,7 @@ test("streamAssistantMessage normalizes recovered DeepSeek DSML tool calls from 
       },
       [proxyModulePath]: {
         async prepareProxyRequest(_providerId, baseUrl) {
-          return { baseUrl, headers: { "x-liveagent-test": "1" } };
+          return { baseUrl, headers: { "x-agent-test": "1" } };
         },
       },
       [powerActivityModulePath]: {
@@ -1067,7 +1067,7 @@ test("completeAssistantMessage normalizes recovered DeepSeek DSML tool calls fro
       },
       [proxyModulePath]: {
         async prepareProxyRequest(_providerId, baseUrl) {
-          return { baseUrl, headers: { "x-liveagent-test": "1" } };
+          return { baseUrl, headers: { "x-agent-test": "1" } };
         },
       },
       [powerActivityModulePath]: {

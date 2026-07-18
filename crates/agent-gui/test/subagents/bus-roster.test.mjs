@@ -47,7 +47,7 @@ test("snapshot buckets messages into direct inbox, shared decisions, open questi
     }),
   ]);
 
-  assert.match(snapshot, /## LiveAgent Message Bus/);
+  assert.match(snapshot, /## Agent Message Bus/);
   assert.match(snapshot, /Current agent: `agent-a`/);
   const inboxIndex = snapshot.indexOf("### Direct Inbox for agent-a");
   const decisionsIndex = snapshot.indexOf("### Shared Decisions");

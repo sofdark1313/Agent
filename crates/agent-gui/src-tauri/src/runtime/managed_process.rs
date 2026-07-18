@@ -63,7 +63,7 @@ pub(crate) struct ManagedProcessRegistry {
     journal: Mutex<Option<Connection>>,
     revision: AtomicU64,
     notifier: Mutex<Option<ManagedProcessNotifier>>,
-    /// This LiveAgent instance's identity, stamped onto journal rows so a
+    /// This Agent instance's identity, stamped onto journal rows so a
     /// concurrently running sibling instance never reaps our live children.
     owner_pid: u32,
     owner_started_at: i64,
@@ -717,7 +717,7 @@ impl ManagedProcessRegistry {
         let mut drop_ids = Vec::new();
         let mut restored = Vec::new();
         for row in rows {
-            // A row owned by a still-running sibling LiveAgent instance is
+            // A row owned by a still-running sibling Agent instance is
             // that instance's live child, not crash residue — leave it alone.
             let owner_alive = row.owner_pid != 0
                 && row.owner_pid != self.owner_pid
@@ -914,7 +914,7 @@ mod tests {
 
     fn temp_workdir(tag: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!(
-            "liveagent-managed-process-{tag}-{}-{}",
+            "agent-managed-process-{tag}-{}-{}",
             std::process::id(),
             now_ms()
         ));

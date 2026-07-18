@@ -334,7 +334,7 @@ test("loadWebSettings forces current gateway URL/token over stale persisted remo
       },
     },
   };
-  store.set("liveagent.gateway.webui.settings.v1", JSON.stringify(stale));
+  store.set("agent.gateway.webui.settings.v1", JSON.stringify(stale));
 
   const loaded = webSettings.loadWebSettings(" new-token ");
   assert.equal(loaded.system.workdir, "/workspace");

@@ -1,4 +1,4 @@
-module github.com/liveagent/agent-gateway
+module github.com/agent/agent-gateway
 
 go 1.25.12
 

@@ -29,15 +29,15 @@ const ORIGIN: &str = "origin";
 const PROXY_AUTHENTICATE: &str = "proxy-authenticate";
 const PROXY_AUTHORIZATION: &str = "proxy-authorization";
 const PROXY_CONNECTION: &str = "proxy-connection";
-const PROXY_PREFIX: &str = "x-liveagent-";
-const PROXY_TOKEN_HEADER: &str = "x-liveagent-proxy-token";
+const PROXY_PREFIX: &str = "x-agent-";
+const PROXY_TOKEN_HEADER: &str = "x-agent-proxy-token";
 const REFERER: &str = "referer";
 const TE: &str = "te";
 const TRAILER: &str = "trailer";
 const TRANSFER_ENCODING: &str = "transfer-encoding";
 const UPGRADE: &str = "upgrade";
-const UPSTREAM_ORIGIN_HEADER: &str = "x-liveagent-upstream-origin";
-const DEFAULT_ALLOW_HEADERS: &str = "authorization,content-type,x-api-key,x-goog-api-key,anthropic-version,x-liveagent-upstream-origin,x-liveagent-proxy-token";
+const UPSTREAM_ORIGIN_HEADER: &str = "x-agent-upstream-origin";
+const DEFAULT_ALLOW_HEADERS: &str = "authorization,content-type,x-api-key,x-goog-api-key,anthropic-version,x-agent-upstream-origin,x-agent-proxy-token";
 const ALLOW_METHODS_VALUE: &str = "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD";
 const VARY_VALUE: &str = "Origin, Access-Control-Request-Method, Access-Control-Request-Headers";
 const IMAGE_PROXY_MAX_BYTES: usize = 25 * 1024 * 1024;
@@ -581,12 +581,12 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             HeaderName::from_static(ACCESS_CONTROL_REQUEST_HEADERS),
-            HeaderValue::from_static("authorization,x-api-key,x-liveagent-proxy-token"),
+            HeaderValue::from_static("authorization,x-api-key,x-agent-proxy-token"),
         );
 
         assert_eq!(
             build_allow_headers_value(&headers),
-            HeaderValue::from_static("authorization,x-api-key,x-liveagent-proxy-token")
+            HeaderValue::from_static("authorization,x-api-key,x-agent-proxy-token")
         );
     }
 

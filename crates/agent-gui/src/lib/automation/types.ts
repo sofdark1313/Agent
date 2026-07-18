@@ -41,7 +41,7 @@ export const HTTP_METHODS: HttpMethod[] = [
 
 /// Header values are replaced with this sentinel in snapshots that leave the
 /// desktop; sending it back in a patch keeps the stored secret unchanged.
-export const MASKED_HEADER_VALUE = "__liveagent-masked__";
+export const MASKED_HEADER_VALUE = "__agent-masked__";
 
 export function canHttpMethodHaveBody(method: HttpMethod): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";

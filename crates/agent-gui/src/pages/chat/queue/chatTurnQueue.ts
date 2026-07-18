@@ -1,6 +1,12 @@
 import type { MentionComposerDraft } from "../../../components/chat/MentionComposer";
 import type { PendingUploadedFile } from "../../../lib/chat/messages/uploadedFiles";
-import type { ChatRuntimeControls, ExecutionMode, SystemToolId } from "../../../lib/settings";
+import type {
+  ApprovalPolicy,
+  ChatRuntimeControls,
+  CustomApprovalRules,
+  ExecutionMode,
+  SystemToolId,
+} from "../../../lib/settings";
 import type {
   GatewayChatRuntimeControlsEvent,
   GatewaySelectedModelEvent,
@@ -21,6 +27,8 @@ export type QueuedChatTurn = {
   draft: MentionComposerDraft;
   uploadedFiles: PendingUploadedFile[];
   executionMode: ExecutionMode;
+  approvalPolicy: ApprovalPolicy;
+  customApprovalRules: CustomApprovalRules;
   workdir: string;
   selectedSystemToolIds: SystemToolId[];
   runtimeControls: ChatRuntimeControls;
@@ -68,6 +76,8 @@ export function createQueuedChatTurn(input: QueuedChatTurnInput): QueuedChatTurn
     draft: input.draft,
     uploadedFiles: input.uploadedFiles.slice(),
     executionMode: input.executionMode,
+    approvalPolicy: input.approvalPolicy,
+    customApprovalRules: { ...input.customApprovalRules },
     workdir: input.workdir.trim(),
     selectedSystemToolIds: input.selectedSystemToolIds.slice(),
     runtimeControls: { ...input.runtimeControls },

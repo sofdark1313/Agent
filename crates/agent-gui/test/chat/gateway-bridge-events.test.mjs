@@ -234,9 +234,9 @@ test("gateway bridge checkpoint emits compaction summary payload", () => {
       event: {
         type: "token",
         text: "Compacted facts",
-        provider: "liveagent",
+        provider: "agent",
         model: "summary",
-        api: "liveagent-compaction",
+        api: "agent-compaction",
         conversation_id: "conversation-1",
         checkpoint: {
           summaryId: "summary-1",

@@ -86,7 +86,7 @@ test("checkpoint and error entries flush the assistant group", () => {
         content: "summary",
         summaryId: "s1",
         coveredMessageCount: 3,
-        generatedBy: { providerId: "liveagent", model: "summary" },
+        generatedBy: { providerId: "agent", model: "summary" },
       },
       { id: "a-2", kind: "assistant", text: "after", round: 1 },
       { id: "err-1", kind: "error", text: "boom" },
@@ -142,7 +142,7 @@ test("parseHistoryMessagesJson yields identical ids across reparses", () => {
       role: "user",
       id: "m1",
       content: "问题",
-      liveAgentHistoryRef: {
+      agentHistoryRef: {
         segmentIndex: 0,
         messageIndex: 0,
         segmentId: "seg-1",

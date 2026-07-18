@@ -86,6 +86,10 @@ export function displayString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+export function normalizeAssistantLeadingIndent(value: string) {
+  return value.replace(/^([\r\n]*)(?:[\u3000\u00a0])+/u, "$1");
+}
+
 export function compactInlineText(value: unknown, maxChars = 120) {
   const text = displayString(value).replace(/\s+/g, " ");
   if (text.length <= maxChars) return text;
@@ -281,23 +285,14 @@ export function groupRoundBlocks(blocks: UiRound["blocks"]): GroupedRoundBlock[]
 
   const flushPendingTools = () => {
     if (pendingTools.length === 0) return;
-    if (pendingTools.length === 1) {
-      const item = pendingTools[0];
-      groupedBlocks.push({
-        kind: "tool",
-        key: `tool-${getToolTraceKey(item, pendingStartIndex)}`,
-        item,
-      });
-    } else {
-      groupedBlocks.push({
-        kind: "toolGroup",
-        // Anchored to the group's start only: appending tools to a streaming
-        // group must keep the key stable, or the remount would wipe the
-        // user's manual expand/collapse state mid-run.
-        key: `tool-group-${pendingStartIndex}-${getToolTraceKey(pendingTools[0], pendingStartIndex)}`,
-        items: pendingTools,
-      });
-    }
+    groupedBlocks.push({
+      kind: "toolGroup",
+      // Anchored to the group's start only: appending tools to a streaming
+      // group must keep the key stable, or the remount would wipe the
+      // user's manual expand/collapse state mid-run.
+      key: `tool-group-${pendingStartIndex}-${getToolTraceKey(pendingTools[0], pendingStartIndex)}`,
+      items: pendingTools,
+    });
     pendingTools = [];
   };
 

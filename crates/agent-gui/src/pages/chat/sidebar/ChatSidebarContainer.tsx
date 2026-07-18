@@ -8,7 +8,12 @@ import { ChatHistorySidebar } from "../../../components/chat/ChatHistorySidebar"
 import { useLocale } from "../../../i18n";
 import type { AppUpdateController } from "../../../lib/appUpdates";
 import { normalizeConversationTitle } from "../../../lib/chat/page/chatPageHelpers";
-import type { WorkspaceProject } from "../../../lib/settings";
+import type {
+  ApprovalPolicy,
+  AppSettings,
+  ExecutionMode,
+  WorkspaceProject,
+} from "../../../lib/settings";
 import {
   selectConversations,
   selectListState,
@@ -20,13 +25,18 @@ import type { SidebarSnapshot, SidebarStore } from "../../../lib/sidebar/store";
 import type { SidebarConversation } from "../../../lib/sidebar/types";
 import { useSidebarSelector } from "../../../lib/sidebar/useSidebarSelector";
 import { sortWorkspaceProjectsByActivity } from "../../../lib/workspaceProjects";
+import type { SectionId } from "../../settings/types";
+import { ChatModeSelector } from "../components/ChatModeSelector";
 
 type ChatSidebarContainerProps = {
   store: SidebarStore;
   currentConversationId: string;
   isOpen: boolean;
+  executionMode: ExecutionMode;
+  approvalPolicy: ApprovalPolicy;
+  setSettings: (updater: (prev: AppSettings) => AppSettings) => void;
   fontScale?: number;
-  activeView: "chat" | "skills-hub" | "mcp-hub";
+  activeView: "chat" | "skills-hub" | "mcp-hub" | "cron-hub";
   showProjects: boolean;
   // Merged (settings ∪ history workdirs) but unsorted — the container sorts
   // with the store's activity/running inputs.
@@ -60,10 +70,11 @@ type ChatSidebarContainerProps = {
   onShareConversation: (item: SidebarConversation) => void;
   onOpenSharedConversations: () => void;
   onCloseSidebar: () => void;
-  onOpenSettings: () => void;
+  onOpenSettings: (section?: SectionId) => void;
   appUpdate?: AppUpdateController;
   onOpenSkillsHub: () => void;
   onOpenMcpHub: () => void;
+  onOpenCronHub: () => void;
 };
 
 function selectMutations(snapshot: SidebarSnapshot) {
@@ -187,6 +198,13 @@ export function ChatSidebarContainer(props: ChatSidebarContainerProps) {
       renamingId={renamingId}
       renameDraft={renameDraft}
       isOpen={props.isOpen}
+      headerModeSelector={
+        <ChatModeSelector
+          executionMode={props.executionMode}
+          approvalPolicy={props.approvalPolicy}
+          setSettings={props.setSettings}
+        />
+      }
       fontScale={props.fontScale}
       activeView={props.activeView}
       showProjects={props.showProjects}
@@ -229,6 +247,7 @@ export function ChatSidebarContainer(props: ChatSidebarContainerProps) {
       appUpdate={props.appUpdate}
       onOpenSkillsHub={props.onOpenSkillsHub}
       onOpenMcpHub={props.onOpenMcpHub}
+      onOpenCronHub={props.onOpenCronHub}
     />
   );
 }

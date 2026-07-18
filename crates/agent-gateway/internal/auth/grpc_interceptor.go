@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const authenticateMethod = "/liveagent.gateway.v1.AgentGateway/Authenticate"
+const authenticateMethod = "/agent.gateway.v1.AgentGateway/Authenticate"
 
 func GRPCUnaryInterceptor(expectedToken string) grpc.UnaryServerInterceptor {
 	return func(

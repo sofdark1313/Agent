@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
-	"github.com/liveagent/agent-gateway/internal/session"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 type wsEnvelope struct {

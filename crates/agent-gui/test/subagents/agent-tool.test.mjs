@@ -51,8 +51,8 @@ test("readonly happy path: identity prompts, filtered child tools, SendMessage a
     ["Read", "Grep", "mcp_docs_search", "SendMessage"],
   );
   assert.equal(call.sessionId, "parent-session:subagent:reviewer-a");
-  assert.equal(call.workdir, "/tmp/liveagent-subagent-test");
-  assert.match(call.context.systemPrompt, /You are Code Reviewer, a named delegated LiveAgent subagent/);
+  assert.equal(call.workdir, "/tmp/agent-subagent-test");
+  assert.match(call.context.systemPrompt, /You are Code Reviewer, a named delegated Agent subagent/);
   assert.match(call.context.systemPrompt, /- Stable id: reviewer-a/);
   assert.match(call.context.systemPrompt, /- Role: Review code paths/);
   assert.match(call.context.systemPrompt, /- Team position: 1 of 1/);
@@ -171,10 +171,10 @@ test("worktree lifecycle: create -> run -> status -> auto apply -> cleanup", asy
   assert.equal(result.details.mode, "worktree");
   assert.equal(harness.worktreeIpc.creates.length, 1);
   const createInput = harness.worktreeIpc.creates[0];
-  assert.equal(createInput.workdir, "/tmp/liveagent-subagent-test");
+  assert.equal(createInput.workdir, "/tmp/agent-subagent-test");
   assert.match(createInput.label, /^parent-session-call-agent-1-fixer$/);
 
-  const worktreeRoot = "/tmp/liveagent-worktrees/parent-session-call-agent-1-fixer";
+  const worktreeRoot = "/tmp/agent-worktrees/parent-session-call-agent-1-fixer";
   // Runner executed inside the worktree workdir with the child registry.
   assert.equal(harness.runnerCalls[0].workdir, worktreeRoot);
   // Status inspected, patch applied back to the parent workdir, then cleanup.
@@ -182,7 +182,7 @@ test("worktree lifecycle: create -> run -> status -> auto apply -> cleanup", asy
     { worktreeRoot, maxDiffChars: 20000 },
   ]);
   assert.deepEqual(harness.worktreeIpc.applies, [
-    { parentWorkdir: "/tmp/liveagent-subagent-test", worktreeRoot },
+    { parentWorkdir: "/tmp/agent-subagent-test", worktreeRoot },
   ]);
   assert.equal(harness.worktreeIpc.cleanups.length, 1);
   assert.equal(harness.worktreeIpc.cleanups[0].worktreeRoot, worktreeRoot);
@@ -192,7 +192,7 @@ test("worktree lifecycle: create -> run -> status -> auto apply -> cleanup", asy
   assert.equal(report.changed, true);
   assert.equal(report.applyStatus, "applied");
   assert.equal(report.applyMethod, "git_apply");
-  assert.equal(report.appliedToWorkdir, "/tmp/liveagent-subagent-test");
+  assert.equal(report.appliedToWorkdir, "/tmp/agent-subagent-test");
   assert.equal(report.worktreeCleanupStatus, "removed");
   assert.equal(report.worktreeCleanupReason, "applied");
   assert.equal(report.worktreeBranchDeleted, true);

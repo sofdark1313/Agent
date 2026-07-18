@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/liveagent/agent-gateway/internal/config"
-	"github.com/liveagent/agent-gateway/internal/server"
-	"github.com/liveagent/agent-gateway/internal/session"
+	"github.com/agent/agent-gateway/internal/config"
+	"github.com/agent/agent-gateway/internal/server"
+	"github.com/agent/agent-gateway/internal/session"
 )
 
 // idleTimeout = 3*100ms + 200ms = 500ms for every test in this file.

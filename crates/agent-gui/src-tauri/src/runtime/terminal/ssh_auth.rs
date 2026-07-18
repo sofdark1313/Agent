@@ -222,7 +222,7 @@ pub(crate) fn trim_trailing_posix_slashes(path: &str) -> String {
 }
 
 pub(crate) async fn authenticate_ssh_handle(
-    handle: &mut client::Handle<LiveAgentSshClient>,
+    handle: &mut client::Handle<AgentSshClient>,
     host: &RuntimeSshHostConfig,
     auth: ResolvedSshAuth,
 ) -> Result<SshAuthOutcome, String> {
@@ -348,7 +348,7 @@ pub(crate) fn classify_password_kbi_prompts(
 }
 
 pub(crate) async fn continue_keyboard_interactive_auth(
-    handle: &mut client::Handle<LiveAgentSshClient>,
+    handle: &mut client::Handle<AgentSshClient>,
     mut response: client::KeyboardInteractiveAuthResponse,
     auto_password: Option<String>,
 ) -> Result<SshAuthOutcome, String> {

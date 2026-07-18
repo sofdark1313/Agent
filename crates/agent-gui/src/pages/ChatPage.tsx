@@ -1,5 +1,5 @@
 import type { Context, Message, UserMessage } from "@earendil-works/pi-ai";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
@@ -13,6 +13,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { HistoryShareModal } from "../components/chat/HistoryShareModal";
 import type {
@@ -38,10 +39,12 @@ import type { WorkspaceFilePreviewOpenRequest } from "../components/workspace-ed
 import type { WorkspaceSshTerminalOpenRequest } from "../components/workspace-editor/WorkspaceSshTerminalOverlay";
 import { isWorkspacePreviewPath } from "../components/workspace-editor/workspaceImagePreview";
 import { useLocale } from "../i18n";
+import { subscribeAppCommand } from "../lib/appCommands";
 import type { AppUpdateController } from "../lib/appUpdates";
 import { getAutomationState } from "../lib/automation";
 import { createHookRunScope } from "../lib/automation/hookRunner";
 import type { CompactionStatus } from "../lib/chat/compaction/types";
+import { ToolApprovalBroker } from "../lib/chat/approval/toolApprovalBroker";
 import { buildPersistableMessagesFromSnapshot } from "../lib/chat/conversation/chatAbort";
 import {
   appendMessagesToConversation,
@@ -107,7 +110,9 @@ import {
 import {
   type AppSettings,
   applyMcpOpsToAppSettings,
+  type ApprovalPolicy,
   type ChatRuntimeControls,
+  type CustomApprovalRules,
   DEFAULT_WORKSPACE_PROJECT_ID,
   type ExecutionMode,
   findProviderModelConfig,
@@ -224,6 +229,7 @@ import {
   normalizeGatewayExecutionMode,
   normalizeGatewayWorkdir,
 } from "./chat/gateway/gatewayBridgeTypes";
+import { CronHubPage } from "./cron-hub/CronHubPage";
 import {
   appendQueuedChatTurn,
   buildQueuedChatTurnPreview,
@@ -243,6 +249,9 @@ import {
   takeNextQueuedChatTurn,
 } from "./chat/queue/chatTurnQueue";
 import { ChatSidebarContainer } from "./chat/sidebar/ChatSidebarContainer";
+import { ConversationTodoPanel } from "./chat/components/ConversationTodoPanel";
+import { ConversationUsagePanel } from "./chat/components/ConversationUsagePanel";
+import { ToolApprovalCard } from "./chat/components/ToolApprovalCard";
 import { McpHubPage } from "./mcp-hub/McpHubPage";
 import type { SectionId } from "./settings/types";
 import { SkillsHubPage } from "./skills-hub/SkillsHubPage";
@@ -592,6 +601,8 @@ function createWorkspaceProjectFromPath(path: string, kind: WorkspaceProject["ki
   } satisfies WorkspaceProject;
 }
 
+const PROJECTLESS_WORKSPACE_PROJECT_ID = "projectless";
+
 export function ChatPage(props: ChatPageProps) {
   const {
     settings,
@@ -607,6 +618,12 @@ export function ChatPage(props: ChatPageProps) {
   setPreferredMonacoNlsLocale(settings.locale);
   const effectiveTheme = resolveEffectiveTheme(settings.theme);
   const { t } = useLocale();
+  const approvalBroker = useMemo(() => new ToolApprovalBroker(), []);
+  const pendingToolApprovals = useSyncExternalStore(
+    approvalBroker.subscribe,
+    approvalBroker.getSnapshot,
+    approvalBroker.getSnapshot,
+  );
   const initialConversationRef = useRef(createConversationIdentity());
   const initialConversationStateRef = useRef(createConversationStateFromContext(context));
 
@@ -627,6 +644,13 @@ export function ChatPage(props: ChatPageProps) {
   >(null);
   const [currentConversationId, setCurrentConversationId] = useState<string>(
     () => initialConversationRef.current.conversationId,
+  );
+  const visibleToolApprovals = useMemo(
+    () =>
+      pendingToolApprovals.filter(
+        (request) => request.conversationId === currentConversationId,
+      ),
+    [currentConversationId, pendingToolApprovals],
   );
   const [currentConversationSessionId, setCurrentConversationSessionId] = useState<string>(
     () => initialConversationRef.current.sessionId,
@@ -685,10 +709,16 @@ export function ChatPage(props: ChatPageProps) {
     [settings.system.missingWorkspaceProjectPaths],
   );
   const activeWorkspaceProject = useMemo(
-    () => findWorkspaceProject(workspaceProjects, activeWorkspaceProjectId),
+    () =>
+      activeWorkspaceProjectId === PROJECTLESS_WORKSPACE_PROJECT_ID
+        ? undefined
+        : findWorkspaceProject(workspaceProjects, activeWorkspaceProjectId),
     [activeWorkspaceProjectId, workspaceProjects],
   );
   useEffect(() => {
+    if (activeWorkspaceProjectId === PROJECTLESS_WORKSPACE_PROJECT_ID) {
+      return;
+    }
     if (activeWorkspaceProject?.id && activeWorkspaceProject.id !== activeWorkspaceProjectId) {
       setActiveWorkspaceProjectId(activeWorkspaceProject.id);
     }
@@ -708,7 +738,9 @@ export function ChatPage(props: ChatPageProps) {
   }, [sidebarScope, sidebarStore]);
   const historyScopeKey = sidebarScopeKey(sidebarScope);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeView, setActiveView] = useState<"chat" | "skills-hub" | "mcp-hub">("chat");
+  const [activeView, setActiveView] = useState<
+    "chat" | "skills-hub" | "mcp-hub" | "cron-hub"
+  >("chat");
   const [rightDockOpen, setRightDockOpen] = useState(false);
   const previousRightDockFileTreeOpenRef = useRef(false);
   const [workspaceEditorMounted, setWorkspaceEditorMounted] = useState(false);
@@ -1028,18 +1060,23 @@ export function ChatPage(props: ChatPageProps) {
     [checkWorkspaceProjectDirectory, setErrorMessage, t],
   );
 
-  const handleOpenCreateWorkspaceProject = useCallback(async () => {
-    try {
-      const picked = await invoke<string | null>("system_pick_folder", {
-        initialWorkdir: activeWorkspaceProjectPath || workdir,
-      });
-      const path = picked?.trim();
-      if (!path) return;
-      activateWorkspaceProject(createWorkspaceProjectFromPath(path, "managed"));
-    } catch (error) {
-      setErrorMessage(asErrorMessage(error, "选择项目目录失败"));
-    }
-  }, [activateWorkspaceProject, activeWorkspaceProjectPath, workdir]);
+  const handleOpenCreateWorkspaceProject = useCallback(
+    async (options?: { startConversation?: boolean }) => {
+      try {
+        const picked = await invoke<string | null>("system_pick_folder", {
+          initialWorkdir: activeWorkspaceProjectPath || workdir,
+        });
+        const path = picked?.trim();
+        if (!path) return;
+        activateWorkspaceProject(createWorkspaceProjectFromPath(path, "managed"), {
+          startConversation: options?.startConversation,
+        });
+      } catch (error) {
+        setErrorMessage(asErrorMessage(error, "选择项目目录失败"));
+      }
+    },
+    [activateWorkspaceProject, activeWorkspaceProjectPath, workdir],
+  );
 
   const commitWorkspaceProjectRename = useCallback(
     (project: WorkspaceProject, nextNameInput: string) => {
@@ -1683,7 +1720,7 @@ export function ChatPage(props: ChatPageProps) {
         await invoke("app_confirmed_exit");
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(asErrorMessage(error, "退出 LiveAgent 失败"));
+          setErrorMessage(asErrorMessage(error, "退出 Agent 失败"));
         }
       }
     })
@@ -1763,6 +1800,8 @@ export function ChatPage(props: ChatPageProps) {
         originalId: string;
         createdAt: number;
         executionMode: ExecutionMode;
+        approvalPolicy: ApprovalPolicy;
+        customApprovalRules: CustomApprovalRules;
         workdir: string;
         selectedSystemToolIds: SystemToolId[];
         runtimeControls: ChatRuntimeControls;
@@ -2100,6 +2139,9 @@ export function ChatPage(props: ChatPageProps) {
         ? queuedChatTurnEditSlotRef.current
         : null;
     const executionMode = editSlot?.executionMode ?? settings.system.executionMode;
+    const approvalPolicy = editSlot?.approvalPolicy ?? settings.system.approvalPolicy;
+    const customApprovalRules =
+      editSlot?.customApprovalRules ?? settings.system.customApprovalRules;
     const workdirForTurn = isAgentExecutionMode(executionMode)
       ? (
           editSlot?.workdir ??
@@ -2114,6 +2156,8 @@ export function ChatPage(props: ChatPageProps) {
       draft,
       uploadedFiles,
       executionMode,
+      approvalPolicy,
+      customApprovalRules,
       workdir: workdirForTurn,
       selectedSystemToolIds: editSlot?.selectedSystemToolIds ?? settings.system.selectedSystemTools,
       runtimeControls: editSlot?.runtimeControls ?? settings.chatRuntimeControls,
@@ -2196,6 +2240,8 @@ export function ChatPage(props: ChatPageProps) {
           uploadedFilesOverride: queuedTurn.uploadedFiles,
           conversationIdOverride: targetConversationId,
           executionModeOverride: queuedTurn.executionMode,
+          approvalPolicyOverride: queuedTurn.approvalPolicy,
+          customApprovalRulesOverride: queuedTurn.customApprovalRules,
           workdirOverride: queuedTurn.workdir,
           selectedSystemToolIdsOverride: queuedTurn.selectedSystemToolIds,
           runtimeControlsOverride: queuedTurn.runtimeControls,
@@ -2309,6 +2355,8 @@ export function ChatPage(props: ChatPageProps) {
       originalId: queuedTurn.id,
       createdAt: queuedTurn.createdAt,
       executionMode: queuedTurn.executionMode,
+      approvalPolicy: queuedTurn.approvalPolicy,
+      customApprovalRules: { ...queuedTurn.customApprovalRules },
       workdir: queuedTurn.workdir,
       selectedSystemToolIds: queuedTurn.selectedSystemToolIds.slice(),
       runtimeControls: { ...queuedTurn.runtimeControls },
@@ -2393,6 +2441,8 @@ export function ChatPage(props: ChatPageProps) {
       draft: createTextComposerDraft(message),
       uploadedFiles,
       executionMode,
+      approvalPolicy: settings.system.approvalPolicy,
+      customApprovalRules: settings.system.customApprovalRules,
       workdir: isAgentExecutionMode(executionMode) ? workdir : "",
       selectedSystemToolIds:
         selectedSystemToolIds.length > 0
@@ -3440,6 +3490,8 @@ export function ChatPage(props: ChatPageProps) {
     uploadedFilesOverride?: PendingUploadedFile[];
     conversationIdOverride?: string;
     executionModeOverride?: ExecutionMode;
+    approvalPolicyOverride?: ApprovalPolicy;
+    customApprovalRulesOverride?: CustomApprovalRules;
     workdirOverride?: string;
     selectedSystemToolIdsOverride?: SystemToolId[];
     runtimeControlsOverride?: ChatRuntimeControls;
@@ -3466,6 +3518,10 @@ export function ChatPage(props: ChatPageProps) {
       overrides?.executionModeOverride ??
       gatewayBridgeRequest?.executionModeOverride ??
       settings.system.executionMode;
+    const effectiveApprovalPolicy =
+      overrides?.approvalPolicyOverride ?? settings.system.approvalPolicy;
+    const effectiveCustomApprovalRules =
+      overrides?.customApprovalRulesOverride ?? settings.system.customApprovalRules;
     const effectiveIsAgentMode = isAgentExecutionMode(effectiveExecutionMode);
     const effectiveWorkdir = (
       overrides?.workdirOverride ??
@@ -4283,6 +4339,13 @@ export function ChatPage(props: ChatPageProps) {
             },
             agentTemplates: settings.agents,
             selectedSystemToolIds: effectiveSelectedSystemToolIds,
+            approval: {
+              policy: effectiveApprovalPolicy,
+              customRules: effectiveCustomApprovalRules,
+              sessionId: gatewayBridgeRequestId,
+              requestApproval: (input) =>
+                approvalBroker.request({ ...input, conversationId }),
+            },
             getMcpSettings,
             applyMcpOps: (ops) => {
               setSettings((prev) => applyMcpOpsToAppSettings(prev, ops));
@@ -4399,6 +4462,7 @@ export function ChatPage(props: ChatPageProps) {
         titleJobRef.current = null;
       }
     } finally {
+      approvalBroker.cancelSession(gatewayBridgeRequestId);
       compaction.unbindTurn();
       hookLifecycle.endAgent();
       hookScope.close();
@@ -4432,6 +4496,50 @@ export function ChatPage(props: ChatPageProps) {
       workdir: isAgentMode ? activeWorkspaceProjectPath || undefined : undefined,
     });
   }, [activeWorkspaceProjectPath, isAgentMode, openController]);
+
+  const handleNewProjectlessConversation = useCallback(() => {
+    openController.cancel();
+    clearCachedComposerDraft();
+    setActiveWorkspaceProjectId(PROJECTLESS_WORKSPACE_PROJECT_ID);
+    startNewConversationActionRef.current();
+  }, [openController]);
+
+  useEffect(
+    () =>
+      subscribeAppCommand((command) => {
+        switch (command) {
+          case "newChat":
+            setActiveView("chat");
+            handleNewConversation();
+            break;
+          case "newProjectlessChat":
+            setActiveView("chat");
+            handleNewProjectlessConversation();
+            break;
+          case "openFolder":
+            setActiveView("chat");
+            void handleOpenCreateWorkspaceProject({ startConversation: true });
+            break;
+          case "focusComposer":
+            setActiveView("chat");
+            requestAnimationFrame(() => composerRef.current?.focus());
+            break;
+          case "toggleSidebar":
+            handleToggleSidebar();
+            break;
+          case "toggleProjectTools":
+            setActiveView("chat");
+            setRightDockOpen((open) => !open);
+            break;
+        }
+      }),
+    [
+      handleNewConversation,
+      handleNewProjectlessConversation,
+      handleOpenCreateWorkspaceProject,
+      handleToggleSidebar,
+    ],
+  );
 
   const handleSelectConversation = useCallback(
     (id: string) => {
@@ -4947,6 +5055,8 @@ export function ChatPage(props: ChatPageProps) {
   const fileDropLimitHint = t("chat.upload.dropLimit").replace("{max}", String(MAX_UPLOAD_FILES));
 
   useEffect(() => {
+    if (!isTauri()) return;
+
     let cancelled = false;
     let unlisten: (() => void) | null = null;
 
@@ -5017,6 +5127,9 @@ export function ChatPage(props: ChatPageProps) {
           store={sidebarStore}
           currentConversationId={currentConversationId}
           isOpen={sidebarOpen}
+          executionMode={settings.system.executionMode}
+          approvalPolicy={settings.system.approvalPolicy}
+          setSettings={setSettings}
           fontScale={settings.customSettings.fontScale.sidebar}
           activeView={activeView}
           showProjects={isAgentMode}
@@ -5057,7 +5170,7 @@ export function ChatPage(props: ChatPageProps) {
           onShareConversation={handleOpenShareModal}
           onOpenSharedConversations={handleOpenSharedHistoryManager}
           onCloseSidebar={handleCloseSidebar}
-          onOpenSettings={() => onOpenSettings()}
+          onOpenSettings={onOpenSettings}
           appUpdate={appUpdate}
           onOpenSkillsHub={() => {
             cacheActiveComposerDraft();
@@ -5068,6 +5181,11 @@ export function ChatPage(props: ChatPageProps) {
             cacheActiveComposerDraft();
             setRightDockOpen(false);
             setActiveView("mcp-hub");
+          }}
+          onOpenCronHub={() => {
+            cacheActiveComposerDraft();
+            setRightDockOpen(false);
+            setActiveView("cron-hub");
           }}
         />
 
@@ -5139,18 +5257,20 @@ export function ChatPage(props: ChatPageProps) {
               sidebarOpen={sidebarOpen}
               onOpenSidebar={handleOpenSidebar}
             />
+          ) : activeView === "cron-hub" ? (
+            <CronHubPage
+              settings={settings}
+              setSettings={setSettings}
+              sidebarOpen={sidebarOpen}
+              onOpenSidebar={handleOpenSidebar}
+            />
           ) : (
             <>
               <MacOsTitleBarSpacer />
               <div className="relative z-20">
                 <ChatHeader
                   settings={settings}
-                  hasModels={hasModels}
-                  currentModelLabel={currentModelLabel}
-                  modelOptions={modelOptions}
-                  selectedValue={selectedValue}
                   sidebarOpen={sidebarOpen}
-                  setSettings={setSettings}
                   onOpenSettings={onOpenSettings}
                   onToggleTheme={onToggleTheme}
                   onOpenSidebar={handleOpenSidebar}
@@ -5216,11 +5336,19 @@ export function ChatPage(props: ChatPageProps) {
                 workdir={displayedConversationWorkdir}
                 enabledSkills={enabledComposerSkills}
                 isAgentMode={isAgentMode}
+                executionMode={settings.system.executionMode}
+                approvalPolicy={settings.system.approvalPolicy}
+                hasModels={hasModels}
+                currentModelLabel={currentModelLabel}
+                modelOptions={modelOptions}
+                selectedModelValue={selectedValue}
                 chatRuntimeControls={chatRuntimeControlsForCurrentProvider}
                 reasoningOptions={chatRuntimeReasoningOptions}
                 thinkingAlwaysOn={chatRuntimeThinkingAlwaysOn}
                 gitClient={tauriGitClient}
                 workspaceActivityClient={tauriWorkspaceActivityClient}
+                setSettings={setSettings}
+                onOpenSettings={onOpenSettings}
                 onSend={handleSend}
                 onStop={handleStopSending}
                 onComposerBusyChange={handleComposerBusyChange}
@@ -5234,8 +5362,37 @@ export function ChatPage(props: ChatPageProps) {
                 onMoveQueuedTurnUp={moveQueuedTurnUp}
                 onEditQueuedTurn={editQueuedTurn}
                 onRemoveQueuedTurn={removeQueuedTurn}
+                usagePanel={
+                  <ConversationUsagePanel
+                    show={isAgentDevExecutionMode}
+                    historyItems={historyRenderItems}
+                    liveTranscriptStore={liveTranscriptStore}
+                    contextWindow={currentModelContextWindow}
+                  />
+                }
+                taskListPanel={
+                  <ConversationTodoPanel
+                    key={currentConversationId}
+                    historyItems={historyRenderItems}
+                    liveTranscriptStore={liveTranscriptStore}
+                  />
+                }
                 onHeightChange={setComposerOverlayHeight}
               />
+              {visibleToolApprovals[0] ? (
+                <div
+                  className="pointer-events-none absolute inset-x-0 z-40 flex justify-center px-3 sm:px-6"
+                  style={{ bottom: composerOverlayHeight + 8 }}
+                >
+                  <div className="w-full max-w-[760px]">
+                    <ToolApprovalCard
+                      request={visibleToolApprovals[0]}
+                      queueCount={visibleToolApprovals.length}
+                      onDecision={(id, decision) => approvalBroker.resolve(id, decision)}
+                    />
+                  </div>
+                </div>
+              ) : null}
               {isFileDropActive ? (
                 <div
                   className="file-drop-overlay pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4 sm:p-6 bg-white/30 backdrop-blur-md dark:bg-black/30"

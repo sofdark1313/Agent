@@ -132,7 +132,7 @@ pub(crate) fn create_zsh_prompt_overlay(prompt: &str) -> Option<PathBuf> {
     let base = dirs::cache_dir()
         .or_else(dirs::home_dir)
         .unwrap_or_else(std::env::temp_dir);
-    let zdotdir = base.join("liveagent-zsh");
+    let zdotdir = base.join("agent-zsh");
     if fs::create_dir_all(&zdotdir).is_err() {
         return None;
     }
@@ -142,7 +142,7 @@ pub(crate) fn create_zsh_prompt_overlay(prompt: &str) -> Option<PathBuf> {
     let user_zshenv = home.join(".zshenv");
 
     let zshenv_content = format!(
-        "export _LIVEAGENT_REAL_ZDOTDIR=\"$HOME\"\n\
+        "export _AGENT_REAL_ZDOTDIR=\"$HOME\"\n\
          [[ -f \"{}\" ]] && source \"{}\"\n",
         user_zshenv.display(),
         user_zshenv.display(),

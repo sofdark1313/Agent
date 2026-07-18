@@ -683,12 +683,12 @@ test("GatewayWebSocketClient sends skill manage payloads", async () => {
   socket.receive({
     id: socket.sent[1].id,
     type: "response",
-    payload: { action: "list", rootDir: "/Users/me/.liveagent/skills", skills: [] },
+    payload: { action: "list", rootDir: "/Users/me/.agent/skills", skills: [] },
   });
 
   assert.deepEqual(await skillPromise, {
     action: "list",
-    rootDir: "/Users/me/.liveagent/skills",
+    rootDir: "/Users/me/.agent/skills",
     skills: [],
   });
   resetGatewayWebSocketClient();

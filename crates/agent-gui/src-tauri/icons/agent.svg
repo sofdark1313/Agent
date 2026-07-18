@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Agent logo">
+  <rect x="32" y="32" width="960" height="960" rx="224" fill="#171717"/>
+  <path d="M238 788 438 282c27-68 121-68 148 0l200 506" fill="none" stroke="#fff" stroke-width="112" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M344 626h336" fill="none" stroke="#fff" stroke-width="112" stroke-linecap="round"/>
+  <rect x="451" y="433" width="122" height="122" rx="28" fill="#fff"/>
+</svg>

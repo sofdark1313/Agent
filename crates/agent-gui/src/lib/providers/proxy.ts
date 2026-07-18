@@ -2,8 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { ProviderId } from "../settings";
 
-export const LIVEAGENT_PROXY_TOKEN_HEADER = "x-liveagent-proxy-token";
-export const LIVEAGENT_UPSTREAM_ORIGIN_HEADER = "x-liveagent-upstream-origin";
+export const AGENT_PROXY_TOKEN_HEADER = "x-agent-proxy-token";
+export const AGENT_UPSTREAM_ORIGIN_HEADER = "x-agent-upstream-origin";
 
 type ProxyServerInfo = {
   baseUrl: string;
@@ -136,8 +136,8 @@ export async function prepareProxyRequest(
     baseUrl,
     headers: {
       ...headers,
-      [LIVEAGENT_UPSTREAM_ORIGIN_HEADER]: upstreamOrigin,
-      [LIVEAGENT_PROXY_TOKEN_HEADER]: proxyServerInfo.token,
+      [AGENT_UPSTREAM_ORIGIN_HEADER]: upstreamOrigin,
+      [AGENT_PROXY_TOKEN_HEADER]: proxyServerInfo.token,
     },
   };
 }

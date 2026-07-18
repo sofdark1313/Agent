@@ -46,7 +46,11 @@ function asErrorMessage(error: unknown, fallback: string) {
 
 const GATEWAY_SETTINGS_SYNC_EVENT = "gateway:settings-sync";
 
-function AppChrome(props: { children: ReactNode }) {
+function AppChrome(props: {
+  children: ReactNode;
+  onOpenSettings?: (section?: SectionId) => void;
+  onToggleTheme?: () => void;
+}) {
   return (
     <div
       className="relative flex h-full w-full flex-col overflow-hidden bg-background"
@@ -54,7 +58,10 @@ function AppChrome(props: { children: ReactNode }) {
         event.preventDefault();
       }}
     >
-      <WindowsTitleBar />
+      <WindowsTitleBar
+        onOpenSettings={props.onOpenSettings}
+        onToggleTheme={props.onToggleTheme}
+      />
       <div className="relative min-h-0 flex-1 overflow-hidden bg-background">{props.children}</div>
     </div>
   );
@@ -401,7 +408,7 @@ export default function App() {
 
   return (
     <LocaleContext.Provider value={localeContextValue}>
-      <AppChrome>
+      <AppChrome onOpenSettings={openSettings} onToggleTheme={toggleTheme}>
         <CronPromptRunner settings={settings} />
         <MemoryOrganizerHost settings={settings} setSettings={setSettings} />
         <AppErrorBoundary>

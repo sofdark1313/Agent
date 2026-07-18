@@ -968,7 +968,7 @@ mod tests {
                 "workdir": "",
                 "selectedSystemTools": []
             }),
-            "/tmp/liveagent-default-project",
+            "/tmp/agent-default-project",
         )
         .expect("save system");
 
@@ -980,13 +980,13 @@ mod tests {
                 "executionMode": "tools",
                 "hiddenWorkspaceProjectPaths": [],
                 "missingWorkspaceProjectPaths": [],
-                "workdir": "/tmp/liveagent-default-project",
+                "workdir": "/tmp/agent-default-project",
                 "selectedSystemTools": [],
                 "workspaceProjects": [
                     {
                         "id": DEFAULT_WORKSPACE_PROJECT_ID,
                         "name": DEFAULT_WORKSPACE_PROJECT_NAME,
-                        "path": "/tmp/liveagent-default-project",
+                        "path": "/tmp/agent-default-project",
                         "kind": "managed",
                         "createdAt": 1,
                         "updatedAt": 1
@@ -1003,13 +1003,13 @@ mod tests {
             &mut conn,
             json!({
                 "executionMode": "tools",
-                "workdir": "/tmp/liveagent-default-project",
+                "workdir": "/tmp/agent-default-project",
                 "selectedSystemTools": [],
                 "workspaceProjects": [
                     {
                         "id": DEFAULT_WORKSPACE_PROJECT_ID,
                         "name": DEFAULT_WORKSPACE_PROJECT_NAME,
-                        "path": "/tmp/liveagent-default-project",
+                        "path": "/tmp/agent-default-project",
                         "kind": "managed",
                         "createdAt": 10,
                         "updatedAt": 20,
@@ -1018,7 +1018,7 @@ mod tests {
                     }
                 ]
             }),
-            "/tmp/liveagent-default-project",
+            "/tmp/agent-default-project",
         )
         .expect("save system");
 
@@ -1030,13 +1030,13 @@ mod tests {
                 "executionMode": "tools",
                 "hiddenWorkspaceProjectPaths": [],
                 "missingWorkspaceProjectPaths": [],
-                "workdir": "/tmp/liveagent-default-project",
+                "workdir": "/tmp/agent-default-project",
                 "selectedSystemTools": [],
                 "workspaceProjects": [
                     {
                         "id": DEFAULT_WORKSPACE_PROJECT_ID,
                         "name": DEFAULT_WORKSPACE_PROJECT_NAME,
-                        "path": "/tmp/liveagent-default-project",
+                        "path": "/tmp/agent-default-project",
                         "kind": "managed",
                         "createdAt": 1,
                         "updatedAt": 1,
@@ -1051,7 +1051,7 @@ mod tests {
     #[test]
     fn load_system_with_defaults_returns_agent_mode_and_default_project() {
         let conn = open_memory_db();
-        let loaded = load_system_with_defaults(&conn, "/tmp/liveagent-default-project")
+        let loaded = load_system_with_defaults(&conn, "/tmp/agent-default-project")
             .expect("load system");
 
         assert_eq!(
@@ -1061,13 +1061,13 @@ mod tests {
                 "executionMode": "tools",
                 "hiddenWorkspaceProjectPaths": [],
                 "missingWorkspaceProjectPaths": [],
-                "workdir": "/tmp/liveagent-default-project",
+                "workdir": "/tmp/agent-default-project",
                 "selectedSystemTools": [],
                 "workspaceProjects": [
                     {
                         "id": DEFAULT_WORKSPACE_PROJECT_ID,
                         "name": DEFAULT_WORKSPACE_PROJECT_NAME,
-                        "path": "/tmp/liveagent-default-project",
+                        "path": "/tmp/agent-default-project",
                         "kind": "managed",
                         "createdAt": 1,
                         "updatedAt": 1

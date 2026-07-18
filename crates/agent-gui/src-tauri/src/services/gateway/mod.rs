@@ -30,7 +30,7 @@ use crate::services::tunnel::{TunnelProxy, TunnelStore};
 use crate::services::workspace_watch::WorkspaceWatchService;
 
 pub mod proto {
-    tonic::include_proto!("liveagent.gateway.v1");
+    tonic::include_proto!("agent.gateway.v1");
 }
 
 mod chat;

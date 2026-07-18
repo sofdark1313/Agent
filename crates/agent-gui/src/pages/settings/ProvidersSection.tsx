@@ -119,7 +119,7 @@ function ProviderBrandIcon({ type }: { type: ProviderId }) {
 }
 
 const REDACTED_API_KEY_DISPLAY = "API Key";
-const CHERRY_DATA_PATH_STORAGE_KEY = "liveagent.cherryStudioDataPath";
+const CHERRY_DATA_PATH_STORAGE_KEY = "agent.cherryStudioDataPath";
 
 // A local rescan usually returns within a frame, which makes the refresh
 // feedback flash for a single frame. Hold the loading state for one full
@@ -829,7 +829,7 @@ function cherryProviderName(item: CherryProviderImportItem, allItems: CherryProv
 }
 
 // Re-syncing an existing provider must not silently revert an API key the
-// user already configured in LiveAgent; like `name`, the existing key wins.
+// user already configured in Agent; like `name`, the existing key wins.
 function cherryEffectiveApiKey(item: CherryProviderImportItem, existing?: CustomProvider) {
   return existing?.apiKey?.trim() ? existing.apiKey : item.apiKey;
 }
@@ -1775,8 +1775,8 @@ export function ProvidersSection(props: SettingsSectionProps) {
           .map((entry) => `${entry.count} 个 ${getProviderLabel(entry.type)}`)
           .join("、")} 供应商`,
         fetchedCount > 0 && refreshedModelCount > 0
-          ? `LiveAgent 获取并激活 ${refreshedModelCount} 个模型`
-          : "LiveAgent API 未返回可用模型",
+          ? `Agent 获取并激活 ${refreshedModelCount} 个模型`
+          : "Agent API 未返回可用模型",
         failedCount > 0 ? `${failedCount} 个供应商模型获取失败` : "",
       ].filter(Boolean);
       setCherryMessage(details.join("，"));

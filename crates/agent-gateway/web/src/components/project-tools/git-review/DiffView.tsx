@@ -49,7 +49,7 @@ const RAW_DIFF_PREVIEW_CHAR_LIMIT = 60 * 1024;
 const DIFF_SELECTION_AUTOSCROLL_EDGE_PX = 40;
 const DIFF_SELECTION_AUTOSCROLL_MAX_STEP_PX = 22;
 const DIFF_HORIZONTAL_SCROLLBAR_MIN_THUMB_PX = 32;
-const PROJECT_TOOLS_RESIZE_END_EVENT = "liveagent:project-tools-resize-end";
+const PROJECT_TOOLS_RESIZE_END_EVENT = "agent:project-tools-resize-end";
 
 function diffSelectionAutoScrollDelta(
   pointer: number,

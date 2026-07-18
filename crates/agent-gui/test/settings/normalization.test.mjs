@@ -8,6 +8,42 @@ const normalize = loader.loadModule("src/lib/settings/normalize.ts");
 const sync = loader.loadModule("src/lib/settings/sync.ts");
 const RIGHT_DOCK_TAB_IDS = settings.RIGHT_DOCK_SINGLETON_TAB_IDS;
 
+test("system approval settings normalize custom rules and migrate legacy execution modes", () => {
+  const legacyAsk = settings.normalizeSystemSettings({ executionMode: "text" });
+  assert.equal(legacyAsk.approvalPolicy, "ask");
+  assert.equal(legacyAsk.executionMode, "tools");
+
+  const explicitChat = settings.normalizeSystemSettings({
+    executionMode: "text",
+    approvalPolicy: "agent",
+  });
+  assert.equal(explicitChat.executionMode, "text");
+
+  const normalized = settings.normalizeSystemSettings({
+    executionMode: "tools",
+    approvalPolicy: "custom",
+    customApprovalRules: {
+      allowWorkspaceWrites: true,
+      allowCommands: 1,
+      allowNetwork: true,
+      allowMcp: false,
+      allowOutsideWorkspace: true,
+    },
+  });
+  assert.equal(normalized.executionMode, "tools");
+  assert.equal(normalized.approvalPolicy, "custom");
+  assert.deepEqual(normalized.customApprovalRules, {
+    allowWorkspaceWrites: true,
+    allowCommands: false,
+    allowNetwork: true,
+    allowMcp: false,
+    allowOutsideWorkspace: true,
+  });
+
+  const defaults = settings.getDefaultSettings();
+  assert.equal(defaults.system.approvalPolicy, "agent");
+});
+
 test("basic provider field normalizers trim values and remove duplicate models", () => {
   assert.equal(normalize.normalizeBaseUrl(" https://api.example.com/v1/// "), "https://api.example.com/v1//");
   assert.equal(normalize.normalizeBaseUrl(" https:/api.example.com/v1/ "), "https://api.example.com/v1");
@@ -2062,4 +2098,10 @@ test("font scale settings normalize invalid values to 1 and clamp out-of-range v
 
   const custom = settings.normalizeCustomSettings({ fontScale: { chat: 1.2 } }, []);
   assert.deepEqual(custom.fontScale, { sidebar: 1, chat: 1.2, rightDock: 1 });
+});
+
+test("theme toggle only alternates between light and dark", () => {
+  assert.equal(settings.getNextTheme("light"), "dark");
+  assert.equal(settings.getNextTheme("dark"), "light");
+  assert.equal(settings.getNextTheme("system"), "dark");
 });

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/liveagent/agent-gateway/internal/handler"
-	gatewayv1 "github.com/liveagent/agent-gateway/internal/proto/v1"
+	"github.com/agent/agent-gateway/internal/handler"
+	gatewayv1 "github.com/agent/agent-gateway/internal/proto/v1"
 )
 
 func (c *websocketConnection) handleProviderList(req websocketRequest) {

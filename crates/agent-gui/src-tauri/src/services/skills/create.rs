@@ -53,7 +53,7 @@ pub(crate) fn create_skill_from_payload(
     let body = object_string(payload, "body");
     let conflict = normalize_conflict(object_string(payload, "conflict"), "fail")?;
 
-    let tmp = TempDir::new("liveagent-skill-create")?;
+    let tmp = TempDir::new("agent-skill-create")?;
     let source_dir = tmp.path().join(&name);
     fs::create_dir_all(&source_dir)
         .map_err(|e| format!("Failed to create staged Skill directory: {e}"))?;

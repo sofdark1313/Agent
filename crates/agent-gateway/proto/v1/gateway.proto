@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package liveagent.gateway.v1;
+package agent.gateway.v1;
 
-option go_package = "github.com/liveagent/agent-gateway/internal/proto/v1;gatewayv1";
+option go_package = "github.com/agent/agent-gateway/internal/proto/v1;gatewayv1";
 
 service AgentGateway {
   rpc AgentConnect(stream AgentEnvelope) returns (stream GatewayEnvelope);
@@ -346,7 +346,7 @@ message ManagedProcessRecord {
   optional int64 finished_at = 9;   // unix ms
   optional int32 exit_code = 10;    // absent for restored/pid-managed entries
   bool running = 11;
-  bool isolated = 12;               // survives LiveAgent exit
+  bool isolated = 12;               // survives Agent exit
   bool restored = 13;               // recovered after restart; managed by pid
 }
 

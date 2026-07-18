@@ -4,7 +4,7 @@
 //
 // The desktop app is the sole producer: bridge events and runtime snapshots
 // both carry field text truncated to a bounded preview plus a
-// __liveagent_stream_preview meta block holding the true metrics. `progress`
+// __agent_stream_preview meta block holding the true metrics. `progress`
 // (sum of true field chars) is a monotonic revision — streamed arguments only
 // grow — used to reject stale writers (late deltas, lagging snapshots)
 // wherever tool args are merged. Args without meta (local live rounds,
@@ -12,7 +12,7 @@
 // position are >= the truncated preview's metrics, so the guard composes
 // across representations.
 
-export const LIVE_TOOL_PREVIEW_META_KEY = "__liveagent_stream_preview";
+export const LIVE_TOOL_PREVIEW_META_KEY = "__agent_stream_preview";
 
 export const FILE_TOOL_TEXT_FIELDS: Readonly<Record<string, readonly string[]>> = {
   Write: ["content"],

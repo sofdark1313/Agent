@@ -1209,12 +1209,12 @@ fn history_message_content_hash(message: &Value) -> String {
         .and_then(|object| object.get("role"))
         .and_then(Value::as_str)
         .unwrap_or_default();
-    let mut parts = vec!["liveagent-history-ref-v1".to_string()];
+    let mut parts = vec!["agent-history-ref-v1".to_string()];
     append_hash_part(&mut parts, role);
 
     if role == "user" {
         let display_text = object
-            .and_then(|object| object.get("liveAgentDisplayContent"))
+            .and_then(|object| object.get("agentDisplayContent"))
             .and_then(Value::as_str)
             .map(str::to_string)
             .unwrap_or_else(|| {
@@ -1223,7 +1223,7 @@ fn history_message_content_hash(message: &Value) -> String {
         append_hash_part(&mut parts, display_text);
 
         let attachments = object
-            .and_then(|object| object.get("liveAgentAttachments"))
+            .and_then(|object| object.get("agentAttachments"))
             .and_then(Value::as_array);
         let valid_attachments = attachments
             .map(|attachments| {
@@ -1462,7 +1462,7 @@ fn flatten_history_messages_json_window(
                 if let Some(history_ref) =
                     build_history_message_ref_json(parsed.segment, message_index, item)
                 {
-                    object.insert("liveAgentHistoryRef".to_string(), history_ref);
+                    object.insert("agentHistoryRef".to_string(), history_ref);
                 }
             }
             merged.push(cloned);
@@ -1741,7 +1741,7 @@ mod tests {
                     "role":"user",
                     "id":"user-old-2",
                     "content":"old-2",
-                    "liveAgentHistoryRef":{
+                    "agentHistoryRef":{
                         "segmentIndex":4,
                         "messageIndex":2,
                         "segmentId":"segment-a",
@@ -1759,7 +1759,7 @@ mod tests {
                     "role":"user",
                     "id":"user-new-1",
                     "content":"new-1",
-                    "liveAgentHistoryRef":{
+                    "agentHistoryRef":{
                         "segmentIndex":5,
                         "messageIndex":1,
                         "segmentId":"segment-b",

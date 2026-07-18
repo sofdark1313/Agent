@@ -60,7 +60,10 @@ import {
   type SubagentConversationStore,
   type SubagentTemplate,
 } from "../../../lib/subagents";
-import { buildBuiltinToolRegistry } from "../../../lib/tools/builtinRegistry";
+import {
+  buildBuiltinToolRegistry,
+  type BuiltinToolApprovalOptions,
+} from "../../../lib/tools/builtinRegistry";
 import type { BuiltinToolExecutionContext } from "../../../lib/tools/builtinTypes";
 import { createFileToolState } from "../../../lib/tools/fileToolState";
 import type { SkillAccessPolicy } from "../../../lib/tools/skillAccessPolicy";
@@ -219,6 +222,7 @@ export type RunAgentConversationTurnParams = {
   }) => void | Promise<void>;
   agentTemplates: AppSettings["agents"];
   selectedSystemToolIds: SystemToolId[];
+  approval?: BuiltinToolApprovalOptions;
   getMcpSettings: () => AppSettings["mcp"];
   applyMcpOps?: (ops: McpSettingsOp[]) => void;
   remoteWebTunnelsEnabled?: boolean;
@@ -284,6 +288,7 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
     onManagedSkillsChanged,
     agentTemplates,
     selectedSystemToolIds,
+    approval,
     getMcpSettings,
     applyMcpOps,
     remoteWebTunnelsEnabled,
@@ -403,6 +408,7 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
     runtimeScope: "chat",
     currentChatModel: selectedModel,
     selectedSystemToolIds,
+    approval,
     getMcpSettings,
     applyMcpOps,
     remoteWebTunnelsEnabled,

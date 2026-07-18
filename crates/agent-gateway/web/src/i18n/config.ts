@@ -17,7 +17,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "app.errorBoundaryReload": "重新加载",
     "app.errorBoundaryTitle": "页面出现异常",
     "app.loading": "正在加载设置...",
-    "app.name": "LiveAgent",
+    "app.name": "Agent",
     "window.close": "关闭",
 
     /* ── Tooltip ── */
@@ -79,7 +79,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.resizeSidebarSections": "调整工作空间与最近对话占比",
     "chat.emptyChatHistory": "暂无历史对话",
     "chat.clickNewConversation": "点击上方「新对话」开始聊天",
-    "chat.welcome": "欢迎使用 LiveAgent",
+    "chat.welcome": "欢迎使用 Agent",
     "chat.greetingMorning": "早上好",
     "chat.greetingNoon": "中午好",
     "chat.greetingAfternoon": "下午好",
@@ -996,7 +996,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.agentModeDesc": "允许调用工具，执行文件与命令行操作",
     "settings.agentDevMode": "Agent dev 模式",
     "settings.agentDevModeDesc":
-      "与 Agent 模式一致，但会把当前对话的流式请求与返回逐行写入 ~/.liveagent/debug/<对话ID>.jsonl",
+      "与 Agent 模式一致，但会把当前对话的流式请求与返回逐行写入 ~/.agent/debug/<对话ID>.jsonl",
     "settings.workdir": "项目文件夹",
     "settings.workdirRequired": "必填",
     "settings.workdirDesc": "选择这个项目的文件夹。文件工具会在所选项目目录内读写/搜索。",
@@ -1021,7 +1021,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.systemToolsTabBuiltin": "内置工具",
     "settings.systemToolsTabCustom": "自定义工具",
     "settings.systemToolsBuiltinDesc":
-      "LiveAgent 在 Agent 模式下自动注册的内置工具，此处仅供查阅。",
+      "Agent 在 Agent 模式下自动注册的内置工具，此处仅供查阅。",
     "settings.systemToolsCustomDesc":
       "可按需启用的自定义系统工具；启用后会在 Agent 模式下注册，供模型在对话中调用。",
     "settings.systemToolsViewDetail": "查看详情",
@@ -1381,7 +1381,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
     /* ── Settings Remote ── */
     "settings.remoteTitle": "远程访问",
-    "settings.remoteDesc": "通过云端 Gateway 远程控制本地 LiveAgent",
+    "settings.remoteDesc": "通过云端 Gateway 远程控制本地 Agent",
     "settings.remoteConnected": "已连接",
     "settings.remoteDisconnected": "未连接",
     "settings.remoteEnable": "启用远程访问",
@@ -1421,7 +1421,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.remoteHeartbeatHint":
       "与 Gateway 连接的保活心跳间隔（生效范围 10-60 秒），用于维持连接和检测在线状态",
     "settings.remoteInfoBanner":
-      "启用后，本地 LiveAgent 将通过 gRPC 双向流连接云端 Gateway。你可以在浏览器中通过 WebUI 远程发送 Chat 消息、管理 Cron 任务和查看历史记录。所有工具执行仍在本地完成，远程端仅转发指令和结果。",
+      "启用后，本地 Agent 将通过 gRPC 双向流连接云端 Gateway。你可以在浏览器中通过 WebUI 远程发送 Chat 消息、管理 Cron 任务和查看历史记录。所有工具执行仍在本地完成，远程端仅转发指令和结果。",
 
     /* ── MCP Hub ── */
     "mcpHub.title": "MCP Servers",
@@ -1539,7 +1539,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.skillsHubStoreTab": "技能商店",
     "settings.skillsHubImportTab": "本地导入",
     "settings.skillsImportDesc":
-      "扫描本机 Claude Code、Codex、CodeBuddy 的技能目录，勾选后导入到 LiveAgent。",
+      "扫描本机 Claude Code、Codex、CodeBuddy 的技能目录，勾选后导入到 Agent。",
     "settings.skillsImportOverwriteHint": "同名技能将自动备份后覆盖。",
     "settings.skillsImportScanning": "正在扫描本地技能...",
     "settings.skillsImportRescan": "重新扫描",
@@ -1710,7 +1710,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "app.errorBoundaryReload": "Reload",
     "app.errorBoundaryTitle": "Something went wrong",
     "app.loading": "Loading settings...",
-    "app.name": "LiveAgent",
+    "app.name": "Agent",
     "window.close": "Close",
 
     /* ── Tooltip ── */
@@ -1777,7 +1777,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.resizeSidebarSections": "Resize workspaces and recent conversations",
     "chat.emptyChatHistory": "No conversation history",
     "chat.clickNewConversation": "Click 'New Conversation' above to start chatting",
-    "chat.welcome": "Welcome to LiveAgent",
+    "chat.welcome": "Welcome to Agent",
     "chat.greetingMorning": "Good morning",
     "chat.greetingNoon": "Good afternoon",
     "chat.greetingAfternoon": "Good afternoon",
@@ -2729,7 +2729,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.agentModeDesc": "Allows tool calls, file and command-line operations",
     "settings.agentDevMode": "Agent Dev Mode",
     "settings.agentDevModeDesc":
-      "Same as Agent mode, but also writes each streaming request and response line-by-line to ~/.liveagent/debug/<conversationId>.jsonl",
+      "Same as Agent mode, but also writes each streaming request and response line-by-line to ~/.agent/debug/<conversationId>.jsonl",
     "settings.workdir": "Project Folder",
     "settings.workdirRequired": "Required",
     "settings.workdirDesc":
@@ -2755,7 +2755,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.systemToolsTabBuiltin": "Built-in",
     "settings.systemToolsTabCustom": "Custom",
     "settings.systemToolsBuiltinDesc":
-      "Built-in tools that LiveAgent registers automatically in Agent mode. Read-only list; click the eye icon for details.",
+      "Built-in tools that Agent registers automatically in Agent mode. Read-only list; click the eye icon for details.",
     "settings.systemToolsCustomDesc":
       "Optional custom system tools. Enabled tools are registered in Agent mode for the model to call during conversations.",
     "settings.systemToolsViewDetail": "View details",
@@ -3128,7 +3128,7 @@ export const translations: Record<Locale, Record<string, string>> = {
 
     /* ── Settings Remote ── */
     "settings.remoteTitle": "Remote Access",
-    "settings.remoteDesc": "Control your local LiveAgent remotely via cloud Gateway",
+    "settings.remoteDesc": "Control your local Agent remotely via cloud Gateway",
     "settings.remoteConnected": "Connected",
     "settings.remoteDisconnected": "Disconnected",
     "settings.remoteEnable": "Enable remote access",
@@ -3171,7 +3171,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.remoteHeartbeatHint":
       "Keepalive heartbeat interval for the Gateway connection (effective range 10-60 seconds), used to maintain the connection and detect online status",
     "settings.remoteInfoBanner":
-      "When enabled, the local LiveAgent connects to the cloud Gateway via gRPC bidirectional streaming. You can remotely send Chat messages, manage Cron tasks, and view history through the WebUI in your browser. All tool execution remains local — the remote end only relays commands and results.",
+      "When enabled, the local Agent connects to the cloud Gateway via gRPC bidirectional streaming. You can remotely send Chat messages, manage Cron tasks, and view history through the WebUI in your browser. All tool execution remains local — the remote end only relays commands and results.",
 
     /* ── MCP Hub ── */
     "mcpHub.title": "MCP Servers",
@@ -3291,7 +3291,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.skillsHubStoreTab": "Skills Store",
     "settings.skillsHubImportTab": "Local Import",
     "settings.skillsImportDesc":
-      "Scan local Claude Code, Codex, and CodeBuddy skill directories, then pick skills to import into LiveAgent.",
+      "Scan local Claude Code, Codex, and CodeBuddy skill directories, then pick skills to import into Agent.",
     "settings.skillsImportOverwriteHint":
       "Skills with the same name are backed up, then overwritten.",
     "settings.skillsImportScanning": "Scanning local skills...",

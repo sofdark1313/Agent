@@ -132,7 +132,7 @@ fn prune_expired_requests(state: &mut PowerActivityState) {
 
 fn spawn_watchdog(state: Arc<Mutex<PowerActivityState>>) -> bool {
     thread::Builder::new()
-        .name("liveagent-power-activity-watchdog".to_string())
+        .name("agent-power-activity-watchdog".to_string())
         .spawn(move || loop {
             thread::sleep(POWER_ACTIVITY_WATCHDOG_INTERVAL);
             let should_continue = match state.lock() {
@@ -231,7 +231,7 @@ impl KeepAwakeHandle {
         let (ready_tx, ready_rx) = mpsc::channel::<Result<(), String>>();
         let (stop_tx, stop_rx) = mpsc::channel::<()>();
         let thread = thread::Builder::new()
-            .name("liveagent-keep-awake".to_string())
+            .name("agent-keep-awake".to_string())
             .spawn(move || {
                 let start_result = set_windows_keep_awake(true);
                 let should_wait = start_result.is_ok();

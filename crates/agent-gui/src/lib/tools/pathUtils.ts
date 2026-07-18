@@ -203,7 +203,7 @@ function parseSkillUrl(value: string) {
 
 function fixedSkillsRelativePathFromAbsolute(value: string) {
   const normalized = normalizeComparablePath(value);
-  const marker = "/.liveagent/skills/";
+  const marker = "/.agent/skills/";
   const index = normalized.indexOf(marker);
   if (index < 0) return null;
   return normalized.slice(index + marker.length);
@@ -435,7 +435,7 @@ export class ToolPathResolver {
     }
 
     if (raw.startsWith("~")) {
-      // "~/.liveagent/skills/..." is recognizable without knowing the home
+      // "~/.agent/skills/..." is recognizable without knowing the home
       // directory; resolve it as a Skill path before attempting ~ expansion.
       const fixedSkillRel = fixedSkillsRelativePathFromAbsolute(raw);
       if (fixedSkillRel !== null) {

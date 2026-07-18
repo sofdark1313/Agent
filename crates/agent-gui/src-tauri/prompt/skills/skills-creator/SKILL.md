@@ -1,11 +1,11 @@
 ---
 name: skills-creator
-description: Create or update LiveAgent runtime skills. Use when you need to summarize a workflow into a skill, write it into the fixed user skills root, validate it, package it, or refine a skill's references for LiveAgent's SkillsManager flow.
+description: Create or update Agent runtime skills. Use when you need to summarize a workflow into a skill, write it into the fixed user skills root, validate it, package it, or refine a skill's references for Agent's SkillsManager flow.
 ---
 
 # Skills Creator
 
-Create LiveAgent-compatible skills in the fixed runtime skills root by keeping the entrypoint concise, moving long guidance into references, and using helper files only when the workflow truly needs them. Prefer English for generated skill documentation so skills stay broadly reusable, but other languages are accepted.
+Create Agent-compatible skills in the fixed runtime skills root by keeping the entrypoint concise, moving long guidance into references, and using helper files only when the workflow truly needs them. Prefer English for generated skill documentation so skills stay broadly reusable, but other languages are accepted.
 
 ## Workflow
 
@@ -16,7 +16,7 @@ Create LiveAgent-compatible skills in the fixed runtime skills root by keeping t
 5. Use `SkillsManager(action=create)` to write the skill into the fixed user skills root. Keep `conflict=fail` unless the user explicitly wants replacement.
 6. Use `SkillsManager(action=validate)` after creation. Fix validation errors before packaging.
 7. Use `SkillsManager(action=package)` only after validation passes and a distributable archive is required.
-8. After creation, the new skill is enabled for the current conversation automatically; ask LiveAgent to rescan skills or reopen the Skills menu only if the new skill does not appear immediately.
+8. After creation, the new skill is enabled for the current conversation automatically; ask Agent to rescan skills or reopen the Skills menu only if the new skill does not appear immediately.
 
 ## Rules
 

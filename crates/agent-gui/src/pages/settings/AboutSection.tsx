@@ -79,7 +79,7 @@ export function AboutSection(props: AboutSectionProps) {
     latestResult?.channel === "prerelease"
       ? t("settings.aboutChannelPrerelease")
       : t("settings.aboutChannelStable");
-  const currentVersion = latestResult?.currentVersion || __LIVEAGENT_APP_VERSION__;
+  const currentVersion = latestResult?.currentVersion || __AGENT_APP_VERSION__;
   const nextVersion = latestResult?.version || latestResult?.releaseTag || "";
   const releaseDate = formatReleaseDate(latestResult?.date);
   const checking = checkState.status === "checking";
@@ -239,7 +239,7 @@ export function AboutSection(props: AboutSectionProps) {
                 {installed ? t("settings.aboutRestartApp") : t("settings.aboutInstallUpdate")}
               </Button>
               <div className="text-xs text-muted-foreground">
-                {latestResult?.repository || "Stack-Cairn/LiveAgent"}
+                {latestResult?.repository || "Stack-Cairn/Agent"}
               </div>
             </div>
           </div>

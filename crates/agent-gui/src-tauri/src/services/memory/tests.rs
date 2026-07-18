@@ -608,7 +608,7 @@ mod tests {
                 workdir: Some(workdir_text.clone()),
                 memory_type: "project".to_string(),
                 description: "项目目标".to_string(),
-                body: "当前项目是 LiveAgent。".to_string(),
+                body: "当前项目是 Agent。".to_string(),
                 actor: None,
                 conversation_id: None,
                 model: None,
@@ -931,7 +931,7 @@ mod tests {
                 workdir_hash: None,
                 memory_type: None,
                 description: None,
-                body: Some("## 10:00 — conversation test — liveagent\n- 写入 daily".to_string()),
+                body: Some("## 10:00 — conversation test — agent\n- 写入 daily".to_string()),
                 mode: Some("append".to_string()),
                 actor: None,
                 conversation_id: Some("conversation-a".to_string()),
@@ -947,7 +947,7 @@ mod tests {
                 workdir_hash: None,
                 memory_type: None,
                 description: None,
-                body: Some("## 11:00 — conversation test — liveagent\n- 完成验证".to_string()),
+                body: Some("## 11:00 — conversation test — agent\n- 完成验证".to_string()),
                 mode: Some("append".to_string()),
                 actor: None,
                 conversation_id: Some("conversation-b".to_string()),
@@ -1575,7 +1575,7 @@ mod tests {
     #[test]
     fn project_memory_shadows_global_in_overview() {
         let store = test_store();
-        let workdir = std::env::temp_dir().join(format!("liveagent-memory-test-{}", now_ms()));
+        let workdir = std::env::temp_dir().join(format!("agent-memory-test-{}", now_ms()));
         fs::create_dir_all(&workdir).expect("create workdir");
         let workdir_text = workdir.to_string_lossy().to_string();
 
@@ -1743,8 +1743,8 @@ mod tests {
     #[test]
     fn project_search_is_limited_to_current_workdir() {
         let store = test_store();
-        let workdir_a = std::env::temp_dir().join(format!("liveagent-memory-a-{}", now_ms()));
-        let workdir_b = std::env::temp_dir().join(format!("liveagent-memory-b-{}", now_ms()));
+        let workdir_a = std::env::temp_dir().join(format!("agent-memory-a-{}", now_ms()));
+        let workdir_b = std::env::temp_dir().join(format!("agent-memory-b-{}", now_ms()));
         fs::create_dir_all(&workdir_a).expect("create workdir a");
         fs::create_dir_all(&workdir_b).expect("create workdir b");
         let workdir_a = workdir_a.to_string_lossy().to_string();
@@ -1807,8 +1807,8 @@ mod tests {
     #[test]
     fn recent_rejections_only_returns_user_deletions_for_current_scope() {
         let store = test_store();
-        let workdir_a = std::env::temp_dir().join(format!("liveagent-reject-a-{}", now_ms()));
-        let workdir_b = std::env::temp_dir().join(format!("liveagent-reject-b-{}", now_ms()));
+        let workdir_a = std::env::temp_dir().join(format!("agent-reject-a-{}", now_ms()));
+        let workdir_b = std::env::temp_dir().join(format!("agent-reject-b-{}", now_ms()));
         fs::create_dir_all(&workdir_a).expect("create workdir a");
         fs::create_dir_all(&workdir_b).expect("create workdir b");
         let workdir_a = workdir_a.to_string_lossy().to_string();

@@ -19,8 +19,8 @@ const UPLOADED_READABLE_FILE_KINDS = new Set<string>([
   "archive",
 ]);
 
-const DISPLAY_CONTENT_FIELD = "liveAgentDisplayContent";
-const ATTACHMENTS_FIELD = "liveAgentAttachments";
+const DISPLAY_CONTENT_FIELD = "agentDisplayContent";
+const ATTACHMENTS_FIELD = "agentAttachments";
 
 function createUserMessageId() {
   const id =

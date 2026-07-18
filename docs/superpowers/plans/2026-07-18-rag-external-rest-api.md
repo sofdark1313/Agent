@@ -53,8 +53,7 @@ class ExternalCapabilityControllerTest {
 
     @Test
     void capabilities返回固定协议主版本和限制() throws Exception {
-        mockMvc.perform(get("/api/external/v1/capabilities")
-                        .requestAttr("externalApiPrincipal", ExternalApiPrincipal.managementForTest()))
+        mockMvc.perform(get("/api/external/v1/capabilities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.protocolVersion").value("1.0"))
                 .andExpect(jsonPath("$.limits.maxTopK").value(50))
@@ -222,6 +221,8 @@ Expected: FAIL。
 - [ ] **Step 3: 实现认证链和 SaToken 排除规则**
 
 外部业务请求使用 `Authorization: Bearer <key>`。`/health` 匿名；`/capabilities` 和业务端点由 `ExternalApiKeyInterceptor` 验证。`SaTokenConfig`、`DemoModeInterceptor` 和 `UserContextInterceptor` 排除 `/api/external/v1/**`，但管理员 Key 管理入口 `/api/external-api-keys/**` 仍由现有登录体系保护。
+
+同时扩展 `ExternalCapabilityControllerTest`：无 `Authorization` 访问 capabilities 返回 `401 + RAG_AUTH_FAILED`，有效 Key 才返回 Task 1 固定的能力响应。
 
 ```java
 public void requireKnowledgeBases(ExternalApiPrincipal principal, Set<String> requestedIds) {

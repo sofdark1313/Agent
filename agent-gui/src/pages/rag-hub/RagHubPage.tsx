@@ -1,14 +1,30 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GlassPanel, HubBackdrop, HubHeader } from "../../components/hub/HubChrome";
-import { BookOpen, RefreshCw, Search, Trash2, Upload } from "../../components/icons";
+import {
+  AlertTriangle,
+  BookOpen,
+  Clock3,
+  FileText,
+  RefreshCw,
+  Search,
+  Trash2,
+} from "../../components/icons";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
+import { RagDocumentPanel } from "./RagDocumentPanel";
+import {
+  normalizeRagSearchSettings,
+  resolveRagSearchLimits,
+  toggleRagKnowledgeBase,
+} from "./searchSettings";
+import { canTestSavedRagService, chooseRagServiceId } from "./serviceState";
 
 type RagCapabilities = {
   protocolVersion: string;
+  credentialAudience?: string | null;
   features: Record<string, boolean>;
   limits: Record<string, number>;
 };
@@ -28,13 +44,38 @@ type RagService = {
   capabilitiesSnapshot: RagCapabilities | null;
 };
 
-type RagKnowledgeBase = { id: string; name: string };
+type RagKnowledgeBase = {
+  id: string;
+  name: string;
+  embeddingModel: string | null;
+  collectionName: string | null;
+  documentCount: number | null;
+};
 type RagSearchHit = {
   knowledgeBaseId: string;
+  documentId?: string | null;
+  documentName?: string | null;
   chunkId: string;
   content: string;
   score: number;
   source: string;
+  rankBefore?: number | null;
+  rankAfter?: number | null;
+  metadata?: Record<string, unknown>;
+};
+
+type RagSearchTimings = {
+  retrievalMs: number;
+  rerankMs: number;
+  totalMs: number;
+};
+
+type RagSearchResponse = {
+  requestId?: string | null;
+  rawResults?: RagSearchHit[];
+  results: RagSearchHit[];
+  warnings?: string[];
+  timings?: RagSearchTimings | null;
 };
 
 const EMPTY_SERVICE: RagService = {
@@ -52,8 +93,110 @@ const EMPTY_SERVICE: RagService = {
   capabilitiesSnapshot: null,
 };
 
+const EMPTY_KNOWLEDGE_BASE = {
+  name: "",
+  embeddingModel: "",
+  collectionName: "",
+};
+
 function errorText(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function searchWarningText(code: string) {
+  if (code === "RAG_RERANK_UNAVAILABLE") {
+    return "重排服务暂不可用，已回退为原始召回顺序。";
+  }
+  return code;
+}
+
+function RagSearchResultColumn(props: {
+  title: string;
+  subtitle: string;
+  hits: RagSearchHit[];
+  mode: "raw" | "final";
+}) {
+  return (
+    <section className="min-w-0 rounded-xl border border-border/45 bg-background/45 p-3.5">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">{props.title}</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{props.subtitle}</p>
+        </div>
+        <span className="rounded-full border border-border/55 bg-muted/35 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+          {props.hits.length} 条
+        </span>
+      </div>
+
+      {props.hits.length > 0 ? (
+        <div className="space-y-2.5">
+          {props.hits.map((hit, index) => {
+            const before = hit.rankBefore ?? index + 1;
+            const after = props.mode === "final" ? hit.rankAfter : null;
+            const rankChanged = after != null && before !== after;
+            const rankImproved = after != null && after < before;
+            const metadata = Object.entries(hit.metadata ?? {})
+              .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
+              .slice(0, 3);
+
+            return (
+              <article
+                key={`${props.mode}:${hit.knowledgeBaseId}:${hit.chunkId}`}
+                className="rounded-lg border border-border/45 bg-muted/20 p-3 transition-colors hover:bg-muted/30"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+                      <FileText className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p
+                        className="truncate text-xs font-medium"
+                        title={hit.documentName ?? undefined}
+                      >
+                        {hit.documentName || hit.documentId || "来源文档未返回"}
+                      </p>
+                      <p className="truncate font-mono text-[10px] text-muted-foreground">
+                        {hit.knowledgeBaseId} / {hit.chunkId}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={
+                      rankChanged
+                        ? rankImproved
+                          ? "shrink-0 rounded-md bg-cyan-500/12 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-700 dark:text-cyan-300"
+                          : "shrink-0 rounded-md bg-amber-500/12 px-2 py-1 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-300"
+                        : "shrink-0 rounded-md bg-muted/55 px-2 py-1 font-mono text-[10px] text-muted-foreground"
+                    }
+                    title={rankChanged ? "重排前 → 重排后" : "当前排名"}
+                  >
+                    {rankChanged ? `#${before} → #${after}` : `#${after ?? before}`}
+                  </span>
+                </div>
+
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{hit.content}</p>
+
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] text-muted-foreground">
+                  <span>score {hit.score.toFixed(3)}</span>
+                  <span>{hit.source}</span>
+                  {metadata.map(([key, value]) => (
+                    <span key={key}>
+                      {key} {String(value)}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-border/55 px-4 py-8 text-center text-xs text-muted-foreground">
+          没有命中结果
+        </div>
+      )}
+    </section>
+  );
 }
 
 export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => void }) {
@@ -64,10 +207,15 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
   const [agentApiKey, setAgentApiKey] = useState("");
   const [knowledgeBases, setKnowledgeBases] = useState<RagKnowledgeBase[]>([]);
   const [knowledgeBaseId, setKnowledgeBaseId] = useState("");
-  const [documents, setDocuments] = useState<unknown>(null);
-  const [filePath, setFilePath] = useState("");
+  const [knowledgeBaseName, setKnowledgeBaseName] = useState("");
+  const [knowledgeBaseCreateOpen, setKnowledgeBaseCreateOpen] = useState(false);
+  const [newKnowledgeBase, setNewKnowledgeBase] = useState(EMPTY_KNOWLEDGE_BASE);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<RagSearchHit[]>([]);
+  const [searchKnowledgeBaseIds, setSearchKnowledgeBaseIds] = useState<string[]>([]);
+  const [searchTopK, setSearchTopK] = useState(10);
+  const [searchRerank, setSearchRerank] = useState(true);
+  const [searchTopN, setSearchTopN] = useState(5);
+  const [searchResponse, setSearchResponse] = useState<RagSearchResponse | null>(null);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -77,43 +225,87 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
     [selectedId, services],
   );
 
-  async function loadServices(preferredId?: string) {
+  const selectedKnowledgeBase = useMemo(
+    () => knowledgeBases.find((item) => item.id === knowledgeBaseId) ?? null,
+    [knowledgeBaseId, knowledgeBases],
+  );
+
+  const finalResults = searchResponse?.results ?? [];
+  const returnedRawResults = searchResponse?.rawResults ?? [];
+  const rawResults = returnedRawResults.length > 0 ? returnedRawResults : finalResults;
+  const warnings = searchResponse?.warnings ?? [];
+  const searchLimits = resolveRagSearchLimits(draft.capabilitiesSnapshot);
+  const effectiveSearchSettings = normalizeRagSearchSettings(
+    { topK: searchTopK, rerank: searchRerank, topN: searchTopN },
+    searchLimits,
+  );
+  const canTestService = canTestSavedRagService(selected, draft, managementApiKey, agentApiKey);
+
+  const handleDocumentNotice = useCallback((message: string) => {
+    setError("");
+    setNotice(message);
+  }, []);
+
+  const handleDocumentError = useCallback((message: string) => {
+    setNotice("");
+    setError(message);
+  }, []);
+
+  async function loadServices(preferredId?: string, currentId = selectedId) {
     const next = await invoke<RagService[]>("rag_list_services");
     setServices(next);
-    const nextId =
-      preferredId || selectedId || next.find((item) => item.default)?.id || next[0]?.id;
-    if (nextId) setSelectedId(nextId);
+    setSelectedId(chooseRagServiceId(next, preferredId, currentId));
+    return next;
   }
 
   useEffect(() => {
     void invoke<RagService[]>("rag_list_services")
       .then((next) => {
         setServices(next);
-        const nextId = next.find((item) => item.default)?.id || next[0]?.id;
-        if (nextId) setSelectedId(nextId);
+        setSelectedId(chooseRagServiceId(next));
       })
       .catch((reason) => setError(errorText(reason)));
   }, []);
 
   useEffect(() => {
-    if (!selected) return;
-    setDraft(selected);
     setManagementApiKey("");
     setAgentApiKey("");
     setKnowledgeBases([]);
     setKnowledgeBaseId("");
-    setDocuments(null);
-    setResults([]);
+    setKnowledgeBaseName("");
+    setKnowledgeBaseCreateOpen(false);
+    setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
+    setSearchKnowledgeBaseIds([]);
+    setSearchResponse(null);
+    if (selected) setDraft(selected);
   }, [selected]);
 
-  async function run(action: string, task: () => Promise<void>) {
+  useEffect(() => {
+    setKnowledgeBaseName(selectedKnowledgeBase?.name ?? "");
+  }, [selectedKnowledgeBase]);
+
+  useEffect(() => {
+    const availableIds = new Set(knowledgeBases.map((item) => item.id));
+    setSearchKnowledgeBaseIds((current) => {
+      const retained = current.filter((id) => availableIds.has(id));
+      if (retained.length > 0) return retained;
+      if (knowledgeBaseId && availableIds.has(knowledgeBaseId)) return [knowledgeBaseId];
+      return knowledgeBases.map((item) => item.id);
+    });
+  }, [knowledgeBaseId, knowledgeBases]);
+
+  async function run(
+    action: string,
+    task: () => Promise<void>,
+    describeError: (reason: unknown) => string = errorText,
+  ) {
     setBusy(action);
     setError("");
     setNotice("");
     try {
       await task();
     } catch (reason) {
-      setError(errorText(reason));
+      setError(describeError(reason));
     } finally {
       setBusy("");
     }
@@ -124,6 +316,13 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
     setDraft({ ...EMPTY_SERVICE, default: services.length === 0 });
     setManagementApiKey("");
     setAgentApiKey("");
+    setKnowledgeBases([]);
+    setKnowledgeBaseId("");
+    setKnowledgeBaseName("");
+    setKnowledgeBaseCreateOpen(false);
+    setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
+    setSearchKnowledgeBaseIds([]);
+    setSearchResponse(null);
   }
 
   async function saveService() {
@@ -144,76 +343,130 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
     if (!selectedId) return;
     await run("delete", async () => {
       await invoke("rag_delete_service", { service_id: selectedId });
-      setSelectedId("");
-      await loadServices();
-      startNewService();
+      const remaining = await loadServices(undefined, "");
+      if (remaining.length === 0) startNewService();
       setNotice("服务配置和对应凭证已删除。");
     });
   }
 
   async function testService() {
+    if (!canTestService) {
+      setError("请先保存当前服务配置和 API Key，再测试连接。");
+      return;
+    }
     await run("test", async () => {
       const capabilities = await invoke<RagCapabilities>("rag_test_service", {
         service_id: draft.id,
       });
       setDraft((current) => ({ ...current, capabilitiesSnapshot: capabilities }));
+      setServices((current) =>
+        current.map((service) =>
+          service.id === draft.id ? { ...service, capabilitiesSnapshot: capabilities } : service,
+        ),
+      );
       setNotice(`连接成功，协议版本 ${capabilities.protocolVersion}。`);
     });
   }
 
   async function loadKnowledgeBases() {
     await run("knowledge", async () => {
-      const items = await invoke<RagKnowledgeBase[]>("rag_hub_list_knowledge_bases", {
-        service_id: selectedId || undefined,
-      });
-      setKnowledgeBases(items);
-      if (!knowledgeBaseId && items[0]) setKnowledgeBaseId(items[0].id);
+      await refreshKnowledgeBases();
     });
   }
 
-  async function loadDocuments() {
-    if (!knowledgeBaseId) return;
-    await run("documents", async () => {
-      const page = await invoke("rag_hub_list_documents", {
+  async function refreshKnowledgeBases(preferredId?: string) {
+    const items = await invoke<RagKnowledgeBase[]>("rag_hub_list_knowledge_bases", {
+      service_id: selectedId || undefined,
+    });
+    setKnowledgeBases(items);
+    const nextId =
+      (preferredId && items.some((item) => item.id === preferredId) ? preferredId : "") ||
+      (items.some((item) => item.id === knowledgeBaseId) ? knowledgeBaseId : "") ||
+      items[0]?.id ||
+      "";
+    setKnowledgeBaseId(nextId);
+    return items;
+  }
+
+  async function createKnowledgeBase() {
+    const payload = {
+      name: newKnowledgeBase.name.trim(),
+      embeddingModel: newKnowledgeBase.embeddingModel.trim(),
+      collectionName: newKnowledgeBase.collectionName.trim(),
+    };
+    if (!payload.name || !payload.embeddingModel || !payload.collectionName) return;
+    await run(
+      "knowledge-create",
+      async () => {
+        const created = await invoke<RagKnowledgeBase>("rag_hub_create_knowledge_base", {
+          service_id: selectedId || undefined,
+          name: payload.name,
+          embedding_model: payload.embeddingModel,
+          collection_name: payload.collectionName,
+        });
+        await refreshKnowledgeBases(created.id);
+        setKnowledgeBaseCreateOpen(false);
+        setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
+        setNotice(`知识库“${created.name}”已创建。`);
+      },
+      (reason) => {
+        const message = errorText(reason);
+        return message.includes("RAG_KB_FORBIDDEN")
+          ? `${message} 创建知识库需要管理 Key 配置 knowledgeBaseIds=["*"]。`
+          : message;
+      },
+    );
+  }
+
+  async function renameKnowledgeBase() {
+    if (!selectedKnowledgeBase || !knowledgeBaseName.trim()) return;
+    await run("knowledge-update", async () => {
+      const updated = await invoke<RagKnowledgeBase>("rag_hub_update_knowledge_base", {
         service_id: selectedId || undefined,
-        knowledge_base_id: knowledgeBaseId,
-        current: 1,
-        size: 50,
+        knowledge_base_id: selectedKnowledgeBase.id,
+        name: knowledgeBaseName.trim(),
       });
-      setDocuments(page);
+      await refreshKnowledgeBases(updated.id);
+      setNotice(`知识库已重命名为“${updated.name}”。`);
     });
   }
 
-  async function uploadDocument() {
-    if (!knowledgeBaseId || !filePath.trim()) return;
-    await run("upload", async () => {
-      const response = await invoke("rag_hub_upload_document", {
+  async function deleteKnowledgeBase() {
+    if (!selectedKnowledgeBase) return;
+    if (!window.confirm(`确定删除空知识库“${selectedKnowledgeBase.name}”吗？该操作无法撤销。`)) {
+      return;
+    }
+    await run("knowledge-delete", async () => {
+      await invoke("rag_hub_delete_knowledge_base", {
         service_id: selectedId || undefined,
-        knowledge_base_id: knowledgeBaseId,
-        file_path: filePath.trim(),
+        knowledge_base_id: selectedKnowledgeBase.id,
       });
-      setNotice(`文档已提交入库：${JSON.stringify(response)}`);
-      setFilePath("");
-      await loadDocuments();
+      await refreshKnowledgeBases();
+      setNotice(`知识库“${selectedKnowledgeBase.name}”已删除。`);
     });
   }
 
   async function searchKnowledge() {
-    if (!query.trim()) return;
+    if (!query.trim() || searchKnowledgeBaseIds.length === 0) return;
+    setSearchResponse(null);
     await run("search", async () => {
-      const response = await invoke<{ results: RagSearchHit[] }>("rag_hub_search", {
+      const response = await invoke<RagSearchResponse>("rag_hub_search", {
         request: {
           serviceId: selectedId || undefined,
           query: query.trim(),
-          knowledgeBaseIds: knowledgeBaseId
-            ? [knowledgeBaseId]
-            : knowledgeBases.map((item) => item.id),
-          topK: 10,
-          rerank: true,
-          topN: 5,
+          knowledgeBaseIds: searchKnowledgeBaseIds,
+          topK: effectiveSearchSettings.topK,
+          rerank: effectiveSearchSettings.rerank,
+          topN: effectiveSearchSettings.topN,
         },
       });
-      setResults(response.results);
+      setSearchResponse({
+        requestId: response.requestId ?? null,
+        rawResults: response.rawResults ?? [],
+        results: response.results ?? [],
+        warnings: response.warnings ?? [],
+        timings: response.timings ?? null,
+      });
     });
   }
 
@@ -302,7 +555,8 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                     <Button
                       variant="outline"
                       onClick={testService}
-                      disabled={Boolean(busy) || !draft.id}
+                      disabled={Boolean(busy) || !canTestService}
+                      title={canTestService ? "测试已保存的服务配置" : "请先保存当前修改"}
                     >
                       {busy === "test" ? "测试中" : "测试连接"}
                     </Button>
@@ -410,100 +664,416 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
               </GlassPanel>
 
               <div className="grid gap-5 lg:grid-cols-2">
-                <GlassPanel className="p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div>
-                      <h2 className="font-semibold">知识库与文档</h2>
-                      <p className="text-xs text-muted-foreground">管理操作使用管理凭证。</p>
+                <div className="space-y-5">
+                  <GlassPanel className="p-5">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <h2 className="font-semibold">知识库</h2>
+                        <p className="text-xs text-muted-foreground">
+                          选择文档要进入的知识库，管理操作使用管理凭证。
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setKnowledgeBaseCreateOpen((current) => !current)}
+                          disabled={!selectedId || Boolean(busy)}
+                        >
+                          新建
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={loadKnowledgeBases}
+                          disabled={!selectedId || Boolean(busy)}
+                        >
+                          <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                          刷新
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={loadKnowledgeBases}
-                      disabled={!selectedId || Boolean(busy)}
-                    >
-                      <RefreshCw className="mr-2 h-3.5 w-3.5" />
-                      刷新
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {knowledgeBases.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setKnowledgeBaseId(item.id)}
-                        className={`rounded-lg border px-3 py-2 text-sm ${knowledgeBaseId === item.id ? "border-cyan-500/40 bg-cyan-500/[0.07]" : "border-border/50"}`}
-                      >
-                        {item.name}
-                        <span className="ml-2 font-mono text-[10px] text-muted-foreground">
-                          {item.id}
+
+                    {knowledgeBaseCreateOpen ? (
+                      <div className="mb-4 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.04] p-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1.5 sm:col-span-2">
+                            <Label>知识库名称</Label>
+                            <Input
+                              value={newKnowledgeBase.name}
+                              onChange={(event) =>
+                                setNewKnowledgeBase({
+                                  ...newKnowledgeBase,
+                                  name: event.target.value,
+                                })
+                              }
+                              placeholder="公司制度"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>嵌入模型</Label>
+                            <Input
+                              value={newKnowledgeBase.embeddingModel}
+                              onChange={(event) =>
+                                setNewKnowledgeBase({
+                                  ...newKnowledgeBase,
+                                  embeddingModel: event.target.value,
+                                })
+                              }
+                              placeholder="text-embedding-v3"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>集合名称</Label>
+                            <Input
+                              value={newKnowledgeBase.collectionName}
+                              onChange={(event) =>
+                                setNewKnowledgeBase({
+                                  ...newKnowledgeBase,
+                                  collectionName: event.target.value,
+                                })
+                              }
+                              placeholder="company-policy"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-[11px] text-muted-foreground">
+                            创建需要管理 Key 配置 knowledgeBaseIds=["*"]。
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setKnowledgeBaseCreateOpen(false);
+                                setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
+                              }}
+                              disabled={Boolean(busy)}
+                            >
+                              取消
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={createKnowledgeBase}
+                              disabled={
+                                Boolean(busy) ||
+                                !newKnowledgeBase.name.trim() ||
+                                !newKnowledgeBase.embeddingModel.trim() ||
+                                !newKnowledgeBase.collectionName.trim()
+                              }
+                            >
+                              {busy === "knowledge-create" ? "创建中" : "创建知识库"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {knowledgeBases.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setKnowledgeBaseId(item.id)}
+                          className={`rounded-xl border px-3 py-2.5 text-left text-sm transition ${knowledgeBaseId === item.id ? "border-cyan-500/40 bg-cyan-500/[0.07] shadow-sm" : "border-border/50 bg-background/35 hover:bg-muted/35"}`}
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="truncate font-medium">{item.name}</span>
+                            <span className="shrink-0 text-[10px] text-muted-foreground">
+                              {item.documentCount ?? 0} 文档
+                            </span>
+                          </span>
+                          <span className="mt-1 block truncate font-mono text-[10px] text-muted-foreground">
+                            {item.id}
+                          </span>
+                        </button>
+                      ))}
+                      {!knowledgeBases.length ? (
+                        <span className="text-sm text-muted-foreground sm:col-span-2">
+                          点击刷新读取知识库，或直接新建一个空知识库。
                         </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={loadDocuments}
-                      disabled={!knowledgeBaseId || Boolean(busy)}
-                    >
-                      查看文档
-                    </Button>
-                    <Input
-                      value={filePath}
-                      onChange={(event) => setFilePath(event.target.value)}
-                      placeholder="要上传的本地文件绝对路径"
-                    />
-                    <Button
-                      onClick={uploadDocument}
-                      disabled={!knowledgeBaseId || !filePath.trim() || Boolean(busy)}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      上传
-                    </Button>
-                  </div>
-                  {documents ? (
-                    <pre className="mt-4 max-h-56 overflow-auto rounded-lg bg-muted/45 p-3 text-[11px] leading-5">
-                      {JSON.stringify(documents, null, 2)}
-                    </pre>
-                  ) : null}
-                </GlassPanel>
+                      ) : null}
+                    </div>
+
+                    {selectedKnowledgeBase ? (
+                      <div className="mt-4 border-t border-border/45 pt-4">
+                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                          <div className="space-y-1.5">
+                            <Label>显示名称</Label>
+                            <Input
+                              value={knowledgeBaseName}
+                              onChange={(event) => setKnowledgeBaseName(event.target.value)}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={renameKnowledgeBase}
+                              disabled={
+                                Boolean(busy) ||
+                                !knowledgeBaseName.trim() ||
+                                knowledgeBaseName.trim() === selectedKnowledgeBase.name
+                              }
+                            >
+                              {busy === "knowledge-update" ? "保存中" : "保存名称"}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={deleteKnowledgeBase}
+                              disabled={
+                                Boolean(busy) || (selectedKnowledgeBase.documentCount ?? 0) > 0
+                              }
+                              title={
+                                (selectedKnowledgeBase.documentCount ?? 0) > 0
+                                  ? "请先删除知识库中的文档"
+                                  : "删除空知识库"
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-[11px] text-muted-foreground sm:grid-cols-2">
+                          <span className="truncate font-mono">
+                            模型：{selectedKnowledgeBase.embeddingModel || "未返回"}
+                          </span>
+                          <span className="truncate font-mono">
+                            集合：{selectedKnowledgeBase.collectionName || "未返回"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </GlassPanel>
+
+                  <RagDocumentPanel
+                    serviceId={selectedId}
+                    knowledgeBaseId={knowledgeBaseId}
+                    onNotice={handleDocumentNotice}
+                    onError={handleDocumentError}
+                  />
+                </div>
 
                 <GlassPanel className="p-5">
                   <div className="mb-4">
                     <h2 className="font-semibold">检索实验</h2>
                     <p className="text-xs text-muted-foreground">一次完成召回与可选重排。</p>
                   </div>
-                  <Textarea
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="输入要检索的问题"
-                    className="min-h-24"
-                  />
-                  <Button
-                    className="mt-3"
-                    onClick={searchKnowledge}
-                    disabled={!query.trim() || Boolean(busy)}
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {busy === "search" ? "检索中" : "开始检索"}
-                  </Button>
-                  <div className="mt-4 space-y-3">
-                    {results.map((hit, index) => (
-                      <div
-                        key={`${hit.knowledgeBaseId}:${hit.chunkId}`}
-                        className="rounded-lg border border-border/45 bg-muted/25 p-3"
-                      >
-                        <div className="mb-2 flex flex-wrap gap-2 font-mono text-[10px] text-muted-foreground">
-                          <span>[{index + 1}]</span>
-                          <span>{hit.knowledgeBaseId}</span>
-                          <span>{hit.chunkId}</span>
-                          <span>{hit.score.toFixed(3)}</span>
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm leading-6">{hit.content}</p>
+                  <div className="rounded-xl border border-border/45 bg-muted/20 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-medium">检索范围</p>
+                        <p className="text-[11px] text-muted-foreground">可同时选择多个知识库</p>
                       </div>
-                    ))}
+                      {knowledgeBases.length > 0 ? (
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <button
+                            type="button"
+                            className="rounded px-2 py-1 text-cyan-700 hover:bg-cyan-500/10 dark:text-cyan-300"
+                            onClick={() =>
+                              setSearchKnowledgeBaseIds(knowledgeBases.map((item) => item.id))
+                            }
+                          >
+                            全选
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded px-2 py-1 text-muted-foreground hover:bg-muted/60"
+                            onClick={() => setSearchKnowledgeBaseIds([])}
+                          >
+                            清空
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                    {knowledgeBases.length > 0 ? (
+                      <div className="mt-3 flex max-h-28 flex-wrap gap-2 overflow-auto">
+                        {knowledgeBases.map((item) => {
+                          const active = searchKnowledgeBaseIds.includes(item.id);
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              aria-pressed={active}
+                              className={
+                                active
+                                  ? "rounded-full border border-cyan-500/35 bg-cyan-500/12 px-3 py-1.5 text-xs font-medium text-cyan-800 dark:text-cyan-200"
+                                  : "rounded-full border border-border/55 bg-background/55 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/45"
+                              }
+                              onClick={() =>
+                                setSearchKnowledgeBaseIds((current) =>
+                                  toggleRagKnowledgeBase(current, item.id),
+                                )
+                              }
+                            >
+                              {item.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        先加载知识库，再选择检索范围。
+                      </p>
+                    )}
                   </div>
+
+                  <div className="relative mt-3">
+                    <Textarea
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      maxLength={searchLimits.maxQueryLength}
+                      placeholder="输入要检索的问题"
+                      className="min-h-24 pb-7"
+                    />
+                    <span className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10px] text-muted-foreground">
+                      {query.length}/{searchLimits.maxQueryLength}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid gap-3 rounded-xl border border-border/45 bg-background/35 p-3 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="rag-search-top-k">召回数量 Top K</Label>
+                      <Input
+                        id="rag-search-top-k"
+                        type="number"
+                        min={1}
+                        max={searchLimits.maxTopK}
+                        value={effectiveSearchSettings.topK}
+                        onChange={(event) => setSearchTopK(Number(event.target.value))}
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        服务上限 {searchLimits.maxTopK}
+                      </p>
+                    </div>
+
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/45 bg-muted/20 px-3 py-2.5 sm:self-start">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-cyan-600"
+                        checked={effectiveSearchSettings.rerank}
+                        disabled={!searchLimits.rerankSupported}
+                        onChange={(event) => setSearchRerank(event.target.checked)}
+                      />
+                      <span>
+                        <span className="block text-xs font-medium">启用重排</span>
+                        <span className="block text-[10px] text-muted-foreground">
+                          {searchLimits.rerankSupported ? "优化最终排序" : "服务未声明此能力"}
+                        </span>
+                      </span>
+                    </label>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="rag-search-top-n">最终数量 Top N</Label>
+                      <Input
+                        id="rag-search-top-n"
+                        type="number"
+                        min={1}
+                        max={searchLimits.maxTopN}
+                        value={effectiveSearchSettings.topN}
+                        disabled={!effectiveSearchSettings.rerank}
+                        onChange={(event) => setSearchTopN(Number(event.target.value))}
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        服务上限 {searchLimits.maxTopN}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <Button
+                      onClick={searchKnowledge}
+                      disabled={
+                        !selectedId ||
+                        !query.trim() ||
+                        searchKnowledgeBaseIds.length === 0 ||
+                        Boolean(busy)
+                      }
+                    >
+                      <Search className="mr-2 h-4 w-4" />
+                      {busy === "search" ? "检索中" : "开始检索"}
+                    </Button>
+                    <span className="text-[11px] text-muted-foreground">
+                      已选 {searchKnowledgeBaseIds.length} 个知识库
+                      {draft.capabilitiesSnapshot
+                        ? " · 已按服务能力限制参数"
+                        : " · 使用本地安全上限"}
+                    </span>
+                  </div>
+                  {searchResponse ? (
+                    <div className="mt-4 space-y-4">
+                      {searchResponse.timings || searchResponse.requestId ? (
+                        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/45 bg-muted/20 p-3">
+                          <div className="mr-1 flex items-center gap-2 text-xs font-medium">
+                            <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                            检索耗时
+                          </div>
+                          {searchResponse.timings ? (
+                            <>
+                              <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                召回 {searchResponse.timings.retrievalMs} ms
+                              </span>
+                              <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                重排 {searchResponse.timings.rerankMs} ms
+                              </span>
+                              <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
+                                总计 {searchResponse.timings.totalMs} ms
+                              </span>
+                            </>
+                          ) : null}
+                          {searchResponse.requestId ? (
+                            <span
+                              className="ml-auto max-w-full truncate font-mono text-[10px] text-muted-foreground"
+                              title={searchResponse.requestId}
+                            >
+                              请求 {searchResponse.requestId}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {warnings.length > 0 ? (
+                        <div className="space-y-2" role="status">
+                          {warnings.map((warning) => (
+                            <div
+                              key={warning}
+                              className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
+                            >
+                              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <span>{searchWarningText(warning)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {returnedRawResults.length === 0 && finalResults.length > 0 ? (
+                        <p className="text-[11px] text-muted-foreground">
+                          当前服务未返回原始召回列表，左侧暂用最终结果兼容展示。
+                        </p>
+                      ) : null}
+
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        <RagSearchResultColumn
+                          title="原始召回"
+                          subtitle="向量检索返回的候选顺序"
+                          hits={rawResults}
+                          mode="raw"
+                        />
+                        <RagSearchResultColumn
+                          title="最终结果"
+                          subtitle="重排后交给 Agent 的结果"
+                          hits={finalResults}
+                          mode="final"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-xl border border-dashed border-border/55 px-4 py-8 text-center text-xs text-muted-foreground">
+                      输入问题后，可对比原始召回与最终重排结果。
+                    </div>
+                  )}
                 </GlassPanel>
               </div>
             </main>

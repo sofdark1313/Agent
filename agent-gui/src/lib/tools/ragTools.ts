@@ -8,17 +8,35 @@ type RagService = {
   enabled: boolean;
   agentEnabled: boolean;
   agentCredentialConfigured: boolean;
+  capabilitiesSnapshot?: {
+    protocolVersion?: string;
+  } | null;
 };
 
 type RagKnowledgeBase = { id: string; name: string };
 type RagSearchHit = {
   knowledgeBaseId: string;
+  documentId?: string | null;
+  documentName?: string | null;
   chunkId: string;
   content: string;
   score: number;
   source: string;
+  rankBefore?: number | null;
+  rankAfter?: number | null;
+  metadata?: Record<string, unknown>;
 };
-type RagSearchResponse = { results: RagSearchHit[] };
+type RagSearchResponse = {
+  requestId?: string | null;
+  rawResults?: RagSearchHit[];
+  results: RagSearchHit[];
+  warnings?: string[];
+  timings?: {
+    retrievalMs: number;
+    rerankMs: number;
+    totalMs: number;
+  } | null;
+};
 
 const LIST_TOOL: Tool = {
   name: "RagListKnowledgeBases",
@@ -71,6 +89,32 @@ function integer(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : fallback;
 }
 
+function supportsRagProtocol(service: RagService) {
+  const version = service.capabilitiesSnapshot?.protocolVersion?.trim();
+  return version?.split(".", 1)[0] === "1";
+}
+
+function inlineText(value: unknown) {
+  return typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, 200) : "";
+}
+
+function formatSearchHit(hit: RagSearchHit, index: number) {
+  const document = inlineText(hit.documentName) || inlineText(hit.documentId);
+  const before = hit.rankBefore;
+  const after = hit.rankAfter;
+  const rank =
+    before != null && after != null
+      ? before === after
+        ? ` rank=${after}`
+        : ` rank=${before}->${after}`
+      : after != null
+        ? ` rank=${after}`
+        : before != null
+          ? ` rank=${before}`
+          : "";
+  return `[${index + 1}]${document ? ` document=${document}` : ""} kb=${hit.knowledgeBaseId} chunk=${hit.chunkId} score=${hit.score.toFixed(3)} source=${hit.source}${rank}\n${hit.content}`;
+}
+
 function failure(toolCall: ToolCall, error: unknown): ToolResultMessage {
   return {
     role: "toolResult",
@@ -93,7 +137,11 @@ export async function createRagTools(): Promise<BuiltinToolBundle> {
   try {
     const services = await invoke<RagService[]>("rag_list_services");
     enabled = services.some(
-      (service) => service.enabled && service.agentEnabled && service.agentCredentialConfigured,
+      (service) =>
+        service.enabled &&
+        service.agentEnabled &&
+        service.agentCredentialConfigured &&
+        supportsRagProtocol(service),
     );
   } catch {
     enabled = false;
@@ -142,15 +190,15 @@ export async function createRagTools(): Promise<BuiltinToolBundle> {
             topN: integer(args.top_n, 5),
           },
         });
-        const text =
+        const resultText =
           result.results.length === 0
             ? "No RAG results found."
-            : result.results
-                .map(
-                  (hit, index) =>
-                    `[${index + 1}] kb=${hit.knowledgeBaseId} chunk=${hit.chunkId} score=${hit.score.toFixed(3)} source=${hit.source}\n${hit.content}`,
-                )
-                .join("\n\n");
+            : result.results.map(formatSearchHit).join("\n\n");
+        const warnings = (result.warnings ?? []).map(inlineText).filter(Boolean);
+        const text =
+          warnings.length > 0
+            ? `${resultText}\n\nRAG warnings: ${warnings.join(", ")}`
+            : resultText;
         return {
           role: "toolResult" as const,
           toolCallId: toolCall.id,

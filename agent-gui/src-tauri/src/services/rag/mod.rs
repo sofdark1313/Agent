@@ -5,10 +5,11 @@ mod model;
 mod service_store;
 
 pub use error::RagError;
+pub(crate) use gateway::normalize_service_config;
 pub use gateway::RagGatewayService;
 pub use model::{
-    RagAccessMode, RagCapabilities, RagKnowledgeBase, RagSearchRequest, RagSearchResponse,
-    RagServiceConfig,
+    RagAcceptedJob, RagAccessMode, RagCapabilities, RagChunk, RagDocument, RagIngestionJob,
+    RagKnowledgeBase, RagPage, RagSearchRequest, RagSearchResponse, RagServiceConfig,
 };
 pub use service_store::RagServiceStore;
 

@@ -40,9 +40,11 @@ thiserror = "2.0.18"
 walkdir = "2.5.0"
 notify = "8.2.0"
 rfd = "0.17.2"
+tinyfiledialogs = { package = "tinyfiledialogs-rs", version = "3.21.3" }
 tauri-plugin-mcp-bridge = "0.12.0"
 dirs = "6.0.0"
 ignore = "0.4.27"
+mime_guess = "2.0.5"
 rusqlite = { version = "0.40.1", features = ["bundled"] }
 leveldb-core = "0.1.0"
 chrono = "0.4.45"

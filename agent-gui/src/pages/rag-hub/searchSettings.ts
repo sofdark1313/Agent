@@ -1,12 +1,16 @@
-export type RagSearchCapabilities = {
-  limits?: Record<string, number>;
-  features?: Record<string, boolean>;
-};
+import {
+  isFreshRagCapabilitySnapshot,
+  positiveRagCapabilityLimit,
+  type RagCapabilitySnapshot,
+} from "../../lib/rag/capabilitySnapshot";
+
+export type RagSearchCapabilities = RagCapabilitySnapshot;
 
 export type RagSearchLimits = {
   maxTopK: number;
   maxTopN: number;
   maxQueryLength: number;
+  searchSupported: boolean;
   rerankSupported: boolean;
 };
 
@@ -22,13 +26,6 @@ const LOCAL_LIMITS = {
   maxQueryLength: 4000,
 };
 
-function capabilityLimit(value: unknown, localMaximum: number) {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 1) {
-    return localMaximum;
-  }
-  return Math.min(Math.floor(value), localMaximum);
-}
-
 function settingValue(value: number, maximum: number, fallback: number) {
   if (!Number.isFinite(value)) return Math.min(fallback, maximum);
   return Math.max(1, Math.min(Math.floor(value), maximum));
@@ -36,15 +33,35 @@ function settingValue(value: number, maximum: number, fallback: number) {
 
 export function resolveRagSearchLimits(
   capabilities: RagSearchCapabilities | null | undefined,
+  nowMs = Date.now(),
 ): RagSearchLimits {
+  if (!capabilities || !isFreshRagCapabilitySnapshot(capabilities, nowMs)) {
+    return {
+      maxTopK: 1,
+      maxTopN: 1,
+      maxQueryLength: 1,
+      searchSupported: false,
+      rerankSupported: false,
+    };
+  }
+  const maxTopK = positiveRagCapabilityLimit(capabilities, "maxTopK", LOCAL_LIMITS.maxTopK);
+  const maxTopN = positiveRagCapabilityLimit(capabilities, "maxTopN", LOCAL_LIMITS.maxTopN);
+  const maxQueryLength = positiveRagCapabilityLimit(
+    capabilities,
+    "maxQueryLength",
+    LOCAL_LIMITS.maxQueryLength,
+  );
+  const searchSupported =
+    maxTopK !== null &&
+    maxTopN !== null &&
+    maxQueryLength !== null &&
+    typeof capabilities.features?.rerank === "boolean";
   return {
-    maxTopK: capabilityLimit(capabilities?.limits?.maxTopK, LOCAL_LIMITS.maxTopK),
-    maxTopN: capabilityLimit(capabilities?.limits?.maxTopN, LOCAL_LIMITS.maxTopN),
-    maxQueryLength: capabilityLimit(
-      capabilities?.limits?.maxQueryLength,
-      LOCAL_LIMITS.maxQueryLength,
-    ),
-    rerankSupported: capabilities?.features?.rerank !== false,
+    maxTopK: maxTopK ?? 1,
+    maxTopN: maxTopN ?? 1,
+    maxQueryLength: maxQueryLength ?? 1,
+    searchSupported,
+    rerankSupported: searchSupported && maxTopN !== null && capabilities.features?.rerank === true,
   };
 }
 

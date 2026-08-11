@@ -10,6 +10,12 @@ pub enum RagAccessMode {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub(crate) struct RagHealth {
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct RagKnowledgeBase {
     pub id: String,
     pub name: String,
@@ -78,11 +84,25 @@ pub struct RagIngestionError {
 pub struct RagIngestionJob {
     pub job_id: String,
     pub document_id: String,
+    #[serde(default)]
+    pub operation: Option<String>,
+    #[serde(default)]
+    pub root_job_id: Option<String>,
+    #[serde(default)]
+    pub parent_job_id: Option<String>,
+    #[serde(default)]
+    pub attempt_no: Option<u32>,
     pub status: String,
     pub stage: Option<String>,
     pub progress: u32,
     pub retryable: bool,
     pub error: Option<RagIngestionError>,
+    #[serde(default)]
+    pub started_at: Option<String>,
+    #[serde(default)]
+    pub completed_at: Option<String>,
+    #[serde(default)]
+    pub created_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -138,12 +158,83 @@ pub struct RagSearchRequest {
     pub top_n: Option<u32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagRerankCandidate {
+    pub knowledge_base_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub document_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub document_name: Option<String>,
+    pub chunk_id: String,
+    pub content: String,
+    pub score: f64,
+    pub source: String,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagRerankRequest {
+    #[serde(default)]
+    pub service_id: Option<String>,
+    pub query: String,
+    pub candidates: Vec<RagRerankCandidate>,
+    #[serde(default)]
+    pub top_n: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagPipeline {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagIngestionCapabilities {
+    pub allowed_extensions: Vec<String>,
+    pub allowed_mime_types: Vec<String>,
+    pub process_modes: Vec<String>,
+    pub chunk_strategies: Vec<String>,
+    pub chunk_config_schema: BTreeMap<String, serde_json::Value>,
+    #[serde(default)]
+    pub pipelines: Vec<RagPipeline>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RagIngestionRequest {
+    pub process_mode: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chunk_strategy: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chunk_config: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pipeline_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RagPickedDocumentFile {
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub extension: String,
+    pub mime_type: String,
+}
+
 /// 外部 RAG 服务声明的协议能力快照。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct RagCapabilities {
     /// 服务协议版本，例如 `1.0`。
     pub protocol_version: String,
+    /// Agent 本地采集快照的 Unix 毫秒时间；旧快照缺失时必须重新测试连接。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub captured_at_ms: Option<u64>,
     /// 当前请求所使用 API Key 的受众，用于连接测试识别凭证是否放反。
     #[serde(default)]
     pub credential_audience: Option<String>,
@@ -151,6 +242,8 @@ pub struct RagCapabilities {
     pub features: BTreeMap<String, bool>,
     /// 服务声明的数值限制。
     pub limits: BTreeMap<String, u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ingestion: Option<RagIngestionCapabilities>,
 }
 
 /// 不含 API Key 的 RAG 服务配置。

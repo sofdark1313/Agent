@@ -33,6 +33,33 @@ impl RagServiceStore {
         })
     }
 
+    #[cfg(test)]
+    pub(crate) fn overwrite_json_for_test(
+        &self,
+        service_id: &str,
+        column: &str,
+        value: &str,
+    ) -> Result<(), RagError> {
+        let column = match column {
+            "capabilities_snapshot_json" => "capabilities_snapshot_json",
+            "agent_knowledge_base_ids_json" => "agent_knowledge_base_ids_json",
+            _ => {
+                return Err(RagError::new(
+                    RAG_STORE_ERROR,
+                    "unsupported test JSON column",
+                ))
+            }
+        };
+        let connection = self.lock_connection()?;
+        connection
+            .execute(
+                &format!("UPDATE rag_services SET {column} = ?1 WHERE service_id = ?2"),
+                params![value, service_id],
+            )
+            .map(|_| ())
+            .map_err(store_error)
+    }
+
     /// 保存服务配置；新默认服务会在同一事务中清除旧默认标记。
     pub fn save(&self, service: &RagServiceConfig) -> Result<(), RagError> {
         let mut connection = self.lock_connection()?;
@@ -144,7 +171,24 @@ impl RagServiceStore {
     ) -> Result<RagServiceConfig, RagError> {
         let service = match service_id.map(str::trim).filter(|id| !id.is_empty()) {
             Some(id) => self.get(id)?,
-            None => self.list()?.into_iter().find(|item| item.is_default),
+            None => {
+                let services = self.list()?;
+                if let Some(default) = services.iter().find(|item| item.is_default) {
+                    Some(default.clone())
+                } else {
+                    let mut eligible = services.into_iter().filter(|item| {
+                        item.enabled && (access_mode != RagAccessMode::Agent || item.agent_enabled)
+                    });
+                    let service = eligible.next();
+                    if service.is_some() && eligible.next().is_some() {
+                        return Err(RagError::new(
+                            "RAG_SERVICE_NOT_FOUND",
+                            "存在多个可用的 RAG 服务，请显式指定 service_id 或设置默认服务",
+                        ));
+                    }
+                    service
+                }
+            }
         }
         .ok_or_else(|| RagError::new("RAG_SERVICE_NOT_FOUND", "未找到可用的 RAG 服务"))?;
 
@@ -191,17 +235,8 @@ fn map_service_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<RagServiceConfig
                 Box::new(error),
             )
         })?;
-    let capabilities_snapshot: Option<RagCapabilities> = capabilities_snapshot_json
-        .map(|json| {
-            serde_json::from_str(&json).map_err(|error| {
-                rusqlite::Error::FromSqlConversionFailure(
-                    json.len(),
-                    rusqlite::types::Type::Text,
-                    Box::new(error),
-                )
-            })
-        })
-        .transpose()?;
+    let capabilities_snapshot: Option<RagCapabilities> =
+        capabilities_snapshot_json.and_then(|json| serde_json::from_str(&json).ok());
     let timeout_ms: i64 = row.get(8)?;
 
     Ok(RagServiceConfig {

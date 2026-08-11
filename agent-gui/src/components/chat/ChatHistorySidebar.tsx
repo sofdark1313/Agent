@@ -1438,7 +1438,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                   ? "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]"
                   : "text-foreground/80 hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]",
               )}
-              title="RAG Hub"
+              title={t("ragHub.navTitle")}
             >
               <BookOpen
                 className={cn(

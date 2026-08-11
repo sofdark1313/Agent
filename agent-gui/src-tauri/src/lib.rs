@@ -113,6 +113,8 @@ macro_rules! app_invoke_handler {
             // RAG
             commands::rag::rag_list_services,
             commands::rag::rag_save_service,
+            commands::rag::rag_prompt_service_credential,
+            commands::rag::rag_clear_service_credential,
             commands::rag::rag_delete_service,
             commands::rag::rag_test_service,
             commands::rag::rag_hub_list_knowledge_bases,
@@ -125,10 +127,12 @@ macro_rules! app_invoke_handler {
             commands::rag::rag_hub_get_document,
             commands::rag::rag_pick_document_file,
             commands::rag::rag_hub_get_ingestion_job,
+            commands::rag::rag_hub_list_ingestion_jobs,
             commands::rag::rag_hub_retry_ingestion_job,
             commands::rag::rag_hub_delete_document,
             commands::rag::rag_hub_list_document_chunks,
             commands::rag::rag_hub_search,
+            commands::rag::rag_hub_rerank,
             commands::rag::rag_agent_list_knowledge_bases,
             commands::rag::rag_agent_search,
             // Settings

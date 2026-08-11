@@ -2,9 +2,9 @@ use keyring::{Entry, Error as KeyringError};
 
 use super::RagError;
 
-const KEYRING_SERVICE: &str = "Agent RAG";
+pub(crate) const KEYRING_SERVICE: &str = "ai.agent.rag";
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RagCredentialKind {
     Management,
     Agent,
@@ -42,13 +42,20 @@ impl RagCredentialStore {
     }
 
     pub fn get(&self, service_id: &str, kind: RagCredentialKind) -> Result<String, RagError> {
-        entry(service_id, kind)?.get_password().map_err(|error| {
-            if matches!(error, KeyringError::NoEntry) {
-                RagError::new("RAG_CREDENTIAL_MISSING", "RAG API Key 未配置")
-            } else {
-                keyring_error(error)
-            }
-        })
+        self.get_optional(service_id, kind)?
+            .ok_or_else(|| RagError::new("RAG_CREDENTIAL_MISSING", "RAG API Key 未配置"))
+    }
+
+    pub fn get_optional(
+        &self,
+        service_id: &str,
+        kind: RagCredentialKind,
+    ) -> Result<Option<String>, RagError> {
+        match entry(service_id, kind)?.get_password() {
+            Ok(value) => Ok(Some(value)),
+            Err(KeyringError::NoEntry) => Ok(None),
+            Err(error) => Err(keyring_error(error)),
+        }
     }
 
     pub fn delete(&self, service_id: &str, kind: RagCredentialKind) -> Result<(), RagError> {
@@ -65,8 +72,12 @@ impl RagCredentialProvider for RagCredentialStore {
     }
 }
 
+pub(crate) fn credential_account(service_id: &str, kind: RagCredentialKind) -> String {
+    format!("{service_id}:{}", kind.label())
+}
+
 fn entry(service_id: &str, kind: RagCredentialKind) -> Result<Entry, RagError> {
-    Entry::new(KEYRING_SERVICE, &format!("{service_id}:{}", kind.label())).map_err(keyring_error)
+    Entry::new(KEYRING_SERVICE, &credential_account(service_id, kind)).map_err(keyring_error)
 }
 
 fn keyring_error(error: impl std::fmt::Display) -> RagError {

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GlassPanel, HubBackdrop, HubHeader } from "../../components/hub/HubChrome";
 import {
   AlertTriangle,
@@ -14,16 +14,30 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
+import { useLocale } from "../../i18n";
+import { nextRagCapabilityExpiryDelay } from "../../lib/rag/capabilitySnapshot";
+import { resolveRagIngestionSettings } from "./ingestionSettings";
 import { RagDocumentPanel } from "./RagDocumentPanel";
+import { buildRagRerankRequest } from "./rerankModel";
 import {
   normalizeRagSearchSettings,
   resolveRagSearchLimits,
   toggleRagKnowledgeBase,
 } from "./searchSettings";
-import { canTestSavedRagService, chooseRagServiceId } from "./serviceState";
+import {
+  canTestSavedRagService,
+  chooseRagServiceId,
+  DEFAULT_RAGENT_BASE_URL,
+  filterRagKnowledgeBases,
+  isValidRagServiceTimeout,
+  MAX_RAG_SERVICE_TIMEOUT_MS,
+  MIN_RAG_SERVICE_TIMEOUT_MS,
+  resolveRagCapabilityHealth,
+} from "./serviceState";
 
 type RagCapabilities = {
   protocolVersion: string;
+  capturedAtMs?: number | null;
   credentialAudience?: string | null;
   features: Record<string, boolean>;
   limits: Record<string, number>;
@@ -43,6 +57,8 @@ type RagService = {
   agentCredentialConfigured: boolean;
   capabilitiesSnapshot: RagCapabilities | null;
 };
+
+type RagCredentialKind = "management" | "agent";
 
 type RagKnowledgeBase = {
   id: string;
@@ -78,11 +94,13 @@ type RagSearchResponse = {
   timings?: RagSearchTimings | null;
 };
 
+type Translate = (key: string) => string;
+
 const EMPTY_SERVICE: RagService = {
   id: "local-rag",
   name: "Local RAG",
   adapterType: "ragent",
-  baseUrl: "http://localhost:8080",
+  baseUrl: DEFAULT_RAGENT_BASE_URL,
   enabled: true,
   default: true,
   agentEnabled: true,
@@ -103,9 +121,9 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
-function searchWarningText(code: string) {
+function searchWarningText(t: Translate, code: string) {
   if (code === "RAG_RERANK_UNAVAILABLE") {
-    return "重排服务暂不可用，已回退为原始召回顺序。";
+    return t("ragHub.search.warningRerankUnavailable");
   }
   return code;
 }
@@ -115,6 +133,7 @@ function RagSearchResultColumn(props: {
   subtitle: string;
   hits: RagSearchHit[];
   mode: "raw" | "final";
+  t: Translate;
 }) {
   return (
     <section className="min-w-0 rounded-xl border border-border/45 bg-background/45 p-3.5">
@@ -124,7 +143,7 @@ function RagSearchResultColumn(props: {
           <p className="mt-0.5 text-[11px] text-muted-foreground">{props.subtitle}</p>
         </div>
         <span className="rounded-full border border-border/55 bg-muted/35 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          {props.hits.length} 条
+          {props.t("ragHub.search.hitCount").replace("{count}", String(props.hits.length))}
         </span>
       </div>
 
@@ -154,7 +173,9 @@ function RagSearchResultColumn(props: {
                         className="truncate text-xs font-medium"
                         title={hit.documentName ?? undefined}
                       >
-                        {hit.documentName || hit.documentId || "来源文档未返回"}
+                        {hit.documentName ||
+                          hit.documentId ||
+                          props.t("ragHub.search.sourceDocumentUnavailable")}
                       </p>
                       <p className="truncate font-mono text-[10px] text-muted-foreground">
                         {hit.knowledgeBaseId} / {hit.chunkId}
@@ -169,7 +190,11 @@ function RagSearchResultColumn(props: {
                           : "shrink-0 rounded-md bg-amber-500/12 px-2 py-1 font-mono text-[10px] font-semibold text-amber-700 dark:text-amber-300"
                         : "shrink-0 rounded-md bg-muted/55 px-2 py-1 font-mono text-[10px] text-muted-foreground"
                     }
-                    title={rankChanged ? "重排前 → 重排后" : "当前排名"}
+                    title={
+                      rankChanged
+                        ? props.t("ragHub.search.rankBeforeAfter")
+                        : props.t("ragHub.search.currentRank")
+                    }
                   >
                     {rankChanged ? `#${before} → #${after}` : `#${after ?? before}`}
                   </span>
@@ -192,7 +217,7 @@ function RagSearchResultColumn(props: {
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-border/55 px-4 py-8 text-center text-xs text-muted-foreground">
-          没有命中结果
+          {props.t("ragHub.search.noHits")}
         </div>
       )}
     </section>
@@ -200,14 +225,14 @@ function RagSearchResultColumn(props: {
 }
 
 export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => void }) {
+  const { t } = useLocale();
   const [services, setServices] = useState<RagService[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState<RagService>(EMPTY_SERVICE);
-  const [managementApiKey, setManagementApiKey] = useState("");
-  const [agentApiKey, setAgentApiKey] = useState("");
   const [knowledgeBases, setKnowledgeBases] = useState<RagKnowledgeBase[]>([]);
   const [knowledgeBaseId, setKnowledgeBaseId] = useState("");
   const [knowledgeBaseName, setKnowledgeBaseName] = useState("");
+  const [knowledgeBaseQuery, setKnowledgeBaseQuery] = useState("");
   const [knowledgeBaseCreateOpen, setKnowledgeBaseCreateOpen] = useState(false);
   const [newKnowledgeBase, setNewKnowledgeBase] = useState(EMPTY_KNOWLEDGE_BASE);
   const [query, setQuery] = useState("");
@@ -216,9 +241,14 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
   const [searchRerank, setSearchRerank] = useState(true);
   const [searchTopN, setSearchTopN] = useState(5);
   const [searchResponse, setSearchResponse] = useState<RagSearchResponse | null>(null);
+  const [rerankResponse, setRerankResponse] = useState<RagSearchResponse | null>(null);
+  const [rerankCandidateSnapshot, setRerankCandidateSnapshot] = useState<RagSearchHit[]>([]);
+  const [resultView, setResultView] = useState<"search" | "rerank">("search");
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [capabilityNowMs, setCapabilityNowMs] = useState(() => Date.now());
+  const rerankRequestTokenRef = useRef(0);
 
   const selected = useMemo(
     () => services.find((service) => service.id === selectedId) ?? null,
@@ -229,17 +259,34 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
     () => knowledgeBases.find((item) => item.id === knowledgeBaseId) ?? null,
     [knowledgeBaseId, knowledgeBases],
   );
+  const filteredKnowledgeBases = useMemo(
+    () => filterRagKnowledgeBases(knowledgeBases, knowledgeBaseQuery),
+    [knowledgeBaseQuery, knowledgeBases],
+  );
 
   const finalResults = searchResponse?.results ?? [];
   const returnedRawResults = searchResponse?.rawResults ?? [];
   const rawResults = returnedRawResults.length > 0 ? returnedRawResults : finalResults;
+  const rerankCandidates = returnedRawResults.length > 0 ? returnedRawResults : finalResults;
+  const rerankResults = rerankResponse?.results ?? [];
+  const rerankWarnings = rerankResponse?.warnings ?? [];
   const warnings = searchResponse?.warnings ?? [];
-  const searchLimits = resolveRagSearchLimits(draft.capabilitiesSnapshot);
+  const searchLimits = useMemo(
+    () => resolveRagSearchLimits(draft.capabilitiesSnapshot, capabilityNowMs),
+    [capabilityNowMs, draft.capabilitiesSnapshot],
+  );
+  const ingestionSettings = useMemo(
+    () => resolveRagIngestionSettings(draft.capabilitiesSnapshot, capabilityNowMs),
+    [capabilityNowMs, draft.capabilitiesSnapshot],
+  );
   const effectiveSearchSettings = normalizeRagSearchSettings(
     { topK: searchTopK, rerank: searchRerank, topN: searchTopN },
     searchLimits,
   );
-  const canTestService = canTestSavedRagService(selected, draft, managementApiKey, agentApiKey);
+  const canRerankCurrentCandidates =
+    rerankCandidates.length > 0 && Boolean(query.trim()) && searchLimits.rerankSupported && !busy;
+  const canTestService = canTestSavedRagService(selected, draft);
+  const validServiceTimeout = isValidRagServiceTimeout(draft.timeoutMs);
 
   const handleDocumentNotice = useCallback((message: string) => {
     setError("");
@@ -268,15 +315,27 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
   }, []);
 
   useEffect(() => {
-    setManagementApiKey("");
-    setAgentApiKey("");
+    const now = Date.now();
+    setCapabilityNowMs(now);
+    const delay = nextRagCapabilityExpiryDelay(draft.capabilitiesSnapshot, now);
+    if (delay === null) return;
+    const capabilityExpiryTimer = window.setTimeout(() => setCapabilityNowMs(Date.now()), delay);
+    return () => window.clearTimeout(capabilityExpiryTimer);
+  }, [draft.capabilitiesSnapshot]);
+
+  useEffect(() => {
+    rerankRequestTokenRef.current += 1;
     setKnowledgeBases([]);
     setKnowledgeBaseId("");
     setKnowledgeBaseName("");
+    setKnowledgeBaseQuery("");
     setKnowledgeBaseCreateOpen(false);
     setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
     setSearchKnowledgeBaseIds([]);
     setSearchResponse(null);
+    setRerankResponse(null);
+    setRerankCandidateSnapshot([]);
+    setResultView("search");
     if (selected) setDraft(selected);
   }, [selected]);
 
@@ -314,8 +373,6 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
   function startNewService() {
     setSelectedId("");
     setDraft({ ...EMPTY_SERVICE, default: services.length === 0 });
-    setManagementApiKey("");
-    setAgentApiKey("");
     setKnowledgeBases([]);
     setKnowledgeBaseId("");
     setKnowledgeBaseName("");
@@ -323,19 +380,61 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
     setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
     setSearchKnowledgeBaseIds([]);
     setSearchResponse(null);
+    setRerankResponse(null);
+    setRerankCandidateSnapshot([]);
+    setResultView("search");
   }
 
   async function saveService() {
+    if (!validServiceTimeout) {
+      setError(t("ragHub.service.timeoutInvalid"));
+      return;
+    }
     await run("save", async () => {
       const saved = await invoke<RagService>("rag_save_service", {
         request: {
           service: draft,
-          managementApiKey: managementApiKey || undefined,
-          agentApiKey: agentApiKey || undefined,
         },
       });
       await loadServices(saved.id);
-      setNotice("服务配置已保存，API Key 只保存在系统凭证库中。");
+      setNotice(t("ragHub.notice.serviceSaved"));
+    });
+  }
+
+  function applyCredentialService(service: RagService) {
+    setDraft(service);
+    setServices((current) => current.map((item) => (item.id === service.id ? service : item)));
+  }
+
+  async function configureCredential(kind: RagCredentialKind) {
+    if (!selectedId) {
+      setError(t("ragHub.error.saveBeforeCredential"));
+      return;
+    }
+    await run(`credential:${kind}`, async () => {
+      const updated = await invoke<RagService | null>("rag_prompt_service_credential", {
+        service_id: selectedId,
+        credential_kind: kind,
+      });
+      if (!updated) {
+        setNotice(t("ragHub.notice.credentialCancelled"));
+        return;
+      }
+      applyCredentialService(updated);
+      setNotice(t("ragHub.notice.credentialSaved"));
+    });
+  }
+
+  async function clearCredential(kind: RagCredentialKind) {
+    if (!selectedId) return;
+    if (!window.confirm(t("ragHub.confirm.clearCredential"))) return;
+    await run(`credential-clear:${kind}`, async () => {
+      const updated = await invoke<RagService>("rag_clear_service_credential", {
+        service_id: selectedId,
+        credential_kind: kind,
+      });
+      applyCredentialService(updated);
+      setNotice(t("ragHub.notice.credentialCleared"));
     });
   }
 
@@ -345,13 +444,13 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
       await invoke("rag_delete_service", { service_id: selectedId });
       const remaining = await loadServices(undefined, "");
       if (remaining.length === 0) startNewService();
-      setNotice("服务配置和对应凭证已删除。");
+      setNotice(t("ragHub.notice.serviceDeleted"));
     });
   }
 
   async function testService() {
     if (!canTestService) {
-      setError("请先保存当前服务配置和 API Key，再测试连接。");
+      setError(t("ragHub.error.saveBeforeTest"));
       return;
     }
     await run("test", async () => {
@@ -364,7 +463,9 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
           service.id === draft.id ? { ...service, capabilitiesSnapshot: capabilities } : service,
         ),
       );
-      setNotice(`连接成功，协议版本 ${capabilities.protocolVersion}。`);
+      setNotice(
+        t("ragHub.notice.connectionSucceeded").replace("{version}", capabilities.protocolVersion),
+      );
     });
   }
 
@@ -407,12 +508,12 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
         await refreshKnowledgeBases(created.id);
         setKnowledgeBaseCreateOpen(false);
         setNewKnowledgeBase(EMPTY_KNOWLEDGE_BASE);
-        setNotice(`知识库“${created.name}”已创建。`);
+        setNotice(t("ragHub.notice.knowledgeBaseCreated").replace("{name}", created.name));
       },
       (reason) => {
         const message = errorText(reason);
         return message.includes("RAG_KB_FORBIDDEN")
-          ? `${message} 创建知识库需要管理 Key 配置 knowledgeBaseIds=["*"]。`
+          ? `${message} ${t("ragHub.error.knowledgeBaseAdminRequired")}`
           : message;
       },
     );
@@ -427,13 +528,17 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
         name: knowledgeBaseName.trim(),
       });
       await refreshKnowledgeBases(updated.id);
-      setNotice(`知识库已重命名为“${updated.name}”。`);
+      setNotice(t("ragHub.notice.knowledgeBaseRenamed").replace("{name}", updated.name));
     });
   }
 
   async function deleteKnowledgeBase() {
     if (!selectedKnowledgeBase) return;
-    if (!window.confirm(`确定删除空知识库“${selectedKnowledgeBase.name}”吗？该操作无法撤销。`)) {
+    if (
+      !window.confirm(
+        t("ragHub.confirm.deleteKnowledgeBase").replace("{name}", selectedKnowledgeBase.name),
+      )
+    ) {
       return;
     }
     await run("knowledge-delete", async () => {
@@ -442,31 +547,85 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
         knowledge_base_id: selectedKnowledgeBase.id,
       });
       await refreshKnowledgeBases();
-      setNotice(`知识库“${selectedKnowledgeBase.name}”已删除。`);
+      setNotice(
+        t("ragHub.notice.knowledgeBaseDeleted").replace("{name}", selectedKnowledgeBase.name),
+      );
     });
+  }
+
+  function toggleAgentKnowledgeBase(knowledgeBaseId: string) {
+    setDraft((current) => ({
+      ...current,
+      agentKnowledgeBaseIds: toggleRagKnowledgeBase(current.agentKnowledgeBaseIds, knowledgeBaseId),
+    }));
+    setError("");
+    setNotice(t("ragHub.knowledgeBase.allowlistSaveRetest"));
   }
 
   async function searchKnowledge() {
     if (!query.trim() || searchKnowledgeBaseIds.length === 0) return;
+    rerankRequestTokenRef.current += 1;
+    const requestToken = rerankRequestTokenRef.current;
     setSearchResponse(null);
+    setRerankResponse(null);
+    setRerankCandidateSnapshot([]);
+    setResultView("search");
     await run("search", async () => {
-      const response = await invoke<RagSearchResponse>("rag_hub_search", {
-        request: {
-          serviceId: selectedId || undefined,
-          query: query.trim(),
-          knowledgeBaseIds: searchKnowledgeBaseIds,
-          topK: effectiveSearchSettings.topK,
-          rerank: effectiveSearchSettings.rerank,
-          topN: effectiveSearchSettings.topN,
-        },
-      });
-      setSearchResponse({
-        requestId: response.requestId ?? null,
-        rawResults: response.rawResults ?? [],
-        results: response.results ?? [],
-        warnings: response.warnings ?? [],
-        timings: response.timings ?? null,
-      });
+      try {
+        const response = await invoke<RagSearchResponse>("rag_hub_search", {
+          request: {
+            serviceId: selectedId || undefined,
+            query: query.trim(),
+            knowledgeBaseIds: searchKnowledgeBaseIds,
+            topK: effectiveSearchSettings.topK,
+            rerank: effectiveSearchSettings.rerank,
+            topN: effectiveSearchSettings.topN,
+          },
+        });
+        if (requestToken !== rerankRequestTokenRef.current) return;
+        setSearchResponse({
+          requestId: response.requestId ?? null,
+          rawResults: response.rawResults ?? [],
+          results: response.results ?? [],
+          warnings: response.warnings ?? [],
+          timings: response.timings ?? null,
+        });
+      } catch (reason) {
+        if (requestToken !== rerankRequestTokenRef.current) return;
+        throw reason;
+      }
+    });
+  }
+
+  async function rerankCurrentCandidates() {
+    if (!canRerankCurrentCandidates) return;
+    const requestToken = ++rerankRequestTokenRef.current;
+    await run("rerank", async () => {
+      try {
+        const response = await invoke<RagSearchResponse>("rag_hub_rerank", {
+          request: buildRagRerankRequest({
+            serviceId: selectedId || undefined,
+            query,
+            hits: rerankCandidates,
+            topN: effectiveSearchSettings.topN,
+            capabilities: draft.capabilitiesSnapshot,
+          }),
+        });
+        if (requestToken !== rerankRequestTokenRef.current) return;
+        setRerankCandidateSnapshot(rerankCandidates);
+        setRerankResponse({
+          requestId: response.requestId ?? null,
+          rawResults: response.rawResults ?? [],
+          results: response.results ?? [],
+          warnings: response.warnings ?? [],
+          timings: response.timings ?? null,
+        });
+        setResultView("rerank");
+        setNotice(t("ragHub.notice.rerankComplete"));
+      } catch (reason) {
+        if (requestToken !== rerankRequestTokenRef.current) return;
+        throw reason;
+      }
     });
   }
 
@@ -480,65 +639,119 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
         <HubHeader
           icon={<BookOpen className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />}
           title="RAG"
-          subtitle="配置外部知识服务、上传文档，并让 Agent 通过内置只读工具检索"
+          subtitle={t("ragHub.subtitle")}
           sidebarOpen={props.sidebarOpen}
           onOpenSidebar={props.onOpenSidebar}
-          actions={<Button onClick={startNewService}>新增服务</Button>}
+          actions={<Button onClick={startNewService}>{t("ragHub.service.add")}</Button>}
         />
         <div className="hub-scroll min-h-0 flex-1 overflow-auto px-5 pb-8 pt-5 sm:px-6 lg:px-8 xl:px-10">
           <div className="mx-auto grid w-full max-w-[1320px] gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
             <aside className="space-y-3">
               <div className="flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                <span>服务</span>
+                <span>{t("ragHub.service.title")}</span>
                 <span>{services.length}</span>
               </div>
-              {services.map((service) => (
-                <button
-                  key={service.id}
-                  type="button"
-                  onClick={() => setSelectedId(service.id)}
-                  className={`w-full rounded-xl border px-4 py-3 text-left transition ${selectedId === service.id ? "border-cyan-500/40 bg-cyan-500/[0.07]" : "border-border/45 bg-background/55 hover:bg-muted/45"}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="truncate text-sm font-medium">{service.name}</span>
-                    <span
-                      className={`h-2 w-2 rounded-full ${service.enabled ? "bg-emerald-500" : "bg-muted-foreground/35"}`}
-                    />
-                  </div>
-                  <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
-                    {service.baseUrl}
-                  </div>
-                  <div className="mt-2 flex gap-1.5 text-[10px] text-muted-foreground">
-                    {service.default ? (
-                      <span className="rounded bg-muted px-1.5 py-0.5">默认</span>
-                    ) : null}
-                    {service.agentEnabled ? (
-                      <span className="rounded bg-muted px-1.5 py-0.5">Agent</span>
-                    ) : null}
-                  </div>
-                </button>
-              ))}
+              {services.map((service) => {
+                const serviceCapabilityHealth = resolveRagCapabilityHealth(
+                  service.capabilitiesSnapshot,
+                  capabilityNowMs,
+                );
+                const healthClass =
+                  serviceCapabilityHealth === "valid"
+                    ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                    : serviceCapabilityHealth === "expired"
+                      ? "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      : serviceCapabilityHealth === "incompatible"
+                        ? "border-destructive/25 bg-destructive/10 text-destructive"
+                        : "border-border/55 bg-muted/40 text-muted-foreground";
+                return (
+                  <button
+                    key={service.id}
+                    type="button"
+                    onClick={() => setSelectedId(service.id)}
+                    className={`w-full rounded-xl border px-4 py-3 text-left transition ${selectedId === service.id ? "border-cyan-500/40 bg-cyan-500/[0.07]" : "border-border/45 bg-background/55 hover:bg-muted/45"}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="truncate text-sm font-medium">{service.name}</span>
+                      <span
+                        className={`h-2 w-2 rounded-full ${service.enabled ? "bg-emerald-500" : "bg-muted-foreground/35"}`}
+                      />
+                    </div>
+                    <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                      {service.baseUrl}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                      {service.default ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5">
+                          {t("ragHub.service.defaultBadge")}
+                        </span>
+                      ) : null}
+                      {service.agentEnabled ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5">Agent</span>
+                      ) : null}
+                    </div>
+                    <dl className="mt-2 grid gap-1 border-t border-border/35 pt-2 text-[10px] text-muted-foreground">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt>{t("ragHub.service.managementCredential")}</dt>
+                        <dd>
+                          {service.managementCredentialConfigured
+                            ? t("ragHub.credential.configuredShort")
+                            : t("ragHub.credential.notConfigured")}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <dt>{t("ragHub.service.agentCredential")}</dt>
+                        <dd>
+                          {service.agentCredentialConfigured
+                            ? t("ragHub.credential.configuredShort")
+                            : t("ragHub.credential.notConfigured")}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <dt>{t("ragHub.service.protocolVersion")}</dt>
+                        <dd className="font-mono">
+                          {service.capabilitiesSnapshot?.protocolVersion || "—"}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <dt>{t("ragHub.service.capabilityHealth")}</dt>
+                        <dd className={`rounded-full border px-1.5 py-0.5 ${healthClass}`}>
+                          {t(`ragHub.service.capabilityStatus.${serviceCapabilityHealth}`)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </button>
+                );
+              })}
               {services.length === 0 ? (
-                <p className="px-1 text-sm text-muted-foreground">
-                  先保存一个已经运行的 RAG 服务。
-                </p>
+                <p className="px-1 text-sm text-muted-foreground">{t("ragHub.service.empty")}</p>
               ) : null}
             </aside>
 
             <main className="space-y-5">
-              {error || notice ? (
+              {error ? (
                 <div
-                  className={`rounded-lg border px-3 py-2 text-sm ${error ? "border-destructive/35 bg-destructive/5 text-destructive" : "border-cyan-500/25 bg-cyan-500/[0.06] text-foreground"}`}
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-lg border border-destructive/35 bg-destructive/5 px-3 py-2 text-sm text-destructive"
                 >
-                  {error || notice}
+                  {error}
+                </div>
+              ) : notice ? (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="rounded-lg border border-cyan-500/25 bg-cyan-500/[0.06] px-3 py-2 text-sm text-foreground"
+                >
+                  {notice}
                 </div>
               ) : null}
 
               <GlassPanel className="p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="font-semibold">连接配置</h2>
-                    <p className="text-xs text-muted-foreground">密钥保存后不会回显到页面。</p>
+                    <h2 className="font-semibold">{t("ragHub.service.connectionConfig")}</h2>
+                    <p className="text-xs text-muted-foreground">{t("ragHub.credential.noEcho")}</p>
                   </div>
                   <div className="flex gap-2">
                     {selected ? (
@@ -547,7 +760,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         size="icon"
                         onClick={deleteService}
                         disabled={Boolean(busy)}
-                        title="删除服务"
+                        title={t("ragHub.service.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -556,21 +769,27 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                       variant="outline"
                       onClick={testService}
                       disabled={Boolean(busy) || !canTestService}
-                      title={canTestService ? "测试已保存的服务配置" : "请先保存当前修改"}
+                      title={
+                        canTestService
+                          ? t("ragHub.service.testSavedTitle")
+                          : t("ragHub.service.saveFirstTitle")
+                      }
                     >
-                      {busy === "test" ? "测试中" : "测试连接"}
+                      {busy === "test" ? t("ragHub.service.testing") : t("ragHub.service.test")}
                     </Button>
                     <Button
                       onClick={saveService}
-                      disabled={Boolean(busy) || !draft.id || !draft.baseUrl}
+                      disabled={
+                        Boolean(busy) || !draft.id || !draft.baseUrl || !validServiceTimeout
+                      }
                     >
-                      {busy === "save" ? "保存中" : "保存配置"}
+                      {busy === "save" ? t("ragHub.common.saving") : t("ragHub.service.save")}
                     </Button>
                   </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>服务 ID</Label>
+                    <Label>{t("ragHub.service.id")}</Label>
                     <Input
                       value={draft.id}
                       disabled={Boolean(selected)}
@@ -578,46 +797,140 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>显示名称</Label>
+                    <Label>{t("ragHub.common.displayName")}</Label>
                     <Input
                       value={draft.name}
                       onChange={(event) => setDraft({ ...draft, name: event.target.value })}
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rag-service-adapter">{t("ragHub.service.adapter")}</Label>
+                    <select
+                      id="rag-service-adapter"
+                      value={draft.adapterType}
+                      disabled
+                      className="h-10 w-full rounded-md border border-input bg-muted/25 px-3 text-sm text-muted-foreground disabled:cursor-not-allowed disabled:opacity-100"
+                    >
+                      <option value="ragent">ragent</option>
+                    </select>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t("ragHub.service.adapterHint")}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rag-service-timeout">{t("ragHub.service.timeout")}</Label>
+                    <Input
+                      id="rag-service-timeout"
+                      type="number"
+                      min={MIN_RAG_SERVICE_TIMEOUT_MS}
+                      max={MAX_RAG_SERVICE_TIMEOUT_MS}
+                      step={1_000}
+                      value={draft.timeoutMs}
+                      aria-invalid={!validServiceTimeout}
+                      onChange={(event) =>
+                        setDraft({ ...draft, timeoutMs: Number(event.target.value) })
+                      }
+                    />
+                    <p
+                      className={
+                        validServiceTimeout
+                          ? "text-[10px] text-muted-foreground"
+                          : "text-[10px] text-destructive"
+                      }
+                    >
+                      {validServiceTimeout
+                        ? t("ragHub.service.timeoutHint")
+                            .replace("{min}", String(MIN_RAG_SERVICE_TIMEOUT_MS))
+                            .replace("{max}", String(MAX_RAG_SERVICE_TIMEOUT_MS))
+                        : t("ragHub.service.timeoutInvalid")}
+                    </p>
+                  </div>
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label>Base URL</Label>
+                    <Label>{t("ragHub.service.baseUrl")}</Label>
                     <Input
                       value={draft.baseUrl}
                       onChange={(event) => setDraft({ ...draft, baseUrl: event.target.value })}
-                      placeholder="http://localhost:8080"
+                      placeholder={DEFAULT_RAGENT_BASE_URL}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>管理 API Key</Label>
-                    <Input
-                      type="password"
-                      value={managementApiKey}
-                      onChange={(event) => setManagementApiKey(event.target.value)}
-                      placeholder={
-                        draft.managementCredentialConfigured
-                          ? "已配置；留空保持不变"
-                          : "用于文档和管理操作"
-                      }
-                    />
+                    <Label>{t("ragHub.credential.management")}</Label>
+                    <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/55 bg-muted/20 px-3">
+                      <span className="text-xs text-muted-foreground">
+                        {draft.managementCredentialConfigured
+                          ? t("ragHub.credential.configured")
+                          : t("ragHub.credential.notConfigured")}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!selectedId || Boolean(busy)}
+                          onClick={() => configureCredential("management")}
+                        >
+                          {draft.managementCredentialConfigured
+                            ? t("ragHub.credential.replace")
+                            : t("ragHub.credential.nativeInput")}
+                        </Button>
+                        {draft.managementCredentialConfigured ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={Boolean(busy)}
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => clearCredential("management")}
+                          >
+                            {t("ragHub.common.clear")}
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t("ragHub.credential.managementHint")}
+                    </p>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Agent API Key</Label>
-                    <Input
-                      type="password"
-                      value={agentApiKey}
-                      onChange={(event) => setAgentApiKey(event.target.value)}
-                      placeholder={
-                        draft.agentCredentialConfigured ? "已配置；留空保持不变" : "只读检索凭证"
-                      }
-                    />
+                    <Label>{t("ragHub.credential.agent")}</Label>
+                    <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/55 bg-muted/20 px-3">
+                      <span className="text-xs text-muted-foreground">
+                        {draft.agentCredentialConfigured
+                          ? t("ragHub.credential.configured")
+                          : t("ragHub.credential.notConfigured")}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!selectedId || Boolean(busy)}
+                          onClick={() => configureCredential("agent")}
+                        >
+                          {draft.agentCredentialConfigured
+                            ? t("ragHub.credential.replace")
+                            : t("ragHub.credential.nativeInput")}
+                        </Button>
+                        {draft.agentCredentialConfigured ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={Boolean(busy)}
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => clearCredential("agent")}
+                          >
+                            {t("ragHub.common.clear")}
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t("ragHub.credential.agentHint")}
+                    </p>
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label>Agent 知识库白名单</Label>
+                    <Label>{t("ragHub.credential.knowledgeBaseAllowlist")}</Label>
                     <Input
                       value={draft.agentKnowledgeBaseIds.join(", ")}
                       onChange={(event) =>
@@ -640,7 +953,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                       checked={draft.enabled}
                       onChange={(event) => setDraft({ ...draft, enabled: event.target.checked })}
                     />
-                    启用服务
+                    {t("ragHub.service.enable")}
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -648,7 +961,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                       checked={draft.default}
                       onChange={(event) => setDraft({ ...draft, default: event.target.checked })}
                     />
-                    设为默认
+                    {t("ragHub.service.setDefault")}
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -658,7 +971,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         setDraft({ ...draft, agentEnabled: event.target.checked })
                       }
                     />
-                    开放给 Agent
+                    {t("ragHub.service.enableForAgent")}
                   </label>
                 </div>
               </GlassPanel>
@@ -668,9 +981,9 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                   <GlassPanel className="p-5">
                     <div className="mb-4 flex items-start justify-between gap-3">
                       <div>
-                        <h2 className="font-semibold">知识库</h2>
+                        <h2 className="font-semibold">{t("ragHub.knowledgeBase.title")}</h2>
                         <p className="text-xs text-muted-foreground">
-                          选择文档要进入的知识库，管理操作使用管理凭证。
+                          {t("ragHub.knowledgeBase.subtitle")}
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-2">
@@ -680,7 +993,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                           onClick={() => setKnowledgeBaseCreateOpen((current) => !current)}
                           disabled={!selectedId || Boolean(busy)}
                         >
-                          新建
+                          {t("ragHub.common.create")}
                         </Button>
                         <Button
                           variant="outline"
@@ -689,7 +1002,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                           disabled={!selectedId || Boolean(busy)}
                         >
                           <RefreshCw className="mr-2 h-3.5 w-3.5" />
-                          刷新
+                          {t("ragHub.common.refresh")}
                         </Button>
                       </div>
                     </div>
@@ -698,7 +1011,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                       <div className="mb-4 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.04] p-3">
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="space-y-1.5 sm:col-span-2">
-                            <Label>知识库名称</Label>
+                            <Label>{t("ragHub.knowledgeBase.name")}</Label>
                             <Input
                               value={newKnowledgeBase.name}
                               onChange={(event) =>
@@ -707,11 +1020,11 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                                   name: event.target.value,
                                 })
                               }
-                              placeholder="公司制度"
+                              placeholder={t("ragHub.knowledgeBase.namePlaceholder")}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <Label>嵌入模型</Label>
+                            <Label>{t("ragHub.knowledgeBase.embeddingModel")}</Label>
                             <Input
                               value={newKnowledgeBase.embeddingModel}
                               onChange={(event) =>
@@ -724,7 +1037,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <Label>集合名称</Label>
+                            <Label>{t("ragHub.knowledgeBase.collectionName")}</Label>
                             <Input
                               value={newKnowledgeBase.collectionName}
                               onChange={(event) =>
@@ -739,7 +1052,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         </div>
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                           <p className="text-[11px] text-muted-foreground">
-                            创建需要管理 Key 配置 knowledgeBaseIds=["*"]。
+                            {t("ragHub.knowledgeBase.createHint")}
                           </p>
                           <div className="flex gap-2">
                             <Button
@@ -751,7 +1064,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                               }}
                               disabled={Boolean(busy)}
                             >
-                              取消
+                              {t("ragHub.common.cancel")}
                             </Button>
                             <Button
                               size="sm"
@@ -763,44 +1076,97 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                                 !newKnowledgeBase.collectionName.trim()
                               }
                             >
-                              {busy === "knowledge-create" ? "创建中" : "创建知识库"}
+                              {busy === "knowledge-create"
+                                ? t("ragHub.common.creating")
+                                : t("ragHub.knowledgeBase.create")}
                             </Button>
                           </div>
                         </div>
                       </div>
                     ) : null}
 
+                    <div className="mb-3 space-y-1.5">
+                      <Label htmlFor="rag-knowledge-base-search" className="sr-only">
+                        {t("ragHub.knowledgeBase.searchLabel")}
+                      </Label>
+                      <Input
+                        id="rag-knowledge-base-search"
+                        type="search"
+                        value={knowledgeBaseQuery}
+                        onChange={(event) => setKnowledgeBaseQuery(event.target.value)}
+                        placeholder={t("ragHub.knowledgeBase.searchPlaceholder")}
+                      />
+                    </div>
+
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {knowledgeBases.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setKnowledgeBaseId(item.id)}
-                          className={`rounded-xl border px-3 py-2.5 text-left text-sm transition ${knowledgeBaseId === item.id ? "border-cyan-500/40 bg-cyan-500/[0.07] shadow-sm" : "border-border/50 bg-background/35 hover:bg-muted/35"}`}
-                        >
-                          <span className="flex items-center justify-between gap-2">
-                            <span className="truncate font-medium">{item.name}</span>
-                            <span className="shrink-0 text-[10px] text-muted-foreground">
-                              {item.documentCount ?? 0} 文档
-                            </span>
-                          </span>
-                          <span className="mt-1 block truncate font-mono text-[10px] text-muted-foreground">
-                            {item.id}
-                          </span>
-                        </button>
-                      ))}
+                      {filteredKnowledgeBases.map((item) => {
+                        const allowedForAgent = draft.agentKnowledgeBaseIds.includes(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className={`overflow-hidden rounded-xl border text-sm transition ${knowledgeBaseId === item.id ? "border-cyan-500/40 bg-cyan-500/[0.07] shadow-sm" : "border-border/50 bg-background/35"}`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setKnowledgeBaseId(item.id)}
+                              className="w-full px-3 py-2.5 text-left hover:bg-muted/25"
+                            >
+                              <span className="flex items-center justify-between gap-2">
+                                <span className="truncate font-medium">{item.name}</span>
+                                <span className="shrink-0 text-[10px] text-muted-foreground">
+                                  {t("ragHub.knowledgeBase.documentCount").replace(
+                                    "{count}",
+                                    String(item.documentCount ?? 0),
+                                  )}
+                                </span>
+                              </span>
+                              <span className="mt-1 block truncate font-mono text-[10px] text-muted-foreground">
+                                {item.id}
+                              </span>
+                            </button>
+                            <div className="flex items-center justify-between gap-2 border-t border-border/35 px-3 py-2">
+                              <span className="text-[10px] text-muted-foreground">
+                                {t("ragHub.knowledgeBase.agentAccess")}
+                              </span>
+                              <button
+                                type="button"
+                                aria-pressed={allowedForAgent}
+                                onClick={() => toggleAgentKnowledgeBase(item.id)}
+                                className={
+                                  allowedForAgent
+                                    ? "rounded-full border border-cyan-500/35 bg-cyan-500/12 px-2 py-1 text-[10px] font-medium text-cyan-800 dark:text-cyan-200"
+                                    : "rounded-full border border-border/55 bg-background/55 px-2 py-1 text-[10px] text-muted-foreground hover:bg-muted/45"
+                                }
+                              >
+                                {allowedForAgent
+                                  ? t("ragHub.knowledgeBase.removeFromAgent")
+                                  : t("ragHub.knowledgeBase.addToAgent")}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                       {!knowledgeBases.length ? (
                         <span className="text-sm text-muted-foreground sm:col-span-2">
-                          点击刷新读取知识库，或直接新建一个空知识库。
+                          {t("ragHub.knowledgeBase.empty")}
+                        </span>
+                      ) : null}
+                      {knowledgeBases.length > 0 && !filteredKnowledgeBases.length ? (
+                        <span className="text-sm text-muted-foreground sm:col-span-2">
+                          {t("ragHub.knowledgeBase.noMatches")}
                         </span>
                       ) : null}
                     </div>
+
+                    <p className="mt-3 text-[10px] text-muted-foreground">
+                      {t("ragHub.knowledgeBase.allowlistSaveRetest")}
+                    </p>
 
                     {selectedKnowledgeBase ? (
                       <div className="mt-4 border-t border-border/45 pt-4">
                         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                           <div className="space-y-1.5">
-                            <Label>显示名称</Label>
+                            <Label>{t("ragHub.common.displayName")}</Label>
                             <Input
                               value={knowledgeBaseName}
                               onChange={(event) => setKnowledgeBaseName(event.target.value)}
@@ -817,7 +1183,9 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                                 knowledgeBaseName.trim() === selectedKnowledgeBase.name
                               }
                             >
-                              {busy === "knowledge-update" ? "保存中" : "保存名称"}
+                              {busy === "knowledge-update"
+                                ? t("ragHub.common.saving")
+                                : t("ragHub.knowledgeBase.saveName")}
                             </Button>
                             <Button
                               variant="ghost"
@@ -828,8 +1196,8 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                               }
                               title={
                                 (selectedKnowledgeBase.documentCount ?? 0) > 0
-                                  ? "请先删除知识库中的文档"
-                                  : "删除空知识库"
+                                  ? t("ragHub.knowledgeBase.deleteDocumentsFirst")
+                                  : t("ragHub.knowledgeBase.deleteEmpty")
                               }
                             >
                               <Trash2 className="h-4 w-4" />
@@ -838,10 +1206,12 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         </div>
                         <div className="mt-3 grid gap-2 text-[11px] text-muted-foreground sm:grid-cols-2">
                           <span className="truncate font-mono">
-                            模型：{selectedKnowledgeBase.embeddingModel || "未返回"}
+                            {t("ragHub.knowledgeBase.modelLabel")}
+                            {selectedKnowledgeBase.embeddingModel || t("ragHub.common.notReturned")}
                           </span>
                           <span className="truncate font-mono">
-                            集合：{selectedKnowledgeBase.collectionName || "未返回"}
+                            {t("ragHub.knowledgeBase.collectionLabel")}
+                            {selectedKnowledgeBase.collectionName || t("ragHub.common.notReturned")}
                           </span>
                         </div>
                       </div>
@@ -851,6 +1221,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                   <RagDocumentPanel
                     serviceId={selectedId}
                     knowledgeBaseId={knowledgeBaseId}
+                    ingestionSettings={ingestionSettings}
                     onNotice={handleDocumentNotice}
                     onError={handleDocumentError}
                   />
@@ -858,14 +1229,16 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
 
                 <GlassPanel className="p-5">
                   <div className="mb-4">
-                    <h2 className="font-semibold">检索实验</h2>
-                    <p className="text-xs text-muted-foreground">一次完成召回与可选重排。</p>
+                    <h2 className="font-semibold">{t("ragHub.search.title")}</h2>
+                    <p className="text-xs text-muted-foreground">{t("ragHub.search.subtitle")}</p>
                   </div>
                   <div className="rounded-xl border border-border/45 bg-muted/20 p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="text-xs font-medium">检索范围</p>
-                        <p className="text-[11px] text-muted-foreground">可同时选择多个知识库</p>
+                        <p className="text-xs font-medium">{t("ragHub.search.scope")}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {t("ragHub.search.scopeHint")}
+                        </p>
                       </div>
                       {knowledgeBases.length > 0 ? (
                         <div className="flex items-center gap-1 text-[11px]">
@@ -876,14 +1249,14 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                               setSearchKnowledgeBaseIds(knowledgeBases.map((item) => item.id))
                             }
                           >
-                            全选
+                            {t("ragHub.common.selectAll")}
                           </button>
                           <button
                             type="button"
                             className="rounded px-2 py-1 text-muted-foreground hover:bg-muted/60"
                             onClick={() => setSearchKnowledgeBaseIds([])}
                           >
-                            清空
+                            {t("ragHub.common.clear")}
                           </button>
                         </div>
                       ) : null}
@@ -915,17 +1288,24 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                       </div>
                     ) : (
                       <p className="mt-3 text-xs text-muted-foreground">
-                        先加载知识库，再选择检索范围。
+                        {t("ragHub.search.loadKnowledgeBasesFirst")}
                       </p>
                     )}
                   </div>
 
+                  <Label htmlFor="rag-search-query" className="sr-only">
+                    {t("ragHub.search.queryLabel")}
+                  </Label>
                   <div className="relative mt-3">
                     <Textarea
+                      id="rag-search-query"
                       value={query}
-                      onChange={(event) => setQuery(event.target.value)}
+                      onChange={(event) => {
+                        rerankRequestTokenRef.current += 1;
+                        setQuery(event.target.value);
+                      }}
                       maxLength={searchLimits.maxQueryLength}
-                      placeholder="输入要检索的问题"
+                      placeholder={t("ragHub.search.queryPlaceholder")}
                       className="min-h-24 pb-7"
                     />
                     <span className="pointer-events-none absolute bottom-2 right-3 font-mono text-[10px] text-muted-foreground">
@@ -935,7 +1315,7 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
 
                   <div className="mt-3 grid gap-3 rounded-xl border border-border/45 bg-background/35 p-3 sm:grid-cols-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="rag-search-top-k">召回数量 Top K</Label>
+                      <Label htmlFor="rag-search-top-k">{t("ragHub.search.topK")}</Label>
                       <Input
                         id="rag-search-top-k"
                         type="number"
@@ -945,7 +1325,10 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         onChange={(event) => setSearchTopK(Number(event.target.value))}
                       />
                       <p className="text-[10px] text-muted-foreground">
-                        服务上限 {searchLimits.maxTopK}
+                        {t("ragHub.search.serviceLimit").replace(
+                          "{limit}",
+                          String(searchLimits.maxTopK),
+                        )}
                       </p>
                     </div>
 
@@ -958,15 +1341,19 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         onChange={(event) => setSearchRerank(event.target.checked)}
                       />
                       <span>
-                        <span className="block text-xs font-medium">启用重排</span>
+                        <span className="block text-xs font-medium">
+                          {t("ragHub.search.enableRerank")}
+                        </span>
                         <span className="block text-[10px] text-muted-foreground">
-                          {searchLimits.rerankSupported ? "优化最终排序" : "服务未声明此能力"}
+                          {searchLimits.rerankSupported
+                            ? t("ragHub.search.rerankHint")
+                            : t("ragHub.search.rerankUnsupported")}
                         </span>
                       </span>
                     </label>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="rag-search-top-n">最终数量 Top N</Label>
+                      <Label htmlFor="rag-search-top-n">{t("ragHub.search.topN")}</Label>
                       <Input
                         id="rag-search-top-n"
                         type="number"
@@ -974,10 +1361,16 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                         max={searchLimits.maxTopN}
                         value={effectiveSearchSettings.topN}
                         disabled={!effectiveSearchSettings.rerank}
-                        onChange={(event) => setSearchTopN(Number(event.target.value))}
+                        onChange={(event) => {
+                          rerankRequestTokenRef.current += 1;
+                          setSearchTopN(Number(event.target.value));
+                        }}
                       />
                       <p className="text-[10px] text-muted-foreground">
-                        服务上限 {searchLimits.maxTopN}
+                        {t("ragHub.search.serviceLimit").replace(
+                          "{limit}",
+                          String(searchLimits.maxTopN),
+                        )}
                       </p>
                     </div>
                   </div>
@@ -985,93 +1378,247 @@ export function RagHubPage(props: { sidebarOpen: boolean; onOpenSidebar: () => v
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <Button
                       onClick={searchKnowledge}
+                      aria-busy={busy === "search"}
                       disabled={
                         !selectedId ||
+                        !searchLimits.searchSupported ||
                         !query.trim() ||
                         searchKnowledgeBaseIds.length === 0 ||
                         Boolean(busy)
                       }
                     >
                       <Search className="mr-2 h-4 w-4" />
-                      {busy === "search" ? "检索中" : "开始检索"}
+                      {busy === "search" ? t("ragHub.search.searching") : t("ragHub.search.start")}
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={rerankCurrentCandidates}
+                      aria-busy={busy === "rerank"}
+                      disabled={!canRerankCurrentCandidates}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      {busy === "rerank"
+                        ? t("ragHub.search.rerankingCandidates")
+                        : t("ragHub.search.rerankCandidates")}
+                    </Button>
+                    <span className="sr-only" role="status" aria-live="polite">
+                      {busy === "search"
+                        ? t("ragHub.search.searchingAnnouncement")
+                        : busy === "rerank"
+                          ? t("ragHub.search.rerankingAnnouncement")
+                          : ""}
+                    </span>
                     <span className="text-[11px] text-muted-foreground">
-                      已选 {searchKnowledgeBaseIds.length} 个知识库
+                      {t("ragHub.search.selectedKnowledgeBases").replace(
+                        "{count}",
+                        String(searchKnowledgeBaseIds.length),
+                      )}
                       {draft.capabilitiesSnapshot
-                        ? " · 已按服务能力限制参数"
-                        : " · 使用本地安全上限"}
+                        ? t("ragHub.search.capabilityLimits")
+                        : t("ragHub.search.localLimits")}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {draft.capabilitiesSnapshot?.features?.rerank === true
+                        ? t("ragHub.search.rerankCandidateCount").replace(
+                            "{count}",
+                            String(rerankCandidates.length),
+                          )
+                        : t("ragHub.search.rerankCapabilityRequired")}
                     </span>
                   </div>
                   {searchResponse ? (
                     <div className="mt-4 space-y-4">
-                      {searchResponse.timings || searchResponse.requestId ? (
-                        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/45 bg-muted/20 p-3">
-                          <div className="mr-1 flex items-center gap-2 text-xs font-medium">
-                            <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                            检索耗时
-                          </div>
-                          {searchResponse.timings ? (
-                            <>
-                              <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
-                                召回 {searchResponse.timings.retrievalMs} ms
-                              </span>
-                              <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
-                                重排 {searchResponse.timings.rerankMs} ms
-                              </span>
-                              <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
-                                总计 {searchResponse.timings.totalMs} ms
-                              </span>
-                            </>
-                          ) : null}
-                          {searchResponse.requestId ? (
-                            <span
-                              className="ml-auto max-w-full truncate font-mono text-[10px] text-muted-foreground"
-                              title={searchResponse.requestId}
-                            >
-                              请求 {searchResponse.requestId}
-                            </span>
-                          ) : null}
-                        </div>
+                      {rerankResponse ? (
+                        <fieldset className="inline-flex rounded-lg border border-border/55 bg-muted/25 p-1">
+                          <legend className="sr-only">{t("ragHub.search.resultViewLegend")}</legend>
+                          <button
+                            type="button"
+                            aria-pressed={resultView === "search"}
+                            className={
+                              resultView === "search"
+                                ? "rounded-md bg-background px-3 py-1.5 text-xs font-medium text-cyan-800 shadow-sm dark:text-cyan-200"
+                                : "rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                            }
+                            onClick={() => setResultView("search")}
+                          >
+                            {t("ragHub.search.results")}
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={resultView === "rerank"}
+                            className={
+                              resultView === "rerank"
+                                ? "rounded-md bg-background px-3 py-1.5 text-xs font-medium text-cyan-800 shadow-sm dark:text-cyan-200"
+                                : "rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                            }
+                            onClick={() => setResultView("rerank")}
+                          >
+                            {t("ragHub.search.rerankedResults")}
+                          </button>
+                        </fieldset>
                       ) : null}
 
-                      {warnings.length > 0 ? (
-                        <div className="space-y-2" role="status">
-                          {warnings.map((warning) => (
-                            <div
-                              key={warning}
-                              className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
-                            >
-                              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                              <span>{searchWarningText(warning)}</span>
+                      {resultView === "search" ? (
+                        <>
+                          {searchResponse.timings || searchResponse.requestId ? (
+                            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/45 bg-muted/20 p-3">
+                              <div className="mr-1 flex items-center gap-2 text-xs font-medium">
+                                <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                                {t("ragHub.search.searchTiming")}
+                              </div>
+                              {searchResponse.timings ? (
+                                <>
+                                  <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                    {t("ragHub.search.retrievalTiming").replace(
+                                      "{ms}",
+                                      String(searchResponse.timings.retrievalMs),
+                                    )}
+                                  </span>
+                                  <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                    {t("ragHub.search.rerankTiming").replace(
+                                      "{ms}",
+                                      String(searchResponse.timings.rerankMs),
+                                    )}
+                                  </span>
+                                  <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
+                                    {t("ragHub.search.totalTiming").replace(
+                                      "{ms}",
+                                      String(searchResponse.timings.totalMs),
+                                    )}
+                                  </span>
+                                </>
+                              ) : null}
+                              {searchResponse.requestId ? (
+                                <span
+                                  className="ml-auto max-w-full truncate font-mono text-[10px] text-muted-foreground"
+                                  title={searchResponse.requestId}
+                                >
+                                  {t("ragHub.search.requestId").replace(
+                                    "{id}",
+                                    searchResponse.requestId,
+                                  )}
+                                </span>
+                              ) : null}
                             </div>
-                          ))}
-                        </div>
-                      ) : null}
+                          ) : null}
 
-                      {returnedRawResults.length === 0 && finalResults.length > 0 ? (
-                        <p className="text-[11px] text-muted-foreground">
-                          当前服务未返回原始召回列表，左侧暂用最终结果兼容展示。
-                        </p>
-                      ) : null}
+                          {warnings.length > 0 ? (
+                            <div className="space-y-2" role="status">
+                              {warnings.map((warning) => (
+                                <div
+                                  key={warning}
+                                  className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
+                                >
+                                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                  <span>{searchWarningText(t, warning)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
 
-                      <div className="grid gap-4 lg:grid-cols-2">
-                        <RagSearchResultColumn
-                          title="原始召回"
-                          subtitle="向量检索返回的候选顺序"
-                          hits={rawResults}
-                          mode="raw"
-                        />
-                        <RagSearchResultColumn
-                          title="最终结果"
-                          subtitle="重排后交给 Agent 的结果"
-                          hits={finalResults}
-                          mode="final"
-                        />
-                      </div>
+                          {returnedRawResults.length === 0 && finalResults.length > 0 ? (
+                            <p className="text-[11px] text-muted-foreground">
+                              {t("ragHub.search.rawResultsFallback")}
+                            </p>
+                          ) : null}
+
+                          <div className="grid gap-4 lg:grid-cols-2">
+                            <RagSearchResultColumn
+                              title={t("ragHub.search.rawResults")}
+                              subtitle={t("ragHub.search.rawResultsSubtitle")}
+                              hits={rawResults}
+                              mode="raw"
+                              t={t}
+                            />
+                            <RagSearchResultColumn
+                              title={t("ragHub.search.finalResults")}
+                              subtitle={t("ragHub.search.finalResultsSubtitle")}
+                              hits={finalResults}
+                              mode="final"
+                              t={t}
+                            />
+                          </div>
+                        </>
+                      ) : rerankResponse ? (
+                        <>
+                          {rerankResponse.timings || rerankResponse.requestId ? (
+                            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+                              <div className="mr-1 flex items-center gap-2 text-xs font-medium">
+                                <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                                {t("ragHub.search.independentRerankTiming")}
+                              </div>
+                              {rerankResponse.timings ? (
+                                <>
+                                  <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                    {t("ragHub.search.candidateTiming").replace(
+                                      "{ms}",
+                                      String(rerankResponse.timings.retrievalMs),
+                                    )}
+                                  </span>
+                                  <span className="rounded-md bg-background/60 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                                    {t("ragHub.search.rerankTiming").replace(
+                                      "{ms}",
+                                      String(rerankResponse.timings.rerankMs),
+                                    )}
+                                  </span>
+                                  <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">
+                                    {t("ragHub.search.totalTiming").replace(
+                                      "{ms}",
+                                      String(rerankResponse.timings.totalMs),
+                                    )}
+                                  </span>
+                                </>
+                              ) : null}
+                              {rerankResponse.requestId ? (
+                                <span
+                                  className="ml-auto max-w-full truncate font-mono text-[10px] text-muted-foreground"
+                                  title={rerankResponse.requestId}
+                                >
+                                  {t("ragHub.search.requestId").replace(
+                                    "{id}",
+                                    rerankResponse.requestId,
+                                  )}
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
+
+                          {rerankWarnings.length > 0 ? (
+                            <div className="space-y-2" role="status">
+                              {rerankWarnings.map((warning) => (
+                                <div
+                                  key={warning}
+                                  className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/8 px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
+                                >
+                                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                  <span>{searchWarningText(t, warning)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+
+                          <div className="grid gap-4 lg:grid-cols-2">
+                            <RagSearchResultColumn
+                              title={t("ragHub.search.candidateInput")}
+                              subtitle={t("ragHub.search.candidateInputSubtitle")}
+                              hits={rerankCandidateSnapshot}
+                              mode="raw"
+                              t={t}
+                            />
+                            <RagSearchResultColumn
+                              title={t("ragHub.search.rerankedResults")}
+                              subtitle={t("ragHub.search.independentRerankSubtitle")}
+                              hits={rerankResults}
+                              mode="final"
+                              t={t}
+                            />
+                          </div>
+                        </>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="mt-4 rounded-xl border border-dashed border-border/55 px-4 py-8 text-center text-xs text-muted-foreground">
-                      输入问题后，可对比原始召回与最终重排结果。
+                      {t("ragHub.search.empty")}
                     </div>
                   )}
                 </GlassPanel>

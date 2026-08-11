@@ -41,4 +41,5 @@ chatroom
 *.sw?
 .pnpm-store
 workspace.zip
-docs/
+docs/*
+!docs/rag-integration-runbook.md

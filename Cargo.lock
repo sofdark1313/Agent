@@ -70,6 +70,7 @@ dependencies = [
  "keyring",
  "leveldb-core",
  "lopdf",
+ "mime_guess",
  "notify",
  "objc2-app-kit 0.3.2",
  "portable-pty",
@@ -93,6 +94,7 @@ dependencies = [
  "tauri-plugin-updater",
  "tempfile",
  "thiserror 2.0.18",
+ "tinyfiledialogs-rs",
  "tokio",
  "tokio-cron-scheduler",
  "tokio-stream",
@@ -6852,6 +6854,16 @@ checksum = "c431b87111666e491a90baa837f914fb45cd5dc3c268591b0220ff5057f2085f"
 dependencies = [
  "num-conv",
  "time-core",
+]
+
+[[package]]
+name = "tinyfiledialogs-rs"
+version = "3.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c18ab3f79ad8deb90fa577326e01de4759d812893a94722c980642c73ac1274"
+dependencies = [
+ "cc",
+ "libc",
 ]
 
 [[package]]

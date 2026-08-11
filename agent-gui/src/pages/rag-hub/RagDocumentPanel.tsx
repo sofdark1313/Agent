@@ -4,7 +4,28 @@ import { GlassPanel } from "../../components/hub/HubChrome";
 import { FileText, Link2, RefreshCw, Trash2, Upload } from "../../components/icons";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useLocale } from "../../i18n";
+import {
+  effectiveRagDocumentStatus,
+  hydrateRagIngestionHistory,
+  normalizeRagDocumentStatus,
+  type RagJobsByDocumentId,
+  reconcileRagJobsWithDocuments,
+  recordAcceptedRagJob,
+  recordRagIngestionJob,
+  removeRagDocumentJob,
+  retryJobIdForDocument,
+} from "./ingestionJobState";
 import { pollIngestionJob } from "./ingestionPolling";
+import {
+  createDefaultRagIngestionSelection,
+  type RagIngestionProcessMode,
+  type RagIngestionSelection,
+  type RagIngestionSettings,
+  type RagPickedDocumentFile,
+  validateRagIngestionSelection,
+  validateRagPickedDocument,
+} from "./ingestionSettings";
 
 type RagPage<T> = {
   items: T[];
@@ -46,19 +67,29 @@ type RagAcceptedJob = {
 type RagIngestionJob = {
   jobId: string;
   documentId: string;
+  operation?: string | null;
+  rootJobId?: string | null;
+  parentJobId?: string | null;
+  attemptNo?: number | null;
   status: "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
   stage?: string | null;
   progress: number;
   retryable: boolean;
   error?: { code: string; message: string } | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt?: string | null;
 };
 
 type Props = {
   serviceId: string;
   knowledgeBaseId: string;
+  ingestionSettings: RagIngestionSettings;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 };
+
+type Translate = (key: string) => string;
 
 function errorText(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -69,25 +100,23 @@ function isAbortError(error: unknown) {
 }
 
 function normalizeStatus(status: string) {
-  const normalized = status.trim().toUpperCase();
-  if (normalized === "SUCCESS") return "SUCCEEDED";
-  return normalized;
+  return normalizeRagDocumentStatus(status);
 }
 
-function statusLabel(status: string) {
+function statusLabel(t: Translate, status: string) {
   switch (normalizeStatus(status)) {
     case "PENDING":
-      return "等待处理";
+      return t("ragHub.document.status.pending");
     case "RUNNING":
-      return "处理中";
+      return t("ragHub.document.status.running");
     case "SUCCEEDED":
-      return "已入库";
+      return t("ragHub.document.status.succeeded");
     case "FAILED":
-      return "处理失败";
+      return t("ragHub.document.status.failed");
     case "CANCELLED":
-      return "已取消";
+      return t("ragHub.document.status.cancelled");
     default:
-      return status || "未知";
+      return status || t("ragHub.common.unknown");
   }
 }
 
@@ -104,8 +133,8 @@ function statusClass(status: string) {
   }
 }
 
-function formatBytes(value?: number | null) {
-  if (!value || value <= 0) return "未知大小";
+function formatBytes(t: Translate, value?: number | null) {
+  if (!value || value <= 0) return t("ragHub.document.unknownSize");
   const units = ["B", "KB", "MB", "GB"];
   let size = value;
   let unit = 0;
@@ -116,16 +145,32 @@ function formatBytes(value?: number | null) {
   return `${size >= 10 || unit === 0 ? size.toFixed(0) : size.toFixed(1)} ${units[unit]}`;
 }
 
-export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError }: Props) {
+export function RagDocumentPanel({
+  serviceId,
+  knowledgeBaseId,
+  ingestionSettings,
+  onNotice,
+  onError,
+}: Props) {
+  const { t } = useLocale();
   const [documents, setDocuments] = useState<RagDocument[]>([]);
   const [total, setTotal] = useState(0);
-  const [filePath, setFilePath] = useState("");
+  const [selectedFile, setSelectedFile] = useState<RagPickedDocumentFile | null>(null);
+  const [ingestionSelection, setIngestionSelection] = useState<RagIngestionSelection>(() =>
+    createDefaultRagIngestionSelection(ingestionSettings),
+  );
   const [documentUrl, setDocumentUrl] = useState("");
   const [busy, setBusy] = useState("");
-  const [activeJob, setActiveJob] = useState<RagIngestionJob | null>(null);
+  const [jobsByDocumentId, setJobsByDocumentId] = useState<RagJobsByDocumentId>({});
+  const [activeDocumentId, setActiveDocumentId] = useState("");
+  const [historyDocumentId, setHistoryDocumentId] = useState("");
   const [chunkDocumentId, setChunkDocumentId] = useState("");
   const [chunks, setChunks] = useState<RagChunk[]>([]);
   const pollController = useRef<AbortController | null>(null);
+  const fileUploadSupported = ingestionSettings.fileUploadSupported;
+  const urlImportSupported = ingestionSettings.urlImportSupported;
+  const maxUploadBytes = ingestionSettings.maxUploadBytes;
+  const activeJob = activeDocumentId ? jobsByDocumentId[activeDocumentId]?.current : null;
 
   const refreshDocuments = useCallback(
     async (silent = false) => {
@@ -142,8 +187,32 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
           current: 1,
           size: 50,
         });
-        setDocuments(page.items ?? []);
-        setTotal(page.total ?? page.items?.length ?? 0);
+        const items = page.items ?? [];
+        setDocuments(items);
+        setJobsByDocumentId((current) => reconcileRagJobsWithDocuments(current, items));
+        setTotal(page.total ?? items.length);
+        const historyResults = await Promise.allSettled(
+          items
+            .filter((document) => normalizeStatus(document.status) !== "SUCCEEDED")
+            .map(async (document) => ({
+              documentId: document.id,
+              page: await invoke<RagPage<RagIngestionJob>>("rag_hub_list_ingestion_jobs", {
+                service_id: serviceId,
+                document_id: document.id,
+                current: 1,
+                size: 20,
+              }),
+            })),
+        );
+        setJobsByDocumentId((current) =>
+          historyResults.reduce(
+            (next, result) =>
+              result.status === "fulfilled"
+                ? hydrateRagIngestionHistory(next, result.value.documentId, result.value.page.items)
+                : next,
+            current,
+          ),
+        );
       } catch (reason) {
         if (!silent) onError(errorText(reason));
       } finally {
@@ -157,21 +226,34 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
     pollController.current?.abort();
     setDocuments([]);
     setTotal(0);
-    setFilePath("");
+    setSelectedFile(null);
+    setIngestionSelection(createDefaultRagIngestionSelection(ingestionSettings));
     setDocumentUrl("");
-    setActiveJob(null);
+    setJobsByDocumentId({});
+    setActiveDocumentId("");
+    setHistoryDocumentId("");
     setChunkDocumentId("");
     setChunks([]);
     if (serviceId && knowledgeBaseId) void refreshDocuments();
     return () => pollController.current?.abort();
-  }, [serviceId, knowledgeBaseId, refreshDocuments]);
+  }, [serviceId, knowledgeBaseId, refreshDocuments, ingestionSettings]);
 
   async function chooseFile() {
     setBusy("pick");
     onError("");
     try {
-      const selected = await invoke<string | null>("rag_pick_document_file");
-      if (selected) setFilePath(selected);
+      const selected = await invoke<RagPickedDocumentFile | null>("rag_pick_document_file", {
+        service_id: serviceId,
+      });
+      if (selected) {
+        const error = validateRagPickedDocument(ingestionSettings, selected);
+        if (error) {
+          setSelectedFile(null);
+          onError(error);
+        } else {
+          setSelectedFile(selected);
+        }
+      }
     } catch (reason) {
       onError(errorText(reason));
     } finally {
@@ -184,24 +266,39 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
     const controller = new AbortController();
     pollController.current = controller;
     try {
-      return await pollIngestionJob(
+      const result = await pollIngestionJob(
         async () => {
           const job = await invoke<RagIngestionJob>("rag_hub_get_ingestion_job", {
             service_id: serviceId,
             job_id: jobId,
           });
-          setActiveJob(job);
+          setJobsByDocumentId((current) => recordRagIngestionJob(current, job));
+          setActiveDocumentId(job.documentId);
           return job;
         },
         { signal: controller.signal },
       );
+      setJobsByDocumentId((current) =>
+        recordRagIngestionJob(current, result.job, result.exhausted),
+      );
+      return result;
     } finally {
       if (pollController.current === controller) pollController.current = null;
     }
   }
 
   async function uploadDocument() {
-    if (!serviceId || !knowledgeBaseId || !filePath) return;
+    if (!serviceId || !knowledgeBaseId || !selectedFile) return;
+    const fileError = validateRagPickedDocument(ingestionSettings, selectedFile);
+    const ingestionValidation = validateRagIngestionSelection(
+      ingestionSettings,
+      ingestionSelection,
+    );
+    if (fileError || !ingestionValidation.valid || !ingestionValidation.request) {
+      onError(fileError || ingestionValidation.error || t("ragHub.error.invalidIngestionConfig"));
+      return;
+    }
+    const ingestionRequest = ingestionValidation.request;
     setBusy("upload");
     onError("");
     onNotice("");
@@ -209,10 +306,11 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
       const accepted = await invoke<RagAcceptedJob>("rag_hub_upload_document", {
         service_id: serviceId,
         knowledge_base_id: knowledgeBaseId,
-        file_path: filePath,
+        file_path: selectedFile.path,
+        ingestion: ingestionRequest,
       });
-      setFilePath("");
-      await followAcceptedJob(accepted, "文档已提交，正在等待入库");
+      setSelectedFile(null);
+      await followAcceptedJob(accepted, t("ragHub.notice.documentSubmitted"));
     } catch (reason) {
       if (!isAbortError(reason)) onError(errorText(reason));
     } finally {
@@ -223,6 +321,15 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
   async function importDocumentUrl() {
     const url = documentUrl.trim();
     if (!serviceId || !knowledgeBaseId || !url) return;
+    const ingestionValidation = validateRagIngestionSelection(
+      ingestionSettings,
+      ingestionSelection,
+    );
+    if (!ingestionValidation.valid || !ingestionValidation.request) {
+      onError(ingestionValidation.error || t("ragHub.error.invalidIngestionConfig"));
+      return;
+    }
+    const ingestionRequest = ingestionValidation.request;
     setBusy("import-url");
     onError("");
     onNotice("");
@@ -231,9 +338,10 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
         service_id: serviceId,
         knowledge_base_id: knowledgeBaseId,
         document_url: url,
+        ingestion: ingestionRequest,
       });
       setDocumentUrl("");
-      await followAcceptedJob(accepted, "URL 文档已安全下载，正在等待入库");
+      await followAcceptedJob(accepted, t("ragHub.notice.urlDocumentSubmitted"));
     } catch (reason) {
       if (!isAbortError(reason)) onError(errorText(reason));
     } finally {
@@ -242,41 +350,51 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
   }
 
   async function followAcceptedJob(accepted: RagAcceptedJob, pendingMessage: string) {
-    setActiveJob({
-      jobId: accepted.jobId,
-      documentId: accepted.documentId,
-      status: "PENDING",
-      stage: "VALIDATING",
-      progress: 0,
-      retryable: false,
-    });
-    onNotice(`${pendingMessage}（任务 ${accepted.jobId}）。`);
+    setJobsByDocumentId((current) => recordAcceptedRagJob(current, accepted));
+    setActiveDocumentId(accepted.documentId);
+    onNotice(
+      t("ragHub.notice.jobAccepted")
+        .replace("{message}", pendingMessage)
+        .replace("{jobId}", accepted.jobId),
+    );
     await refreshDocuments(true);
-    const completed = await waitForJob(accepted.jobId);
+    const polling = await waitForJob(accepted.jobId);
+    const completed = polling.job;
     if (completed.status === "SUCCEEDED") {
-      onNotice("文档已完成解析、分块和向量入库。");
+      onNotice(t("ragHub.notice.documentSucceeded"));
     } else if (completed.status === "FAILED") {
-      onError(completed.error?.message || "文档入库失败，可以点击重试。");
+      onError(completed.error?.message || t("ragHub.error.documentFailed"));
+    } else if (polling.exhausted) {
+      onNotice(t("ragHub.notice.pollingPaused").replace("{jobId}", completed.jobId));
     }
     await refreshDocuments(true);
   }
 
   async function retryDocument(documentId: string) {
+    const retryJobId = retryJobIdForDocument(jobsByDocumentId, documentId);
+    if (!retryJobId) {
+      onError(t("ragHub.error.noRetryableJob"));
+      return;
+    }
     setBusy(`retry:${documentId}`);
     onError("");
     onNotice("");
     try {
       const job = await invoke<RagIngestionJob>("rag_hub_retry_ingestion_job", {
         service_id: serviceId,
-        job_id: documentId,
+        job_id: retryJobId,
       });
-      setActiveJob(job);
-      onNotice("已重新提交文档入库任务。");
-      const completed = await waitForJob(job.jobId);
+      setJobsByDocumentId((current) => recordRagIngestionJob(current, job));
+      setActiveDocumentId(documentId);
+      onNotice(t("ragHub.notice.retrySubmitted"));
+      const polling = await waitForJob(job.jobId);
+      const completed = polling.job;
       if (completed.status === "SUCCEEDED") {
-        onNotice("重试成功，文档已经入库。");
+        onNotice(t("ragHub.notice.retrySucceeded"));
       } else if (completed.status === "FAILED") {
-        onError(completed.error?.message || "重试后仍然失败。");
+        onError(completed.error?.message || t("ragHub.error.retryFailed"));
+      } else if (polling.exhausted) {
+        onNotice(t("ragHub.notice.pollingPaused").replace("{jobId}", completed.jobId));
       }
       await refreshDocuments(true);
     } catch (reason) {
@@ -287,7 +405,7 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
   }
 
   async function deleteDocument(document: RagDocument) {
-    if (!window.confirm(`确定删除文档“${document.name}”吗？对应 Chunk 和向量也会被清理。`)) {
+    if (!window.confirm(t("ragHub.confirm.deleteDocument").replace("{name}", document.name))) {
       return;
     }
     setBusy(`delete:${document.id}`);
@@ -302,7 +420,10 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
         setChunkDocumentId("");
         setChunks([]);
       }
-      onNotice("文档、Chunk 和向量已删除。");
+      setJobsByDocumentId((current) => removeRagDocumentJob(current, document.id));
+      if (activeDocumentId === document.id) setActiveDocumentId("");
+      if (historyDocumentId === document.id) setHistoryDocumentId("");
+      onNotice(t("ragHub.notice.documentDeleted"));
       await refreshDocuments(true);
     } catch (reason) {
       onError(errorText(reason));
@@ -335,13 +456,52 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
     }
   }
 
+  const ingestionValidation = validateRagIngestionSelection(ingestionSettings, ingestionSelection);
+  const selectedChunkSchema = ingestionSelection.chunkStrategy
+    ? ingestionSettings.chunkConfigSchema[ingestionSelection.chunkStrategy]
+    : undefined;
+
+  function selectProcessMode(processMode: RagIngestionProcessMode) {
+    setIngestionSelection(
+      createDefaultRagIngestionSelection({
+        ...ingestionSettings,
+        processModes: [
+          processMode,
+          ...ingestionSettings.processModes.filter((mode) => mode !== processMode),
+        ],
+      }),
+    );
+  }
+
+  function selectChunkStrategy(chunkStrategy: string) {
+    setIngestionSelection(
+      createDefaultRagIngestionSelection({
+        ...ingestionSettings,
+        processModes: ["chunk"],
+        chunkStrategies: [
+          chunkStrategy,
+          ...ingestionSettings.chunkStrategies.filter((item) => item !== chunkStrategy),
+        ],
+      }),
+    );
+  }
+
+  function updateChunkConfig(name: string, value: number | string | boolean) {
+    setIngestionSelection((current) => ({
+      ...current,
+      chunkConfig: { ...(current.chunkConfig ?? {}), [name]: value },
+    }));
+  }
+
   return (
     <GlassPanel className="p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-semibold">文档入库</h2>
+          <h2 className="font-semibold">{t("ragHub.document.title")}</h2>
           <p className="text-xs text-muted-foreground">
-            选择本地文件后由 Rust 直接流式上传，React 不读取文件内容。
+            {fileUploadSupported
+              ? t("ragHub.document.uploadHint").replace("{size}", formatBytes(t, maxUploadBytes))
+              : t("ragHub.document.uploadUnsupported")}
           </p>
         </div>
         <Button
@@ -351,23 +511,174 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
           disabled={!knowledgeBaseId || Boolean(busy)}
         >
           <RefreshCw className="mr-2 h-3.5 w-3.5" />
-          刷新 {total ? `(${total})` : ""}
+          {t("ragHub.common.refresh")} {total ? `(${total})` : ""}
         </Button>
+      </div>
+
+      <div className="mb-3 rounded-xl border border-border/45 bg-muted/20 p-3">
+        {ingestionSettings.capabilityError ? (
+          <p className="text-xs text-destructive">{ingestionSettings.capabilityError}</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="space-y-1 text-xs">
+              <span className="text-muted-foreground">{t("ragHub.document.processMode")}</span>
+              <select
+                className="h-9 w-full rounded-md border border-border/60 bg-background px-2"
+                value={ingestionSelection.processMode}
+                onChange={(event) =>
+                  selectProcessMode(event.target.value as RagIngestionProcessMode)
+                }
+                disabled={Boolean(busy)}
+              >
+                {ingestionSettings.processModes.map((processMode) => (
+                  <option key={processMode} value={processMode}>
+                    {processMode === "chunk"
+                      ? t("ragHub.document.chunkMode")
+                      : t("ragHub.document.pipelineMode")}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {ingestionSelection.processMode === "chunk" ? (
+              <>
+                <label className="space-y-1 text-xs">
+                  <span className="text-muted-foreground">
+                    {t("ragHub.document.chunkStrategy")}
+                  </span>
+                  <select
+                    className="h-9 w-full rounded-md border border-border/60 bg-background px-2"
+                    value={ingestionSelection.chunkStrategy ?? ""}
+                    onChange={(event) => selectChunkStrategy(event.target.value)}
+                    disabled={Boolean(busy)}
+                  >
+                    {ingestionSettings.chunkStrategies.map((chunkStrategy) => (
+                      <option key={chunkStrategy} value={chunkStrategy}>
+                        {chunkStrategy}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {Object.entries(selectedChunkSchema?.properties ?? {}).map(
+                  ([name, schema], index) => {
+                    const controlId = `rag-chunk-config-${index}`;
+                    return (
+                      <div key={name} className="space-y-1 text-xs">
+                        <label htmlFor={controlId} className="text-muted-foreground">
+                          {name}
+                        </label>
+                        {schema.type === "boolean" ? (
+                          <select
+                            id={controlId}
+                            className="h-9 w-full rounded-md border border-border/60 bg-background px-2"
+                            value={String(ingestionSelection.chunkConfig?.[name] ?? false)}
+                            onChange={(event) =>
+                              updateChunkConfig(name, event.target.value === "true")
+                            }
+                            disabled={Boolean(busy)}
+                          >
+                            <option value="true">true</option>
+                            <option value="false">false</option>
+                          </select>
+                        ) : schema.enum ? (
+                          <select
+                            id={controlId}
+                            className="h-9 w-full rounded-md border border-border/60 bg-background px-2"
+                            value={String(ingestionSelection.chunkConfig?.[name] ?? "")}
+                            onChange={(event) => updateChunkConfig(name, event.target.value)}
+                            disabled={Boolean(busy)}
+                          >
+                            {schema.enum.map((value) => (
+                              <option key={value} value={value}>
+                                {value}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id={controlId}
+                            type={schema.type === "integer" ? "number" : "text"}
+                            min={schema.minimum ?? schema.minLength}
+                            max={schema.maximum ?? schema.maxLength}
+                            step={schema.type === "integer" ? 1 : undefined}
+                            value={String(ingestionSelection.chunkConfig?.[name] ?? "")}
+                            onChange={(event) =>
+                              updateChunkConfig(
+                                name,
+                                schema.type === "integer"
+                                  ? Number(event.target.value)
+                                  : event.target.value,
+                              )
+                            }
+                            disabled={Boolean(busy)}
+                          />
+                        )}
+                      </div>
+                    );
+                  },
+                )}
+              </>
+            ) : (
+              <label className="space-y-1 text-xs">
+                <span className="text-muted-foreground">{t("ragHub.document.pipelineLabel")}</span>
+                <select
+                  className="h-9 w-full rounded-md border border-border/60 bg-background px-2"
+                  value={ingestionSelection.pipelineId ?? ""}
+                  onChange={(event) =>
+                    setIngestionSelection((current) => ({
+                      ...current,
+                      pipelineId: event.target.value,
+                    }))
+                  }
+                  disabled={Boolean(busy)}
+                >
+                  {ingestionSettings.pipelines.map((pipeline) => (
+                    <option key={pipeline.id} value={pipeline.id}>
+                      {pipeline.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+        )}
+        {!ingestionValidation.valid && !ingestionSettings.capabilityError ? (
+          <p className="mt-2 text-[11px] text-destructive">{ingestionValidation.error}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           readOnly
-          value={filePath}
-          placeholder={knowledgeBaseId ? "请选择要入库的文档" : "请先选择知识库"}
-          title={filePath}
+          value={selectedFile?.name ?? ""}
+          placeholder={
+            !fileUploadSupported
+              ? t("ragHub.document.fileUploadDisabled")
+              : knowledgeBaseId
+                ? t("ragHub.document.filePlaceholder")
+                : t("ragHub.document.selectKnowledgeBaseFirst")
+          }
+          title={selectedFile?.path}
         />
-        <Button variant="outline" onClick={chooseFile} disabled={!knowledgeBaseId || Boolean(busy)}>
-          选择文件
+        <Button
+          variant="outline"
+          onClick={chooseFile}
+          disabled={!fileUploadSupported || !knowledgeBaseId || Boolean(busy)}
+        >
+          {t("ragHub.document.selectFile")}
         </Button>
-        <Button onClick={uploadDocument} disabled={!knowledgeBaseId || !filePath || Boolean(busy)}>
+        <Button
+          onClick={uploadDocument}
+          disabled={
+            !fileUploadSupported ||
+            !knowledgeBaseId ||
+            !selectedFile ||
+            !ingestionValidation.valid ||
+            Boolean(busy)
+          }
+        >
           <Upload className="mr-2 h-4 w-4" />
-          {busy === "upload" ? "入库中" : "上传入库"}
+          {busy === "upload" ? t("ragHub.document.ingesting") : t("ragHub.document.upload")}
         </Button>
       </div>
 
@@ -376,29 +687,49 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
           <Input
             type="url"
             value={documentUrl}
+            disabled={!urlImportSupported}
             onChange={(event) => setDocumentUrl(event.target.value)}
-            placeholder={knowledgeBaseId ? "https://example.com/document.pdf" : "请先选择知识库"}
+            placeholder={
+              !urlImportSupported
+                ? t("ragHub.document.urlImportDisabled")
+                : knowledgeBaseId
+                  ? "https://example.com/document.pdf"
+                  : t("ragHub.document.selectKnowledgeBaseFirst")
+            }
           />
           <Button
             variant="outline"
             onClick={importDocumentUrl}
-            disabled={!knowledgeBaseId || !documentUrl.trim() || Boolean(busy)}
+            disabled={
+              !urlImportSupported ||
+              !knowledgeBaseId ||
+              !documentUrl.trim() ||
+              !ingestionValidation.valid ||
+              Boolean(busy)
+            }
           >
             <Link2 className="mr-2 h-4 w-4" />
-            {busy === "import-url" ? "下载中" : "URL 入库"}
+            {busy === "import-url"
+              ? t("ragHub.document.downloading")
+              : t("ragHub.document.urlImport")}
           </Button>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          仅允许公网 HTTP(S) 文档；内网、回环地址和跳转到内网的链接会被拒绝。
+          {urlImportSupported
+            ? t("ragHub.document.urlSecurityHint")
+            : t("ragHub.document.urlCapabilityDisabled")}
         </p>
       </div>
 
       {activeJob ? (
         <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.05] p-3">
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="font-medium">当前任务：{statusLabel(activeJob.status)}</span>
+            <span className="font-medium">
+              {t("ragHub.document.jobCurrent")}
+              {statusLabel(t, activeJob.status)}
+            </span>
             <span className="font-mono text-muted-foreground">
-              {activeJob.stage || "完成"} · {activeJob.progress}%
+              {activeJob.stage || t("ragHub.document.stageComplete")} · {activeJob.progress}%
             </span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -413,21 +744,19 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
       <div className="mt-4 space-y-3">
         {!knowledgeBaseId ? (
           <p className="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-            先刷新并选择一个知识库。
+            {t("ragHub.document.selectKnowledgeBaseEmpty")}
           </p>
         ) : null}
         {knowledgeBaseId && !documents.length && busy !== "documents" ? (
           <p className="rounded-lg border border-dashed border-border/60 p-4 text-sm text-muted-foreground">
-            这个知识库还没有文档。
+            {t("ragHub.document.empty")}
           </p>
         ) : null}
         {documents.map((document) => {
-          const status =
-            activeJob?.documentId === document.id
-              ? activeJob.status
-              : normalizeStatus(document.status);
+          const jobState = jobsByDocumentId[document.id];
+          const status = effectiveRagDocumentStatus(document.status, jobState);
           const running = status === "PENDING" || status === "RUNNING";
-          const failed = status === "FAILED";
+          const retryJobId = retryJobIdForDocument(jobsByDocumentId, document.id);
           return (
             <div key={document.id} className="rounded-xl border border-border/45 bg-muted/20 p-3">
               <div className="flex items-start gap-3">
@@ -442,13 +771,18 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusClass(status)}`}
                     >
-                      {statusLabel(status)}
+                      {statusLabel(t, status)}
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                     <span>{document.fileType || "file"}</span>
-                    <span>{formatBytes(document.fileSize)}</span>
-                    <span>{document.chunkCount ?? 0} Chunks</span>
+                    <span>{formatBytes(t, document.fileSize)}</span>
+                    <span>
+                      {t("ragHub.document.chunkCount").replace(
+                        "{count}",
+                        String(document.chunkCount ?? 0),
+                      )}
+                    </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
@@ -457,9 +791,11 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                       onClick={() => toggleChunks(document.id)}
                       disabled={running || Boolean(busy)}
                     >
-                      {chunkDocumentId === document.id ? "收起 Chunk" : "查看 Chunk"}
+                      {chunkDocumentId === document.id
+                        ? t("ragHub.document.hideChunks")
+                        : t("ragHub.document.showChunks")}
                     </Button>
-                    {failed ? (
+                    {retryJobId ? (
                       <Button
                         variant="outline"
                         size="sm"
@@ -467,7 +803,24 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                         disabled={Boolean(busy)}
                       >
                         <RefreshCw className="mr-2 h-3.5 w-3.5" />
-                        {busy === `retry:${document.id}` ? "重试中" : "重试入库"}
+                        {busy === `retry:${document.id}`
+                          ? t("ragHub.document.retrying")
+                          : t("ragHub.document.retry")}
+                      </Button>
+                    ) : null}
+                    {jobState?.history.length ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setHistoryDocumentId((current) =>
+                            current === document.id ? "" : document.id,
+                          )
+                        }
+                      >
+                        {historyDocumentId === document.id
+                          ? t("ragHub.document.hideJobHistory")
+                          : t("ragHub.document.showJobHistory")}
                       </Button>
                     ) : null}
                     <Button
@@ -478,11 +831,69 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                       className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      删除
+                      {t("ragHub.common.delete")}
                     </Button>
                   </div>
                 </div>
               </div>
+
+              {historyDocumentId === document.id && jobState?.history.length ? (
+                <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
+                  <p className="text-xs font-medium">{t("ragHub.document.jobHistory")}</p>
+                  {jobState.history.map((job) => (
+                    <div key={job.jobId} className="rounded-lg bg-background/65 p-3 text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {job.jobId}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusClass(job.status)}`}
+                        >
+                          {statusLabel(t, job.status)}
+                        </span>
+                      </div>
+                      <div className="mt-2 grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
+                        <span>
+                          {t("ragHub.document.jobAttempt").replace(
+                            "{attempt}",
+                            String(job.attemptNo ?? 1),
+                          )}
+                        </span>
+                        <span>
+                          {t("ragHub.document.jobOperation").replace(
+                            "{operation}",
+                            job.operation ?? "-",
+                          )}
+                        </span>
+                        <span>
+                          {t("ragHub.document.jobStarted").replace(
+                            "{time}",
+                            job.startedAt ?? job.createdAt ?? "-",
+                          )}
+                        </span>
+                        <span>
+                          {t("ragHub.document.jobCompleted").replace(
+                            "{time}",
+                            job.completedAt ?? "-",
+                          )}
+                        </span>
+                        {job.parentJobId ? (
+                          <span className="sm:col-span-2">
+                            {t("ragHub.document.jobParent").replace("{jobId}", job.parentJobId)}
+                          </span>
+                        ) : null}
+                      </div>
+                      {job.error ? (
+                        <p className="mt-2 rounded-md bg-destructive/8 px-2 py-1.5 text-destructive">
+                          {t("ragHub.document.jobError")
+                            .replace("{code}", job.error.code)
+                            .replace("{message}", job.error.message)}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               {chunkDocumentId === document.id ? (
                 <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
@@ -492,8 +903,20 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                         <div className="mb-1 flex flex-wrap gap-2 font-mono text-[10px] text-muted-foreground">
                           <span>#{(chunk.index ?? 0) + 1}</span>
                           <span>{chunk.id}</span>
-                          <span>{chunk.charCount ?? chunk.content.length} 字符</span>
-                          {chunk.tokenCount != null ? <span>{chunk.tokenCount} tokens</span> : null}
+                          <span>
+                            {t("ragHub.document.characterCount").replace(
+                              "{count}",
+                              String(chunk.charCount ?? chunk.content.length),
+                            )}
+                          </span>
+                          {chunk.tokenCount != null ? (
+                            <span>
+                              {t("ragHub.document.tokenCount").replace(
+                                "{count}",
+                                String(chunk.tokenCount),
+                              )}
+                            </span>
+                          ) : null}
                         </div>
                         <p className="max-h-40 overflow-auto whitespace-pre-wrap text-xs leading-5">
                           {chunk.content}
@@ -501,7 +924,7 @@ export function RagDocumentPanel({ serviceId, knowledgeBaseId, onNotice, onError
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground">暂无 Chunk。</p>
+                    <p className="text-xs text-muted-foreground">{t("ragHub.document.noChunks")}</p>
                   )}
                 </div>
               ) : null}

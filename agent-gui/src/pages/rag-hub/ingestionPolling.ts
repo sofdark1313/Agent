@@ -4,6 +4,11 @@ export type PollableIngestionJob = {
   status: RagIngestionStatus;
 };
 
+export type PollIngestionResult<T extends PollableIngestionJob> = {
+  job: T;
+  exhausted: boolean;
+};
+
 type PollOptions = {
   sleep?: (milliseconds: number) => Promise<void>;
   signal?: AbortSignal;
@@ -23,7 +28,7 @@ function defaultSleep(milliseconds: number) {
 export async function pollIngestionJob<T extends PollableIngestionJob>(
   fetchJob: () => Promise<T>,
   options: PollOptions = {},
-): Promise<T> {
+): Promise<PollIngestionResult<T>> {
   const sleep = options.sleep ?? defaultSleep;
   const maxAttempts = Math.max(1, options.maxAttempts ?? 60);
 
@@ -33,8 +38,8 @@ export async function pollIngestionJob<T extends PollableIngestionJob>(
     }
 
     const job = await fetchJob();
-    if (isTerminalIngestionStatus(job.status)) return job;
-    if (attempt === maxAttempts - 1) return job;
+    if (isTerminalIngestionStatus(job.status)) return { job, exhausted: false };
+    if (attempt === maxAttempts - 1) return { job, exhausted: true };
 
     const delay = DELAYS[attempt] ?? 10_000;
     await sleep(delay);

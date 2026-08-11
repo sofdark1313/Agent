@@ -1,3 +1,14 @@
+import {
+  isFreshRagCapabilitySnapshot,
+  type RagCapabilitySnapshot,
+} from "../../lib/rag/capabilitySnapshot";
+
+export const DEFAULT_RAGENT_BASE_URL = "http://localhost:9090/api/ragent";
+export const MIN_RAG_SERVICE_TIMEOUT_MS = 1_000;
+export const MAX_RAG_SERVICE_TIMEOUT_MS = 120_000;
+
+export type RagCapabilityHealth = "untested" | "valid" | "expired" | "incompatible";
+
 export type RagServiceState = {
   id: string;
   name: string;
@@ -35,12 +46,39 @@ function editableSnapshot(service: RagServiceState) {
   };
 }
 
-export function canTestSavedRagService(
-  saved: RagServiceState | null,
-  draft: RagServiceState,
-  managementApiKey: string,
-  agentApiKey: string,
-) {
-  if (!saved || managementApiKey.trim() || agentApiKey.trim()) return false;
+export function canTestSavedRagService(saved: RagServiceState | null, draft: RagServiceState) {
+  if (!saved) return false;
   return JSON.stringify(editableSnapshot(saved)) === JSON.stringify(editableSnapshot(draft));
+}
+
+export function resolveRagCapabilityHealth(
+  snapshot: RagCapabilitySnapshot | null | undefined,
+  nowMs = Date.now(),
+): RagCapabilityHealth {
+  if (!snapshot) return "untested";
+  if (!/^1\.\d+(?:\.\d+)*$/.test(snapshot.protocolVersion?.trim() ?? "")) {
+    return "incompatible";
+  }
+  return isFreshRagCapabilitySnapshot(snapshot, nowMs) ? "valid" : "expired";
+}
+
+export function isValidRagServiceTimeout(timeoutMs: number) {
+  return (
+    Number.isSafeInteger(timeoutMs) &&
+    timeoutMs >= MIN_RAG_SERVICE_TIMEOUT_MS &&
+    timeoutMs <= MAX_RAG_SERVICE_TIMEOUT_MS
+  );
+}
+
+export function filterRagKnowledgeBases<T extends { id: string; name: string }>(
+  knowledgeBases: T[],
+  query: string,
+) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery) return knowledgeBases;
+  return knowledgeBases.filter(
+    (item) =>
+      item.name.toLocaleLowerCase().includes(normalizedQuery) ||
+      item.id.toLocaleLowerCase().includes(normalizedQuery),
+  );
 }

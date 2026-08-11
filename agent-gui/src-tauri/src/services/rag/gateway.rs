@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::io::Read;
 use std::net::IpAddr;
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 
 use reqwest::blocking::{multipart, Client, RequestBuilder, Response};
@@ -9,11 +10,13 @@ use reqwest::{StatusCode, Url};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
+use uuid::Uuid;
 
 use super::{
     RagAcceptedJob, RagAccessMode, RagCapabilities, RagChunk, RagCredentialKind,
-    RagCredentialStore, RagDocument, RagError, RagIngestionJob, RagKnowledgeBase, RagPage,
-    RagSearchRequest, RagSearchResponse, RagServiceConfig, RagServiceStore,
+    RagCredentialProvider, RagCredentialStore, RagDocument, RagError, RagIngestionJob,
+    RagKnowledgeBase, RagPage, RagSearchRequest, RagSearchResponse, RagServiceConfig,
+    RagServiceStore,
 };
 
 const MAX_JSON_RESPONSE_BYTES: u64 = 8 * 1024 * 1024;
@@ -21,18 +24,27 @@ const SUPPORTED_PROTOCOL_MAJOR: &str = "1";
 const LOCAL_MAX_TOP_K: u32 = 50;
 const LOCAL_MAX_TOP_N: u32 = 20;
 const LOCAL_MAX_QUERY_LENGTH: usize = 4_000;
+const LOCAL_MAX_UPLOAD_BYTES: u64 = 25 * 1024 * 1024;
 
 pub struct RagGatewayService {
     store: RagServiceStore,
-    credentials: RagCredentialStore,
+    credentials: Arc<dyn RagCredentialProvider>,
 }
 
 impl RagGatewayService {
     pub fn open() -> Result<Self, RagError> {
         Ok(Self {
             store: RagServiceStore::open()?,
-            credentials: RagCredentialStore,
+            credentials: Arc::new(RagCredentialStore),
         })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn new_for_test(
+        store: RagServiceStore,
+        credentials: Arc<dyn RagCredentialProvider>,
+    ) -> Self {
+        Self { store, credentials }
     }
 
     pub fn test_service(&self, service_id: &str) -> Result<RagCapabilities, RagError> {
@@ -169,9 +181,25 @@ impl RagGatewayService {
         file_path: &str,
     ) -> Result<RagAcceptedJob, RagError> {
         let service = self.store.resolve(service_id, RagAccessMode::Management)?;
+        require_feature(
+            service.capabilities_snapshot.as_ref(),
+            "fileUpload",
+            "文件上传",
+        )?;
         let path = Path::new(file_path);
         if !path.is_file() {
             return Err(RagError::new("RAG_REQUEST_INVALID", "待上传文件不存在"));
+        }
+        let file_size = path
+            .metadata()
+            .map_err(|error| RagError::new("RAG_REQUEST_INVALID", error.to_string()))?
+            .len();
+        let upload_limit = max_upload_bytes(service.capabilities_snapshot.as_ref());
+        if file_size > upload_limit {
+            return Err(RagError::new(
+                "RAG_UPLOAD_TOO_LARGE",
+                format!("待上传文件超过允许的大小（最大 {upload_limit} 字节）"),
+            ));
         }
         let form = multipart::Form::new()
             .file("file", path)
@@ -188,6 +216,7 @@ impl RagGatewayService {
                     url_segment(knowledge_base_id)
                 ),
             )?)
+            .header("Idempotency-Key", Uuid::new_v4().to_string())
             .multipart(form);
         self.send_json(self.authorize(request, &service, RagAccessMode::Management)?)
     }
@@ -199,6 +228,11 @@ impl RagGatewayService {
         document_url: &str,
     ) -> Result<RagAcceptedJob, RagError> {
         let service = self.store.resolve(service_id, RagAccessMode::Management)?;
+        require_feature(
+            service.capabilities_snapshot.as_ref(),
+            "urlImport",
+            "URL 入库",
+        )?;
         let document_url = required_value(document_url, "文档 URL")?;
         let parsed = Url::parse(&document_url)
             .map_err(|error| RagError::new("RAG_REQUEST_INVALID", error.to_string()))?;
@@ -218,15 +252,18 @@ impl RagGatewayService {
             chunk_config: r#"{"chunkSize":512,"overlapSize":64}"#,
             pipeline_id: None,
         };
-        self.post_json(
-            &service,
-            RagAccessMode::Management,
-            &format!(
+        let request = self
+            .client(&service)?
+            .post(endpoint(
+                &service,
+                &format!(
                 "/knowledge-bases/{}/documents/import-url",
                 url_segment(knowledge_base_id)
-            ),
-            &payload,
-        )
+                ),
+            )?)
+            .header("Idempotency-Key", Uuid::new_v4().to_string())
+            .json(&payload);
+        self.send_json(self.authorize(request, &service, RagAccessMode::Management)?)
     }
 
     pub fn get_ingestion_job(
@@ -651,6 +688,32 @@ fn capability_limit(capabilities: Option<&RagCapabilities>, key: &str, local_max
         .filter(|value| *value > 0)
         .map(|value| value.min(u64::from(local_maximum)) as u32)
         .unwrap_or(local_maximum)
+}
+
+fn require_feature(
+    capabilities: Option<&RagCapabilities>,
+    feature: &str,
+    label: &str,
+) -> Result<(), RagError> {
+    if capabilities
+        .and_then(|snapshot| snapshot.features.get(feature))
+        .is_some_and(|supported| !supported)
+    {
+        return Err(RagError::new(
+            "RAG_FEATURE_UNAVAILABLE",
+            format!("当前 RAG 服务未启用{label}能力"),
+        ));
+    }
+    Ok(())
+}
+
+fn max_upload_bytes(capabilities: Option<&RagCapabilities>) -> u64 {
+    capabilities
+        .and_then(|snapshot| snapshot.limits.get("maxUploadBytes"))
+        .copied()
+        .filter(|value| *value > 0)
+        .map(|value| value.min(LOCAL_MAX_UPLOAD_BYTES))
+        .unwrap_or(LOCAL_MAX_UPLOAD_BYTES)
 }
 
 fn url_segment(value: &str) -> String {

@@ -10,6 +10,10 @@ pub enum RagCredentialKind {
     Agent,
 }
 
+pub trait RagCredentialProvider: Send + Sync {
+    fn get(&self, service_id: &str, kind: RagCredentialKind) -> Result<String, RagError>;
+}
+
 impl RagCredentialKind {
     fn label(self) -> &'static str {
         match self {
@@ -52,6 +56,12 @@ impl RagCredentialStore {
             Ok(()) | Err(KeyringError::NoEntry) => Ok(()),
             Err(error) => Err(keyring_error(error)),
         }
+    }
+}
+
+impl RagCredentialProvider for RagCredentialStore {
+    fn get(&self, service_id: &str, kind: RagCredentialKind) -> Result<String, RagError> {
+        RagCredentialStore::get(self, service_id, kind)
     }
 }
 

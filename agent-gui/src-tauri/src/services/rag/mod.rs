@@ -15,4 +15,4 @@ pub use service_store::RagServiceStore;
 
 #[cfg(test)]
 mod tests;
-pub use credential_store::{RagCredentialKind, RagCredentialStore};
+pub use credential_store::{RagCredentialKind, RagCredentialProvider, RagCredentialStore};

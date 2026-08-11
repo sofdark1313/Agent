@@ -1,15 +1,131 @@
 use std::collections::BTreeMap;
+use std::io::{Read, Write};
+use std::net::TcpListener;
+use std::sync::{mpsc, Arc};
+use std::thread;
+use std::time::Duration;
 
 use crate::commands::rag::{apply_credential_state, requires_capabilities_retest};
 
 use super::gateway::{
     filter_agent_knowledge_bases, normalize_service_config, resolve_search_policy,
-    service_test_modes, validate_agent_protocol, validate_capability_audience,
+    service_test_modes, validate_agent_protocol, validate_capability_audience, RagGatewayService,
 };
 use super::{
-    RagAccessMode, RagCapabilities, RagKnowledgeBase, RagSearchResponse, RagServiceConfig,
-    RagServiceStore,
+    RagAccessMode, RagCapabilities, RagCredentialKind, RagCredentialProvider, RagError,
+    RagKnowledgeBase, RagSearchRequest, RagSearchResponse, RagServiceConfig, RagServiceStore,
 };
+
+struct TestCredentials {
+    management: String,
+    agent: String,
+}
+
+impl RagCredentialProvider for TestCredentials {
+    fn get(&self, _service_id: &str, kind: RagCredentialKind) -> Result<String, RagError> {
+        Ok(match kind {
+            RagCredentialKind::Management => self.management.clone(),
+            RagCredentialKind::Agent => self.agent.clone(),
+        })
+    }
+}
+
+fn test_gateway(base_url: String) -> RagGatewayService {
+    test_gateway_with(base_url, |_| {})
+}
+
+fn test_gateway_with(
+    base_url: String,
+    configure: impl FnOnce(&mut RagServiceConfig),
+) -> RagGatewayService {
+    let store = RagServiceStore::open_in_memory().expect("open test RAG store");
+    let mut configured = service("contract", true);
+    configured.base_url = base_url;
+    configured.agent_knowledge_base_ids = vec!["kb-a".to_string()];
+    configure(&mut configured);
+    store.save(&configured).expect("save test RAG service");
+    RagGatewayService::new_for_test(
+        store,
+        Arc::new(TestCredentials {
+            management: "management-secret".to_string(),
+            agent: "agent-secret".to_string(),
+        }),
+    )
+}
+
+fn spawn_http_server(
+    status: &str,
+    headers: &[(&str, String)],
+    body: &str,
+) -> (String, mpsc::Receiver<String>) {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind test HTTP server");
+    let address = listener.local_addr().expect("test HTTP server address");
+    let (sender, receiver) = mpsc::channel();
+    let status = status.to_string();
+    let headers = headers
+        .iter()
+        .map(|(name, value)| ((*name).to_string(), value.clone()))
+        .collect::<Vec<_>>();
+    let body = body.to_string();
+    thread::spawn(move || {
+        let (mut stream, _) = listener.accept().expect("accept test HTTP request");
+        stream
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .expect("set request timeout");
+        let mut request = Vec::new();
+        let mut expected_length = None;
+        loop {
+            let mut chunk = [0_u8; 4096];
+            match stream.read(&mut chunk) {
+                Ok(0) => break,
+                Ok(read) => {
+                    request.extend_from_slice(&chunk[..read]);
+                    if expected_length.is_none() {
+                        if let Some(header_end) = request.windows(4).position(|part| part == b"\r\n\r\n") {
+                            let headers = String::from_utf8_lossy(&request[..header_end]);
+                            let content_length = headers.lines().find_map(|line| {
+                                let (name, value) = line.split_once(':')?;
+                                name.eq_ignore_ascii_case("content-length")
+                                    .then(|| value.trim().parse::<usize>().ok())
+                                    .flatten()
+                            }).unwrap_or(0);
+                            expected_length = Some(header_end + 4 + content_length);
+                        }
+                    }
+                    if expected_length.is_some_and(|length| request.len() >= length) {
+                        break;
+                    }
+                }
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                    ) =>
+                {
+                    break;
+                }
+                Err(error) => panic!("read test HTTP request: {error}"),
+            }
+        }
+        sender
+            .send(String::from_utf8_lossy(&request).into_owned())
+            .expect("capture test HTTP request");
+
+        let mut response = format!(
+            "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n",
+            body.len()
+        );
+        for (name, value) in headers {
+            response.push_str(&format!("{name}: {value}\r\n"));
+        }
+        response.push_str("\r\n");
+        response.push_str(&body);
+        stream
+            .write_all(response.as_bytes())
+            .expect("write test HTTP response");
+    });
+    (format!("http://{address}"), receiver)
+}
 
 fn service(id: &str, is_default: bool) -> RagServiceConfig {
     RagServiceConfig {
@@ -57,6 +173,163 @@ fn service_store_round_trips_non_sensitive_configuration() {
     store.save(&expected).expect("save service");
 
     assert_eq!(store.get("company").expect("get service"), Some(expected));
+}
+
+#[test]
+fn gateway_sends_management_bearer_key_to_the_versioned_knowledge_base_path() {
+    let (base_url, request) = spawn_http_server(
+        "200 OK",
+        &[],
+        r#"[{"id":"kb-a","name":"Company policy"}]"#,
+    );
+    let gateway = test_gateway(base_url);
+
+    let result = gateway
+        .list_knowledge_bases(Some("contract"), RagAccessMode::Management)
+        .expect("list knowledge bases through HTTP gateway");
+
+    assert_eq!(result[0].id, "kb-a");
+    let request = request
+        .recv_timeout(Duration::from_secs(2))
+        .expect("captured management request")
+        .to_ascii_lowercase();
+    assert!(request.starts_with("get /api/external/v1/knowledge-bases http/1.1\r\n"));
+    assert!(request.contains("\r\nauthorization: bearer management-secret\r\n"));
+}
+
+#[test]
+fn gateway_sends_agent_bearer_key_and_normalized_search_payload() {
+    let (base_url, request) = spawn_http_server("200 OK", &[], r#"{"results":[]}"#);
+    let gateway = test_gateway(base_url);
+
+    gateway
+        .search(
+            RagSearchRequest {
+                service_id: Some("contract".to_string()),
+                query: "  annual leave  ".to_string(),
+                knowledge_base_ids: vec!["kb-a".to_string()],
+                top_k: Some(5),
+                rerank: Some(false),
+                top_n: Some(3),
+            },
+            RagAccessMode::Agent,
+        )
+        .expect("search through agent HTTP gateway");
+
+    let request = request
+        .recv_timeout(Duration::from_secs(2))
+        .expect("captured agent request");
+    let lower = request.to_ascii_lowercase();
+    assert!(lower.starts_with("post /api/external/v1/retrieval http/1.1\r\n"));
+    assert!(lower.contains("\r\nauthorization: bearer agent-secret\r\n"));
+    assert!(request.contains(r#""query":"annual leave""#));
+    assert!(request.contains(r#""knowledgeBaseIds":["kb-a"]"#));
+}
+
+#[test]
+fn upload_rejects_disabled_capability_before_reading_or_sending_the_file() {
+    let gateway = test_gateway_with("http://127.0.0.1:9".to_string(), |configured| {
+        configured
+            .capabilities_snapshot
+            .as_mut()
+            .expect("capabilities")
+            .features
+            .insert("fileUpload".to_string(), false);
+    });
+
+    let error = gateway
+        .upload_document(Some("contract"), "kb-a", "missing-file.md")
+        .expect_err("disabled upload capability must fail before file access");
+
+    assert_eq!(error.code(), "RAG_FEATURE_UNAVAILABLE");
+}
+
+#[test]
+fn upload_rejects_files_larger_than_the_capability_limit_before_network_io() {
+    let temp = tempfile::NamedTempFile::new().expect("create upload fixture");
+    std::fs::write(temp.path(), b"12345").expect("write upload fixture");
+    let gateway = test_gateway_with("http://127.0.0.1:9".to_string(), |configured| {
+        let capabilities = configured
+            .capabilities_snapshot
+            .as_mut()
+            .expect("capabilities");
+        capabilities
+            .features
+            .insert("fileUpload".to_string(), true);
+        capabilities.limits.insert("maxUploadBytes".to_string(), 4);
+    });
+
+    let error = gateway
+        .upload_document(
+            Some("contract"),
+            "kb-a",
+            temp.path().to_string_lossy().as_ref(),
+        )
+        .expect_err("oversized upload must fail locally");
+
+    assert_eq!(error.code(), "RAG_UPLOAD_TOO_LARGE");
+}
+
+#[test]
+fn upload_sends_a_unique_idempotency_key() {
+    let (base_url, request) = spawn_http_server(
+        "202 Accepted",
+        &[],
+        r#"{"documentId":"doc-1","jobId":"job-1","status":"PENDING"}"#,
+    );
+    let gateway = test_gateway_with(base_url, |configured| {
+        let capabilities = configured
+            .capabilities_snapshot
+            .as_mut()
+            .expect("capabilities");
+        capabilities
+            .features
+            .insert("fileUpload".to_string(), true);
+        capabilities
+            .limits
+            .insert("maxUploadBytes".to_string(), 1024);
+    });
+    let temp = tempfile::NamedTempFile::new().expect("create upload fixture");
+    std::fs::write(temp.path(), b"policy").expect("write upload fixture");
+
+    gateway
+        .upload_document(
+            Some("contract"),
+            "kb-a",
+            temp.path().to_string_lossy().as_ref(),
+        )
+        .expect("upload through HTTP gateway");
+
+    let request = request
+        .recv_timeout(Duration::from_secs(2))
+        .expect("captured upload request")
+        .to_ascii_lowercase();
+    assert!(request.starts_with(
+        "post /api/external/v1/knowledge-bases/kb-a/documents/upload http/1.1\r\n"
+    ));
+    let idempotency_key = request
+        .lines()
+        .find_map(|line| line.strip_prefix("idempotency-key: "))
+        .expect("idempotency-key header");
+    assert!(!idempotency_key.trim().is_empty());
+}
+
+#[test]
+fn url_import_rejects_disabled_capability_before_network_io() {
+    let gateway = test_gateway_with("http://127.0.0.1:9".to_string(), |configured| {
+        configured
+            .capabilities_snapshot
+            .as_mut()
+            .expect("capabilities")
+            .features
+            .insert("urlImport".to_string(), false);
+    });
+
+    let error = gateway
+        .import_document_url(Some("contract"), "kb-a", "https://example.com/policy.md")
+        .expect_err("disabled URL import capability must fail locally");
+
+    assert_eq!(error.code(), "RAG_FEATURE_UNAVAILABLE");
 }
 
 #[test]

@@ -9,6 +9,7 @@ const loader = createWebModuleLoader({
 });
 
 const uiMessages = loader.loadModule("src/lib/chat/uiMessages.ts");
+const providerLlm = loader.loadModule("src/lib/providers/llm.ts");
 const { buildTurnRows, normalizeSettledRowRounds } = loader.loadModule(
   "src/lib/chat/transcript/rows.ts",
 );
@@ -26,6 +27,14 @@ test("appendTextDeltaToRound extends the trailing block without changing its id"
   assert.equal(round.blocks.length, 1);
   assert.equal(round.blocks[0].id, "text-1");
   assert.equal(round.blocks[0].text, "Hello world");
+});
+
+test("appendTextDeltaToRound strips the conversation end marker from visible text", () => {
+  let round = { blocks: [] };
+  round = uiMessages.appendTextDeltaToRound(round, "Answer ");
+  round = uiMessages.appendTextDeltaToRound(round, "<CPA_DONE>");
+  assert.equal(round.blocks.length, 1);
+  assert.equal(round.blocks[0].text, "Answer ");
 });
 
 test("interleaved thinking/text/tool blocks get per-kind ordinal ids", () => {
@@ -85,6 +94,29 @@ test("buildTurnRows keeps live round state while streaming and strips it once se
   ).rounds[0];
   assert.equal(settledRound.thinkingOpen, undefined, "live-only state cleared at build time");
   assert.deepEqual(settledRound.runningToolCallIds, []);
+});
+
+test("assistantMessageToText strips the conversation end marker", () => {
+  const assistant = {
+    role: "assistant",
+    content: [{ type: "text", text: "Final answer <CPA_DONE>" }],
+    stopReason: "stop",
+  };
+  assert.equal(providerLlm.assistantMessageToText(assistant), "Final answer ");
+});
+
+test("assistantMessageToText unwraps structured answer payloads", () => {
+  const assistant = {
+    role: "assistant",
+    content: [
+      {
+        type: "text",
+        text: '{"answer":"可读正文","answer_language":"zh-CN"}',
+      },
+    ],
+    stopReason: "stop",
+  };
+  assert.equal(providerLlm.assistantMessageToText(assistant), "可读正文");
 });
 
 test("normalizeSettledRowRounds returns identical round objects when nothing needs clearing", () => {

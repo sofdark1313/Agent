@@ -11,6 +11,40 @@ export type ModelOption = {
 };
 
 const VALUE_SEP = "::";
+const CONVERSATION_END_MARKER = "<CPA_DONE>";
+const ASSISTANT_TEXT_KEYS = ["answer", "text", "content", "message"] as const;
+
+export function stripConversationEndMarker(text: string) {
+  return text.includes(CONVERSATION_END_MARKER)
+    ? text.replaceAll(CONVERSATION_END_MARKER, "")
+    : text;
+}
+
+export function normalizeAssistantDisplayText(text: string) {
+  const withoutMarker = stripConversationEndMarker(text);
+  const trimmed = withoutMarker.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return withoutMarker;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return withoutMarker;
+    }
+    const record = parsed as Record<string, unknown>;
+    for (const key of ASSISTANT_TEXT_KEYS) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) {
+        return stripConversationEndMarker(value);
+      }
+    }
+  } catch {
+    // Keep the original text when it is not a plain structured response.
+  }
+
+  return withoutMarker;
+}
 
 export function toModelValue(customProviderId: string, model: string) {
   return `${customProviderId}${VALUE_SEP}${model}`;
@@ -88,12 +122,13 @@ export function assistantMessageToText(message: AssistantMessage) {
   for (const block of message.content) {
     if (block.type === "text") text += block.text;
   }
-  if (text.trim()) return text;
+  const sanitizedText = normalizeAssistantDisplayText(text);
+  if (sanitizedText.trim()) return sanitizedText;
   if (message.stopReason === "error") {
     return formatErrorDisplayText(message.errorMessage, "Request failed");
   }
   if (message.stopReason === "aborted") {
     return formatErrorDisplayText(message.errorMessage, "Cancelled");
   }
-  return text;
+  return sanitizedText;
 }

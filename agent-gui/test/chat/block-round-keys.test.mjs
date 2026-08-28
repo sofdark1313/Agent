@@ -5,6 +5,7 @@ import { createTsModuleLoader } from "../helpers/load-ts-module.mjs";
 const loader = createTsModuleLoader();
 const uiMessages = loader.loadModule("src/lib/chat/messages/uiMessages.ts");
 const conversationState = loader.loadModule("src/lib/chat/conversation/conversationState.ts");
+const messageUtils = loader.loadModule("src/lib/providers/runtime/messageUtils.ts");
 const bubbleUtils = loader.loadModule(
   "src/pages/chat/components/assistant-bubble/assistantBubbleUtils.ts",
 );
@@ -33,6 +34,14 @@ test("appendTextDeltaToRound extends the trailing block without changing its id"
   assert.equal(round.blocks.length, 1);
   assert.equal(round.blocks[0].id, "text-1");
   assert.equal(round.blocks[0].text, "Hello world");
+});
+
+test("appendTextDeltaToRound strips the conversation end marker from visible text", () => {
+  let round = { blocks: [] };
+  round = uiMessages.appendTextDeltaToRound(round, "Answer ");
+  round = uiMessages.appendTextDeltaToRound(round, "<CPA_DONE>");
+  assert.equal(round.blocks.length, 1);
+  assert.equal(round.blocks[0].text, "Answer ");
 });
 
 test("interleaved thinking/text/tool blocks get per-kind ordinal ids", () => {
@@ -145,6 +154,34 @@ test("buildUiMessages stamps r<n> round keys and deterministic block ids", () =>
     ["r1", "r2"],
   );
   assert.deepEqual(first, second, "rebuilding the same messages yields identical keys/ids");
+});
+
+test("assistantMessageToText and streaming reconciliation drop the conversation end marker", () => {
+  const assistant = {
+    role: "assistant",
+    content: [{ type: "text", text: "Final answer <CPA_DONE>" }],
+    stopReason: "stop",
+  };
+  assert.equal(messageUtils.assistantMessageToText(assistant), "Final answer ");
+
+  const reconciler = messageUtils.createStreamingTextReconciler();
+  assert.equal(reconciler.appendDelta("1", "Final answer <CPA_"), "Final answer ");
+  assert.equal(reconciler.appendDelta("1", "DONE>"), "");
+  assert.equal(reconciler.reconcileFinalText("1", "Final answer <CPA_DONE>"), "");
+});
+
+test("assistantMessageToText unwraps structured answer payloads", () => {
+  const assistant = {
+    role: "assistant",
+    content: [
+      {
+        type: "text",
+        text: '{"answer":"可读正文","answer_language":"zh-CN"}',
+      },
+    ],
+    stopReason: "stop",
+  };
+  assert.equal(messageUtils.assistantMessageToText(assistant), "可读正文");
 });
 
 test("merging render-only rounds shifts r<n> keys in lockstep with round numbers", () => {

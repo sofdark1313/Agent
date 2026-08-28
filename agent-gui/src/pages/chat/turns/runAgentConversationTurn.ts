@@ -10,7 +10,6 @@ import type { ProviderRuntimeConfig } from "../../../lib/chat/compaction/types";
 import { isAbortedAssistantMessage } from "../../../lib/chat/conversation/chatAbort";
 import {
   appendMessagesToConversation,
-  appendRenderOnlyMessagesToConversation,
   type ConversationViewState,
 } from "../../../lib/chat/conversation/conversationState";
 import type { LiveTranscriptStore } from "../../../lib/chat/conversation/liveTranscriptStore";
@@ -282,7 +281,7 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
     selectedModel,
     effectiveWorkdir,
     effectiveSkillsEnabled,
-    showSilentMemoryExtraction,
+    showSilentMemoryExtraction: _showSilentMemoryExtraction,
     skillsRootDir,
     skillAccessPolicy,
     onManagedSkillsChanged,
@@ -919,11 +918,6 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
   }
   const shouldRunMemoryExtraction =
     assistantStopReason !== "error" && assistantStopReason !== "aborted";
-  const memoryRoundOffset = Math.max(
-    activeAgentRound || pendingTerminalAssistantMetaRef.current?.round || 1,
-    1,
-  );
-
   const runPostTurnMemoryExtraction = (visibleEvents?: MemoryExtractionVisibleEvents) => {
     const currentMemoryExtractionModel: MemoryExtractionModelConfig = {
       providerId,
@@ -947,133 +941,6 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
     });
   };
 
-  if (showSilentMemoryExtraction && shouldRunMemoryExtraction) {
-    const extraction = await runPostTurnMemoryExtraction({
-      roundOffset: memoryRoundOffset,
-      onTurnStart: (round) => {
-        updateLiveRounds(
-          (prev) => [
-            ...prev,
-            {
-              key: `r${round}`,
-              round,
-              blocks: [],
-              runningToolCallIds: [],
-              thinkingOpen: false,
-            },
-          ],
-          transcriptStore,
-        );
-      },
-      onTextDelta: (delta, round) => {
-        gatewayBridgeEvents.queueToken(delta, { round });
-        batchLiveRoundsUpdate(
-          (prev) =>
-            updateLiveRound(prev, round, (target) =>
-              appendTextDeltaToRound(collapseThinking(target), delta),
-            ),
-          transcriptStore,
-        );
-      },
-      onThinkingDelta: (delta, round) => {
-        gatewayBridgeEvents.queueEvent({
-          type: "thinking",
-          text: delta,
-          round,
-          conversation_id: conversationId,
-        });
-        batchLiveRoundsUpdate(
-          (prev) =>
-            updateLiveRound(prev, round, (target) => ({
-              ...appendThinkingDeltaToRound(target, delta),
-              thinkingOpen: true,
-            })),
-          transcriptStore,
-        );
-      },
-      onToolCall: (toolCall, round) => {
-        if (!shouldShowToolEvent(toolCall)) return;
-        gatewayBridgeEvents.queueEvent({
-          type: "tool_call",
-          id: toolCall.id,
-          name: toolCall.name,
-          arguments: toolCall.arguments,
-          round,
-          conversation_id: conversationId,
-        });
-        batchLiveRoundsUpdate(
-          (prev) =>
-            updateLiveRound(prev, round, (target) => {
-              const withToolCall = upsertToolCallToRound(collapseThinking(target), toolCall);
-              return markToolCallRunningInRound(withToolCall, toolCall);
-            }),
-          transcriptStore,
-        );
-      },
-      onToolExecutionStart: (toolCall, round) => {
-        if (!shouldShowToolEvent(toolCall)) return;
-        gatewayBridgeEvents.queueEvent({
-          type: "tool_call",
-          id: toolCall.id,
-          name: toolCall.name,
-          arguments: toolCall.arguments,
-          round,
-          conversation_id: conversationId,
-        });
-        batchLiveRoundsUpdate(
-          (prev) =>
-            updateLiveRound(prev, round, (target) => {
-              const withToolCall = upsertToolCallToRound(collapseThinking(target), toolCall);
-              return markToolCallRunningInRound(withToolCall, toolCall);
-            }),
-          transcriptStore,
-        );
-      },
-      onToolResult: (toolCall, toolResult, round) => {
-        if (!shouldShowToolEvent(toolCall)) return;
-        gatewayBridgeEvents.queueEvent({
-          type: "tool_result",
-          id: toolCall.id,
-          name: toolCall.name,
-          arguments: toolCall.arguments,
-          content: toolResult.content,
-          details: toolResult.details,
-          isError: toolResult.isError ?? false,
-          round,
-          conversation_id: conversationId,
-        });
-        batchLiveRoundsUpdate(
-          (prev) =>
-            updateLiveRound(prev, round, (target) => {
-              const nextTarget = attachToolResultToRound(
-                collapseThinking(target),
-                toolCall,
-                toolResult,
-              );
-
-              return {
-                ...nextTarget,
-                runningToolCallIds: (nextTarget.runningToolCallIds || []).filter(
-                  (id) => id !== toolCall.id,
-                ),
-              };
-            }),
-          transcriptStore,
-        );
-      },
-      onAssistantMessage: commitAssistantRoundMeta,
-      onToolStatus: (s) => {
-        gatewayBridgeEvents.queueToolStatus(s, false);
-        updateToolStatus(s, transcriptStore);
-      },
-    });
-    if (extraction.emittedMessages.length > 0) {
-      completedState = appendRenderOnlyMessagesToConversation(
-        finalState,
-        extraction.emittedMessages,
-      );
-    }
-  }
   const pendingTerminalAssistantMeta = pendingTerminalAssistantMetaRef.current;
   if (pendingTerminalAssistantMeta) {
     commitAssistantRoundMeta(
@@ -1103,7 +970,7 @@ export async function runAgentConversationTurn(params: RunAgentConversationTurnP
     conversation_id: conversationId,
   });
   gatewayBridgeEvents.close();
-  if (!showSilentMemoryExtraction && shouldRunMemoryExtraction) {
+  if (shouldRunMemoryExtraction) {
     void runPostTurnMemoryExtraction();
   }
 }

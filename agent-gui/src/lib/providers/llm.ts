@@ -9,7 +9,12 @@ export {
   isOfficialGeminiApiBaseUrl,
   normalizeGeminiThoughtSignatures,
 } from "./runtime/geminiToolPayload";
-export { assistantMessageToText, createStreamingTextReconciler } from "./runtime/messageUtils";
+export {
+  assistantMessageToText,
+  createStreamingTextReconciler,
+  normalizeAssistantDisplayText,
+  stripConversationEndMarker,
+} from "./runtime/messageUtils";
 export {
   createModelFromConfig,
   getAvailableThinkingLevelsForModel,

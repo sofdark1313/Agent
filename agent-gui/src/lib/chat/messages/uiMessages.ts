@@ -5,7 +5,11 @@ import type {
   ToolResultMessage,
   Usage,
 } from "@earendil-works/pi-ai";
-import { assistantMessageToText } from "../../providers/llm";
+import {
+  assistantMessageToText,
+  normalizeAssistantDisplayText,
+  stripConversationEndMarker,
+} from "../../providers/llm";
 import { isProviderNativeWebSearchToolName } from "../../providers/nativeWebSearch";
 import {
   buildSubagentCardToolCallId,
@@ -605,17 +609,23 @@ function appendTextLikeBlock(
   delta: string,
 ) {
   if (!delta) return blocks;
+  const sanitize = kind === "text" ? normalizeAssistantDisplayText : stripConversationEndMarker;
+  const sanitizedDelta = sanitize(delta);
+  if (!sanitizedDelta) return blocks;
   const last = blocks[blocks.length - 1];
   if (last?.kind === kind) {
     const next = blocks.slice();
     next[next.length - 1] = {
       kind,
       id: last.id,
-      text: last.text + delta,
+      text: sanitize(last.text + sanitizedDelta),
     };
     return next;
   }
-  return [...blocks, { kind, id: nextTextLikeBlockId(blocks, kind), text: delta }];
+  return [
+    ...blocks,
+    { kind, id: nextTextLikeBlockId(blocks, kind), text: sanitize(sanitizedDelta) },
+  ];
 }
 
 function rebalanceHostedSearchTextBoundaries(blocks: UiRoundContentBlock[]): UiRoundContentBlock[] {

@@ -3670,6 +3670,8 @@ export default function GatewayApp() {
               store={sidebarStore}
               currentConversationId={displayedConversationId}
               isOpen={sidebarOpen}
+              executionMode={settings.system.executionMode}
+              setSettings={setSettings}
               fontScale={settings.customSettings.fontScale.sidebar}
               activeView={activeView}
               showProjects={isAgentMode}
@@ -3705,7 +3707,19 @@ export default function GatewayApp() {
               onLocalDraftDeleted={handleSidebarLocalDraftDeleted}
               onConversationsRemoved={handleSidebarConversationsRemoved}
               onCloseSidebar={() => setSidebarOpen(false)}
-              onOpenSettings={() => openSettings()}
+              onOpenSettings={openSettings}
+              accountAction={
+                <UserMenu
+                  sidebar
+                  open={userMenuOpen}
+                  onOpenChange={setUserMenuOpen}
+                  userMenuLabel={userMenuLabel}
+                  userAvatarLabel={userAvatarLabel}
+                  sessionId={status?.session_id}
+                  onLogout={handleLogout}
+                  onOpenSettings={openSettings}
+                />
+              }
               onOpenSkillsHub={handleSidebarOpenSkillsHub}
               onOpenMcpHub={handleSidebarOpenMcpHub}
             />
@@ -3834,14 +3848,16 @@ export default function GatewayApp() {
                             </span>
                           ) : null}
                         </Button>
-                        <UserMenu
-                          open={userMenuOpen}
-                          onOpenChange={setUserMenuOpen}
-                          userMenuLabel={userMenuLabel}
-                          userAvatarLabel={userAvatarLabel}
-                          sessionId={status?.session_id}
-                          onLogout={handleLogout}
-                        />
+                        {!sidebarOpen ? (
+                          <UserMenu
+                            open={userMenuOpen}
+                            onOpenChange={setUserMenuOpen}
+                            userMenuLabel={userMenuLabel}
+                            userAvatarLabel={userAvatarLabel}
+                            sessionId={status?.session_id}
+                            onLogout={handleLogout}
+                          />
+                        ) : null}
                       </>
                     }
                   />

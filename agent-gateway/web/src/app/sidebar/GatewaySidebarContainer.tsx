@@ -3,7 +3,7 @@
 // list updates, per-row mutations) re-render this subtree only — never
 // GatewayApp. Renders the per-end <ChatHistorySidebar/> view.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatHistorySidebar } from "@/components/chat/ChatHistorySidebar";
 import { useLocale } from "@/i18n";
 import type { ChatHistorySummary } from "@/lib/chat/chatHistory";
@@ -19,6 +19,9 @@ import type { SidebarSnapshot, SidebarStore } from "@/lib/sidebar/store";
 import type { SidebarErrorCode } from "@/lib/sidebar/types";
 import { useSidebarSelector } from "@/lib/sidebar/useSidebarSelector";
 import { sortWorkspaceProjectsByActivity } from "@/lib/workspaceProjects";
+import type { SectionId } from "@/pages/settings/types";
+import type { AppSettings, ExecutionMode } from "@/lib/settings";
+import { ChatModeSelector } from "@/pages/chat/ChatModeSelector";
 
 function selectMutations(snapshot: SidebarSnapshot) {
   return snapshot.mutations;
@@ -73,6 +76,8 @@ export type GatewaySidebarContainerProps = {
   store: SidebarStore;
   currentConversationId: string;
   isOpen: boolean;
+  executionMode: ExecutionMode;
+  setSettings: (updater: (prev: AppSettings) => AppSettings) => void;
   fontScale?: number;
   activeView: "chat" | "skills-hub" | "mcp-hub";
   showProjects: boolean;
@@ -121,7 +126,8 @@ export type GatewaySidebarContainerProps = {
   // migrates the selection when the displayed conversation vanished.
   onConversationsRemoved: (ids: readonly string[]) => void;
   onCloseSidebar: () => void;
-  onOpenSettings: () => void;
+  onOpenSettings: (section?: SectionId) => void;
+  accountAction?: ReactNode;
   onOpenSkillsHub: () => void;
   onOpenMcpHub: () => void;
 };
@@ -309,6 +315,9 @@ export function GatewaySidebarContainer(props: GatewaySidebarContainerProps) {
       renamingId={renamingId}
       renameDraft={renameDraft}
       isOpen={props.isOpen}
+      headerModeSelector={
+        <ChatModeSelector executionMode={props.executionMode} setSettings={props.setSettings} />
+      }
       fontScale={props.fontScale}
       activeView={props.activeView}
       showProjects={props.showProjects}
@@ -347,6 +356,7 @@ export function GatewaySidebarContainer(props: GatewaySidebarContainerProps) {
       onLoadMore={handleLoadMore}
       onCloseSidebar={props.onCloseSidebar}
       onOpenSettings={props.onOpenSettings}
+      accountAction={props.accountAction}
       onOpenSkillsHub={props.onOpenSkillsHub}
       onOpenMcpHub={props.onOpenMcpHub}
     />

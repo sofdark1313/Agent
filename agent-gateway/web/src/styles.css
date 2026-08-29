@@ -4778,3 +4778,214 @@ html[data-agent-webui="gateway"]
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+/* Gateway web chrome aligned with the desktop Agent workspace. */
+html[data-agent-webui="gateway"] {
+  --gateway-desktop-sidebar-width: 280px;
+  --gateway-desktop-content-width: 980px;
+}
+
+html[data-agent-webui="gateway"].dark {
+  --background: 0 0% 8%;
+  --foreground: 0 0% 92%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 92%;
+  --popover: 0 0% 12%;
+  --popover-foreground: 0 0% 92%;
+  --secondary: 0 0% 16%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 64%;
+  --accent: 0 0% 18%;
+  --sidebar-bg: 0 0% 10.5%;
+  --chat-user-bg: 0 0% 18%;
+  --chat-assistant-bg: 0 0% 8%;
+  --chat-tool-bg: 0 0% 10%;
+  --chat-tool-border: 0 0% 22%;
+}
+
+@media (min-width: 821px) {
+  html[data-agent-webui="gateway"] .chat-history-sidebar[data-state="open"] {
+    width: var(--gateway-desktop-sidebar-width);
+    border-right-color: hsl(0 0% 100% / 0.08);
+    background: hsl(var(--sidebar-bg));
+  }
+
+  html[data-agent-webui="gateway"] .chat-history-sidebar-inner {
+    width: var(--gateway-desktop-sidebar-width);
+    min-width: var(--gateway-desktop-sidebar-width);
+  }
+
+  html[data-agent-webui="gateway"] .gateway-sidebar-header {
+    padding: 18px 12px 14px;
+  }
+
+  html[data-agent-webui="gateway"] .gateway-sidebar-agent-trigger {
+    font-size: 16px;
+  }
+
+  html[data-agent-webui="gateway"] .chat-history-sidebar .agent-nav-item,
+  html[data-agent-webui="gateway"] .chat-history-sidebar .chat-history-new-conversation-button {
+    height: 36px;
+    border-radius: 9px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  html[data-agent-webui="gateway"] .chat-history-sidebar .agent-nav-item:hover,
+  html[data-agent-webui="gateway"] .chat-history-sidebar .chat-history-new-conversation-button:hover {
+    background: hsl(0 0% 100% / 0.055);
+  }
+
+  html[data-agent-webui="gateway"] .chat-history-sidebar .chat-history-list {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  html[data-agent-webui="gateway"] .chat-history-sidebar .chat-history-row-title-button {
+    border-radius: 9px;
+  }
+
+  html[data-agent-webui="gateway"] .gateway-sidebar-footer {
+    padding: 10px 12px 12px;
+    border-top-color: hsl(0 0% 100% / 0.08);
+  }
+
+  html[data-agent-webui="gateway"] .gateway-sidebar-account > div {
+    width: 100%;
+  }
+
+  html[data-agent-webui="gateway"] .gateway-sidebar-account-trigger {
+    color: hsl(var(--foreground) / 0.9);
+  }
+
+  html[data-agent-webui="gateway"] .gateway-main-backdrop {
+    background: hsl(var(--background));
+  }
+
+  html[data-agent-webui="gateway"] .gateway-chat-frame {
+    --gateway-chat-column-width: var(--gateway-desktop-content-width);
+    --gateway-chat-column-gutter: 24px;
+    --gateway-chat-composer-bottom: 24px;
+    --gateway-chat-composer-overlay-height: 198px;
+  }
+
+  html[data-agent-webui="gateway"] .gateway-chat-frame > header {
+    min-height: 58px;
+    padding: 10px 22px;
+    border-bottom: 1px solid hsl(0 0% 100% / 0.07);
+  }
+
+  html[data-agent-webui="gateway"] .gateway-chat-frame > header .model-selector-trigger {
+    height: 36px;
+    border-radius: 9px;
+    font-size: 14px;
+  }
+
+  html[data-agent-webui="gateway"] .gateway-transcript-shell {
+    padding-top: 28px;
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer {
+    border-radius: 20px;
+    border-color: hsl(var(--border) / 0.78);
+    background: hsl(var(--card));
+    box-shadow:
+      0 20px 54px -36px hsl(220 22% 16% / 0.38),
+      0 2px 8px -5px hsl(220 22% 16% / 0.16);
+    backdrop-filter: none;
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer:focus-within {
+    border-color: hsl(var(--foreground) / 0.2);
+    background: hsl(var(--card));
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer > [aria-hidden="true"] {
+    opacity: 0 !important;
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer .mention-composer {
+    color: hsl(var(--foreground) / 0.92);
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer .mention-composer.is-empty::before {
+    color: hsl(var(--muted-foreground) / 0.78);
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer .composer-toolbar-action:hover,
+  html[data-agent-webui="gateway"] .agent-codex-composer .composer-reasoning-trigger:hover {
+    background: hsl(0 0% 100% / 0.055);
+  }
+
+  html[data-agent-webui="gateway"] .agent-codex-composer .composer-reasoning-trigger {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  html[data-agent-webui="gateway"] .settings-sidebar {
+    width: 280px;
+    background: hsl(var(--sidebar-bg));
+    border-right-color: hsl(var(--border) / 0.72);
+  }
+
+  html[data-agent-webui="gateway"] .settings-sidebar-header {
+    padding: 18px 16px 16px;
+    border-bottom-color: hsl(0 0% 100% / 0.08);
+  }
+
+  html[data-agent-webui="gateway"] .settings-nav {
+    padding: 16px 12px;
+  }
+
+  html[data-agent-webui="gateway"] .settings-nav-group-label {
+    color: hsl(var(--muted-foreground) / 0.62);
+  }
+
+  html[data-agent-webui="gateway"] .settings-nav-item {
+    border-radius: 9px;
+  }
+
+  html[data-agent-webui="gateway"] .settings-nav-item-active {
+    background: hsl(0 0% 100% / 0.07);
+    color: hsl(var(--foreground));
+  }
+
+  html[data-agent-webui="gateway"] .settings-nav-item-active .settings-nav-icon {
+    background: hsl(0 0% 100% / 0.1);
+    color: hsl(var(--foreground));
+  }
+
+  html[data-agent-webui="gateway"] .settings-main-header {
+    min-height: 76px;
+    padding: 16px 32px;
+    border-bottom-color: hsl(0 0% 100% / 0.08);
+  }
+
+  html[data-agent-webui="gateway"] .settings-content {
+    padding: 24px 32px;
+  }
+}
+
+@media (min-width: 821px) {
+  html[data-agent-webui="gateway"].dark .agent-codex-composer {
+    border-color: hsl(0 0% 100% / 0.1);
+    background: hsl(0 0% 12%);
+    box-shadow:
+      0 24px 66px -36px hsl(0 0% 0% / 0.78),
+      0 2px 10px -5px hsl(0 0% 0% / 0.62);
+  }
+
+  html[data-agent-webui="gateway"].dark .agent-codex-composer:focus-within {
+    border-color: hsl(0 0% 100% / 0.18);
+    background: hsl(0 0% 12%);
+  }
+
+  html[data-agent-webui="gateway"].dark .settings-sidebar {
+    border-right-color: hsl(0 0% 100% / 0.08);
+  }
+}
+
+@media (max-width: 820px) {
+  html[data-agent-webui="gateway"] .gateway-sidebar-account-trigger {
+    width: 100%;
+  }
+}

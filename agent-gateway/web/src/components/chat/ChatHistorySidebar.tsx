@@ -5,6 +5,7 @@ import {
   memo,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
@@ -20,12 +21,14 @@ import {
   workspaceProjectPathKey,
 } from "../../lib/settings";
 import { cn } from "../../lib/shared/utils";
+import type { SectionId } from "../../pages/settings/types";
 import {
   AlertCircle,
   Blend,
   Cable,
   ChevronRight,
   CirclePlus,
+  Clock3,
   Edit3,
   FolderClosed,
   FolderOpen,
@@ -77,6 +80,7 @@ type ChatHistorySidebarProps = {
   renamingId: string | null;
   renameDraft: string;
   isOpen: boolean;
+  headerModeSelector?: ReactNode;
   fontScale?: number;
   activeView?: "chat" | "skills-hub" | "mcp-hub";
   showProjects?: boolean;
@@ -115,7 +119,8 @@ type ChatHistorySidebarProps = {
   onDeleteConversation: (id: string) => void;
   onLoadMore: () => void;
   onCloseSidebar: () => void;
-  onOpenSettings: () => void;
+  onOpenSettings: (section?: SectionId) => void;
+  accountAction?: ReactNode;
   onOpenSkillsHub?: () => void;
   onOpenMcpHub?: () => void;
 };
@@ -1205,6 +1210,8 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     onLoadMore,
     onCloseSidebar,
     onOpenSettings,
+    headerModeSelector,
+    accountAction,
     onOpenSkillsHub,
     onOpenMcpHub,
   } = props;
@@ -1795,20 +1802,9 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
       style={{ "--zone-font-scale": fontScale } as CSSProperties}
     >
       <div className="chat-history-sidebar-inner flex w-[272px] min-w-[272px] min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-border/50 px-2 pb-3 pt-3">
+        <div className="gateway-sidebar-header shrink-0 border-b border-border/50 px-2 pb-3 pt-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 -translate-y-0.5 items-center gap-2">
-              <img
-                src="/icon-simple.png"
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="h-8 w-8 shrink-0 select-none rounded-xl object-contain"
-              />
-              <div className="min-w-0">
-                <div className="truncate font-semibold tracking-tight">Agent</div>
-              </div>
-            </div>
+            <div className="min-w-0 flex-1">{headerModeSelector}</div>
 
             <Button
               type="button"
@@ -1878,6 +1874,16 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                 )}
               />
               <span className="truncate">MCP</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenSettings("cron")}
+              className="agent-nav-item sidebar-hub-menu-item h-[30px] w-full justify-start gap-3 rounded-lg px-3 text-[calc(14px*var(--zone-font-scale,1))] font-normal leading-5 shadow-none text-foreground/80 transition-colors hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]"
+              title={t("settings.cronTitle")}
+            >
+              <Clock3 className="h-4 w-4 shrink-0 text-foreground/85" />
+              <span className="truncate">{t("settings.cronTitle")}</span>
             </Button>
           </div>
         </div>
@@ -2158,17 +2164,21 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
             </div>
           </div>
         </div>
-        <div className="shrink-0 border-t border-border/50 bg-[hsl(var(--sidebar-bg))] px-2 py-1.5">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onOpenSettings}
-            className="h-8 w-full justify-start gap-2.5 rounded-lg px-2.5 text-[calc(13px*var(--zone-font-scale,1))] font-normal text-foreground/85 shadow-none hover:bg-foreground/[0.08] hover:text-foreground"
-            title={t("tooltip.settings")}
-          >
-            <Settings className="h-4 w-4 shrink-0 text-foreground/75" />
-            <span className="truncate">{t("tooltip.settings")}</span>
-          </Button>
+        <div className="gateway-sidebar-footer shrink-0 border-t border-border/50 bg-[hsl(var(--sidebar-bg))] px-2 py-2">
+          {accountAction ? (
+            <div className="gateway-sidebar-account">{accountAction}</div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenSettings()}
+              className="h-8 w-full justify-start gap-2.5 rounded-lg px-2.5 text-[calc(13px*var(--zone-font-scale,1))] font-normal text-foreground/85 shadow-none hover:bg-foreground/[0.08] hover:text-foreground"
+              title={t("tooltip.settings")}
+            >
+              <Settings className="h-4 w-4 shrink-0 text-foreground/75" />
+              <span className="truncate">{t("tooltip.settings")}</span>
+            </Button>
+          )}
         </div>
       </div>
     </aside>

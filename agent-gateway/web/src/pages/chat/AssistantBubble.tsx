@@ -1,9 +1,7 @@
 import { memo } from "react";
 import type { UiRound } from "../../lib/chat/uiMessages";
-import { AssistantAvatar } from "./assistant-bubble/AssistantAvatar";
 import { RoundContent } from "./assistant-bubble/RoundContent";
 
-export { AssistantAvatar } from "./assistant-bubble/AssistantAvatar";
 export { CompactingText, VibingText } from "./assistant-bubble/StatusText";
 
 const EMPTY_RUNNING_TOOL_CALL_IDS: string[] = [];
@@ -47,9 +45,8 @@ export const AssistantBubble = memo(function AssistantBubble(props: {
   const showLabels = rounds.length > 1;
 
   return (
-    <div className="assistant-bubble-shell flex w-full max-w-full items-start gap-3">
-      <AssistantAvatar className="assistant-bubble-avatar" />
-      <div className="assistant-bubble-content min-w-0 flex-1 space-y-3 pt-0.5">
+    <div data-agent-assistant-answer className="w-full max-w-full">
+      <div className="min-w-0 space-y-2">
         {rounds.map((round, idx) => (
           <RoundContent
             key={"key" in round && round.key ? round.key : `round-${round.round}`}

@@ -42,7 +42,6 @@ import {
   estimateUserRowHeight,
 } from "@/lib/transcript-virtual/rowEstimates";
 import {
-  AssistantAvatar,
   AssistantBubble,
   CompactingText,
   VibingText,
@@ -983,55 +982,52 @@ function GatewayAssistantMessageActions(props: {
       : "旧历史缺少稳定消息标识，无法重试";
 
   return (
-    <div className="assistant-bubble-shell flex w-full max-w-full items-start gap-3">
-      <div className="assistant-bubble-avatar w-7 shrink-0" aria-hidden="true" />
-      <div className="chat-assistant-actions flex min-w-0 flex-1 items-center justify-start gap-1.5">
-        <span className="select-none text-[calc(11px*var(--zone-font-scale,1))] tabular-nums text-muted-foreground/70">
-          {formatMessageTimestamp(row.timestamp)}
-        </span>
-        <div className="flex gap-0.5 opacity-0 transition-opacity group-focus-within/assistant:opacity-100 group-hover/assistant:opacity-100">
-          <button
-            type="button"
-            className="chat-assistant-action rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            title={t("chat.copy")}
-            aria-label={t("chat.copy")}
-            disabled={!replyText}
-            onClick={() => {
-              void navigator.clipboard.writeText(replyText).then(() => {
-                setCopiedMessageId(row.key);
-                window.setTimeout(() => {
-                  setCopiedMessageId((current) => (current === row.key ? null : current));
-                }, 1500);
-              });
-            }}
-          >
-            {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
-          <ConfirmActionPopover
-            title={t("chat.retryConfirmTitle")}
-            description={t("chat.retryConfirmDescription")}
-            confirmLabel={t("chat.retry")}
-            align="start"
-            side="top"
-            onConfirm={() => {
-              if (!retryTarget || !retryMessageRef) return;
-              onResendFromEdit?.(retryMessageRef, retryTarget.text, retryTarget.attachments);
-            }}
-          >
-            {(open) => (
-              <button
-                type="button"
-                className="chat-assistant-action rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                title={retryTitle}
-                aria-label={retryTitle}
-                disabled={retryDisabled}
-                onClick={open}
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </ConfirmActionPopover>
-        </div>
+    <div className="chat-assistant-actions flex min-w-0 items-center justify-start gap-1.5">
+      <span className="select-none text-[calc(11px*var(--zone-font-scale,1))] tabular-nums text-muted-foreground/70">
+        {formatMessageTimestamp(row.timestamp)}
+      </span>
+      <div className="flex gap-0.5 opacity-0 transition-opacity group-focus-within/assistant:opacity-100 group-hover/assistant:opacity-100">
+        <button
+          type="button"
+          className="chat-assistant-action rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          title={t("chat.copy")}
+          aria-label={t("chat.copy")}
+          disabled={!replyText}
+          onClick={() => {
+            void navigator.clipboard.writeText(replyText).then(() => {
+              setCopiedMessageId(row.key);
+              window.setTimeout(() => {
+                setCopiedMessageId((current) => (current === row.key ? null : current));
+              }, 1500);
+            });
+          }}
+        >
+          {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+        <ConfirmActionPopover
+          title={t("chat.retryConfirmTitle")}
+          description={t("chat.retryConfirmDescription")}
+          confirmLabel={t("chat.retry")}
+          align="start"
+          side="top"
+          onConfirm={() => {
+            if (!retryTarget || !retryMessageRef) return;
+            onResendFromEdit?.(retryMessageRef, retryTarget.text, retryTarget.attachments);
+          }}
+        >
+          {(open) => (
+            <button
+              type="button"
+              className="chat-assistant-action rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              title={retryTitle}
+              aria-label={retryTitle}
+              disabled={retryDisabled}
+              onClick={open}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </ConfirmActionPopover>
       </div>
     </div>
   );
@@ -1312,9 +1308,8 @@ const GatewayTranscriptListRegion = memo(function GatewayTranscriptListRegion(pr
               className="gateway-transcript-row absolute left-0 right-0 top-0"
               style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
-              <div className="flex w-full max-w-full items-start gap-3">
-                <AssistantAvatar />
-                <div className="min-w-0 flex-1 pt-1">
+              <div className="w-full max-w-full">
+                <div className="min-w-0">
                   {displayedToolStatusIsCompaction ? (
                     <div className="flex items-center py-1">
                       <CompactingText className="text-sm font-medium text-muted-foreground" />
@@ -1391,7 +1386,7 @@ const GatewayTranscriptListRegion = memo(function GatewayTranscriptListRegion(pr
               className="gateway-transcript-row absolute left-0 right-0 top-0"
               style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
-              <div className="group/assistant min-w-0 w-full max-w-full space-y-1">
+              <div className="group/assistant w-full max-w-full">
                 <AssistantBubble
                   rounds={row.rounds}
                   showUsage={showUsage}

@@ -1,12 +1,16 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Loader2, Sparkles } from "../../../components/icons";
+import { ChevronRight, Loader2 } from "../../../components/icons";
 import { Markdown } from "../../../components/Markdown";
 import { useLocale } from "../../../i18n";
 import { normalizeLiveToolStatus, VIBING_STATUS } from "../../../lib/chat/chatPageHelpers";
 import type { UiRound } from "../../../lib/chat/uiMessages";
 import { useScrollFollow } from "../../../lib/chat-scroll/useScrollFollow";
 import { TodoListBlock } from "../TodoListView";
-import { groupRoundBlocks, isBuiltinShareToolName } from "./assistantBubbleUtils";
+import {
+  groupRoundBlocks,
+  isBuiltinShareToolName,
+  normalizeAssistantLeadingIndent,
+} from "./assistantBubbleUtils";
 import { HostedSearchGroupView } from "./HostedSearchGroupView";
 import { CompactingText, VibingText } from "./StatusText";
 import { MemoToolCallItem } from "./ToolCallItem";
@@ -44,7 +48,7 @@ function ThinkingBlock({ text, open }: { text: string; open?: boolean }) {
   if (!hasText) return null;
 
   return (
-    <div className="group/think rounded-lg border border-border/40 bg-muted/30">
+    <div data-agent-thinking-block className="group/think text-muted-foreground">
       <button
         type="button"
         aria-expanded={isOpen}
@@ -52,19 +56,16 @@ function ThinkingBlock({ text, open }: { text: string; open?: boolean }) {
           userInteractedRef.current = true;
           setIsOpen((prev) => !prev);
         }}
-        className="thinking-block-toggle flex w-full cursor-pointer select-none items-center gap-2 px-3 py-2 text-[calc(13px*var(--zone-font-scale,1))] text-muted-foreground transition-colors hover:text-foreground"
+        className="thinking-block-toggle -ml-1 flex cursor-pointer select-none items-center gap-1.5 rounded-md px-1 py-1.5 text-[calc(13px*var(--zone-font-scale,1))] text-muted-foreground transition-colors hover:text-foreground"
       >
-        <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
+        <ChevronRight className={`h-3 w-3 transition-transform ${isOpen ? "rotate-90" : ""}`} />
         <span className="thinking-block-label font-medium">{t("chat.thinkingProcess")}</span>
-        <ChevronRight
-          className={`ml-auto h-3 w-3 transition-transform ${isOpen ? "rotate-90" : ""}`}
-        />
       </button>
       {isOpen ? (
-        <div className="border-t border-border/30 px-3 pb-3 pt-2">
+        <div className="ml-0.5 border-l border-border/55 pb-1 pl-3 pt-1">
           <pre
             ref={setThinkingPre}
-            className="thinking-block-pre max-h-64 overflow-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-[calc(12.5px*var(--zone-font-scale,1))] leading-relaxed text-muted-foreground"
+            className="thinking-block-pre max-h-64 overflow-auto whitespace-pre-wrap bg-transparent p-0 text-[calc(12.5px*var(--zone-font-scale,1))] leading-[1.6] text-muted-foreground"
           >
             <code ref={setThinkingContent} className="block font-[inherit]">
               {text}
@@ -138,7 +139,7 @@ export const RoundContent = memo(function RoundContent(props: {
   if (!hasContent) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {showLabel ? <div className="h-px bg-border/40" /> : null}
 
       {isActive && isLive && normalizedToolStatus ? (
@@ -243,8 +244,8 @@ export const RoundContent = memo(function RoundContent(props: {
         return (
           <Markdown
             key={block.key}
-            content={block.text}
-            className="font-openai-chat"
+            content={normalizeAssistantLeadingIndent(block.text)}
+            className="agent-answer-markdown"
             renderMode={renderMode}
             showCaret={Boolean(isLive && isActive && isStreaming)}
             readOnly={readOnly}

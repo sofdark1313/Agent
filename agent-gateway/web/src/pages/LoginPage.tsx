@@ -5,7 +5,6 @@ import {
   Key,
   Lock,
   MessageSquareText,
-  Shield,
   Timer,
 } from "../components/icons";
 import { Button } from "../components/ui/button";
@@ -56,7 +55,7 @@ export function LoginPage({ token, error, isSubmitting, onTokenChange, onSubmit 
         <div className="login-hero login-entrance-d1">
           <div className="login-hero-title-row">
             <div className="login-logo-mark">
-              <Shield size={18} strokeWidth={2} />
+              <img src="/icon-simple.png" alt="" aria-hidden="true" draggable={false} />
             </div>
             <h1 className="login-hero-title">Agent Gateway</h1>
           </div>

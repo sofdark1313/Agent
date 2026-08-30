@@ -20,6 +20,7 @@ import type {
   GitFileContextPayload,
 } from "@/components/project-tools/git-review";
 import { RightDockPanel } from "@/components/project-tools/RightDockPanel";
+import { cn } from "@/lib/shared/utils";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -96,6 +97,8 @@ import { terminalSessionBelongsToProject } from "@/lib/terminal/sessionStore";
 import type { TerminalSession } from "@/lib/terminal/types";
 import { createGatewayWorkspaceActivityClient } from "@/lib/workspace-activity/gatewayWorkspaceActivityClient";
 import { ChatComposerBar, type ChatQueueTurnPreview } from "@/pages/chat/ChatComposerBar";
+import { ConversationTodoPanel } from "@/pages/chat/components/ConversationTodoPanel";
+import { findLatestConversationTodosFromTranscriptRows } from "@/pages/chat/components/conversationTodoState";
 import { ChatHeader } from "@/pages/chat/ChatHeader";
 import { queuedChatTurnHasContent } from "@/pages/chat/queue/chatTurnQueue";
 import { useChatSkills } from "@/pages/chat/useChatSkills";
@@ -3474,6 +3477,10 @@ export default function GatewayApp() {
     return item?.title ?? "";
   }, [selectedHistoryId, sidebarConversationsById]);
   const transcriptRows = displayedTranscript.rows;
+  const conversationTodos = useMemo(
+    () => findLatestConversationTodosFromTranscriptRows(transcriptRows),
+    [transcriptRows],
+  );
   const transcriptLiveStartIndex = displayedTranscript.liveStartIndex;
   // Row count gates everything visual (empty state, error banner, loading
   // screen): entryCount can be non-zero while nothing renders (meta-only
@@ -3651,13 +3658,13 @@ export default function GatewayApp() {
   return (
     <LocaleContext.Provider value={localeContextValue}>
       <AppErrorBoundary>
-        <div className="gateway-shell">
+        <div className="flex h-full min-h-0 w-full overflow-hidden">
           <input
             ref={fileInputRef}
             type="file"
             multiple
             aria-label={translate("chat.upload.selectFiles", settings.locale)}
-            className="gateway-hidden-file-input"
+            className="hidden"
             onChange={(event) => {
               const files = Array.from(event.currentTarget.files ?? []);
               void handleImportReadableFiles(files);
@@ -3665,12 +3672,13 @@ export default function GatewayApp() {
             }}
           />
 
-          <div className="gateway-editor-host">
+          <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
             <GatewaySidebarContainer
               store={sidebarStore}
               currentConversationId={displayedConversationId}
               isOpen={sidebarOpen}
               executionMode={settings.system.executionMode}
+              approvalPolicy={settings.system.approvalPolicy}
               setSettings={setSettings}
               fontScale={settings.customSettings.fontScale.sidebar}
               activeView={activeView}
@@ -3764,8 +3772,23 @@ export default function GatewayApp() {
 
             {confirmDialog}
 
-            <main className="gateway-main-shell">
-              <div className="gateway-main-backdrop" />
+            <div
+              className={cn(
+                "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background",
+                activeView === "chat" && "zone-font-scale",
+              )}
+              style={
+                activeView === "chat"
+                  ? ({
+                      "--zone-font-scale": settings.customSettings.fontScale.chat,
+                    } as CSSProperties)
+                  : undefined
+              }
+              onDragEnter={handleFileDragEnter}
+              onDragOver={handleFileDragOver}
+              onDragLeave={handleFileDragLeave}
+              onDrop={handleFileDrop}
+            >
               {activeView === "skills-hub" ? (
                 <SkillsHubPage
                   settings={settings}
@@ -3785,24 +3808,11 @@ export default function GatewayApp() {
                   onOpenSidebar={() => setSidebarOpen(true)}
                 />
               ) : (
-                <div
-                  className="gateway-chat-frame zone-font-scale"
-                  style={
-                    { "--zone-font-scale": settings.customSettings.fontScale.chat } as CSSProperties
-                  }
-                  onDragEnter={handleFileDragEnter}
-                  onDragOver={handleFileDragOver}
-                  onDragLeave={handleFileDragLeave}
-                  onDrop={handleFileDrop}
-                >
+                <>
+                  <div className="relative z-20">
                   <ChatHeader
                     settings={settings}
-                    hasModels={modelOptions.length > 0}
-                    currentModelLabel={currentModelLabel}
-                    modelOptions={modelOptions}
-                    selectedValue={selectedValue}
                     sidebarOpen={sidebarOpen}
-                    setSettings={setSettings}
                     onOpenSettings={openSettings}
                     onToggleTheme={() =>
                       setSettings((prev) => ({
@@ -3869,16 +3879,17 @@ export default function GatewayApp() {
                   {chatError && displayedTranscriptRowCount === 0 ? (
                     <div className="gateway-banner-error">{chatError}</div>
                   ) : null}
+                  </div>
 
-                  <section className="gateway-transcript-stage">
-                    <div className="gateway-transcript-scroll-shell">
-                      <ScrollArea
-                        ref={setTranscriptScrollAreaRoot}
-                        viewportRef={setTranscriptViewport}
-                        className="gateway-transcript-scroll"
-                      >
-                        <GatewayTranscript
+                  <div className="relative min-h-0 flex-1">
+                    <ScrollArea
+                      ref={setTranscriptScrollAreaRoot}
+                      viewportRef={setTranscriptViewport}
+                      className="h-full"
+                    >
+                      <GatewayTranscript
                           conversationId={displayedConversationId}
+                          scrollViewport={transcriptViewport}
                           rows={transcriptRows}
                           liveStartIndex={transcriptLiveStartIndex}
                           activeTurnKey={displayedTranscript.activeTurnKey}
@@ -3913,7 +3924,8 @@ export default function GatewayApp() {
                     {!transcriptFollowing ? (
                       <button
                         type="button"
-                        className="gateway-scroll-to-bottom"
+                        className="chat-jump-to-bottom absolute left-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                        style={{ bottom: 80 }}
                         onClick={transcriptFollow.jumpToBottom}
                         aria-label="滚动到底部"
                         title="滚动到底部"
@@ -3923,6 +3935,20 @@ export default function GatewayApp() {
                     ) : null}
                     <ChatComposerBar
                       composerRef={composerRef}
+                      taskListPanel={
+                        <ConversationTodoPanel
+                          key={displayedConversationId}
+                          todos={conversationTodos}
+                        />
+                      }
+                      executionMode={settings.system.executionMode}
+                      approvalPolicy={settings.system.approvalPolicy}
+                      hasModels={modelOptions.length > 0}
+                      currentModelLabel={currentModelLabel}
+                      modelOptions={modelOptions}
+                      selectedModelValue={selectedValue}
+                      setSettings={setSettings}
+                      onOpenSettings={openSettings}
                       isSending={composerIsSending}
                       isUploadingFiles={isUploadingFiles}
                       isInputDisabled={composerInputDisabled}
@@ -4056,10 +4082,9 @@ export default function GatewayApp() {
                         limitHint={fileDropLimitHint}
                       />
                     ) : null}
-                  </section>
-                </div>
+                </>
               )}
-            </main>
+            </div>
             <WorkspaceOverlayHost
               locale={settings.locale}
               theme={effectiveTheme}
@@ -4130,8 +4155,10 @@ export default function GatewayApp() {
 
           {settingsOpen ? (
             <div
-              className={`gateway-settings-overlay ${
-                overlay === "open" ? "gateway-settings-overlay-open" : ""
+              className={`fixed inset-0 z-50 bg-background transition-all duration-300 ease-out ${
+                overlay === "open"
+                  ? "opacity-100 translate-y-0"
+                  : "pointer-events-none opacity-0 translate-y-6"
               }`}
               onTransitionEnd={handleSettingsTransitionEnd}
             >

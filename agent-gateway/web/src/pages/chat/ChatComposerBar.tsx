@@ -15,9 +15,10 @@ import {
   MentionComposer,
   type MentionComposerHandle,
   type MentionComposerSkill,
-} from "../../components/chat/MentionComposer";
-import { GitBranchSelector } from "../../components/git/GitBranchSelector";
+} from "@/components/chat/MentionComposer";
+import { GitBranchSelector } from "@/components/git/GitBranchSelector";
 import {
+  ArrowUp,
   Brain,
   ChevronDown,
   ChevronUp,
@@ -27,30 +28,49 @@ import {
   Loader2,
   Paperclip,
   Play,
-  Send,
+  Plus,
   Square,
   SquarePen,
   Trash2,
   X,
-} from "../../components/icons";
-import { Button } from "../../components/ui/button";
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { useLocale } from "../../i18n";
-import { formatUploadedFileSize, type PendingUploadedFile } from "../../lib/chat/uploadedFiles";
-import type { GitClient } from "../../lib/git/types";
+} from "@/components/ui/select";
+import { useLocale } from "@/i18n";
 import {
+  formatUploadedFileSize,
+  type PendingUploadedFile,
+} from "@/lib/chat/uploadedFiles";
+import type { GitClient } from "@/lib/git/types";
+import type { ModelOption } from "@/lib/providers/llm";
+import {
+  type ApprovalPolicy,
+  type AppSettings,
   type ChatRuntimeControls,
   DEFAULT_CHAT_RUNTIME_CONTROLS,
+  type ExecutionMode,
   type ReasoningLevel,
-} from "../../lib/settings";
-import { cn } from "../../lib/shared/utils";
-import type { WorkspaceActivityClient } from "../../lib/workspace-activity/types";
+} from "@/lib/settings";
+import { cn } from "@/lib/shared/utils";
+import type { WorkspaceActivityClient } from "@/lib/workspace-activity/types";
+import type { SectionId } from "@/pages/settings/types";
+import { ChatAccessSelector } from "@/pages/chat/ChatAccessSelector";
+import { ChatModelSelector } from "@/pages/chat/ChatModelSelector";
 
 const REASONING_I18N_KEYS: Record<ReasoningLevel, string> = {
   off: "settings.reasoning.off",
@@ -61,6 +81,10 @@ const REASONING_I18N_KEYS: Record<ReasoningLevel, string> = {
   xhigh: "settings.reasoning.xhigh",
   max: "settings.reasoning.max",
 };
+
+function isReasoningLevel(value: unknown): value is ReasoningLevel {
+  return typeof value === "string" && Object.hasOwn(REASONING_I18N_KEYS, value);
+}
 
 function isFocusVisibleTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -215,6 +239,12 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   workdir: string;
   enabledSkills: MentionComposerSkill[];
   isAgentMode: boolean;
+  executionMode?: ExecutionMode;
+  approvalPolicy?: ApprovalPolicy;
+  hasModels?: boolean;
+  currentModelLabel?: string;
+  modelOptions?: ModelOption[];
+  selectedModelValue?: string;
   chatRuntimeControls: ChatRuntimeControls;
   reasoningOptions: ReasoningLevel[];
   thinkingAlwaysOn: boolean;
@@ -222,9 +252,11 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   gitWriteEnabled?: boolean;
   gitDisabledMessage?: string;
   workspaceActivityClient?: WorkspaceActivityClient | null;
+  setSettings?: (updater: (prev: AppSettings) => AppSettings) => void;
+  onOpenSettings?: (section?: SectionId) => void;
+  onPrepareChatRuntime?: () => void;
   onSend: () => void;
   onStop: () => void;
-  onPrepareChatRuntime?: () => void;
   onComposerBusyChange: (isBusy: boolean) => void;
   onChatRuntimeControlsChange: (patch: Partial<ChatRuntimeControls>) => void;
   onPickReadableFiles: () => void;
@@ -236,6 +268,9 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   onMoveQueuedTurnUp: (id: string) => void;
   onEditQueuedTurn: (id: string) => void;
   onRemoveQueuedTurn: (id: string) => void;
+  usagePanel?: ReactNode;
+  taskListPanel?: ReactNode;
+  onHeightChange?: (height: number) => void;
 }) {
   const {
     composerRef,
@@ -246,6 +281,12 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     workdir,
     enabledSkills,
     isAgentMode,
+    executionMode,
+    approvalPolicy,
+    hasModels,
+    currentModelLabel,
+    modelOptions,
+    selectedModelValue,
     chatRuntimeControls,
     reasoningOptions,
     thinkingAlwaysOn,
@@ -253,9 +294,10 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     gitWriteEnabled = true,
     gitDisabledMessage,
     workspaceActivityClient,
+    setSettings,
+    onOpenSettings,
     onSend,
     onStop,
-    onPrepareChatRuntime,
     onComposerBusyChange,
     onChatRuntimeControlsChange,
     onPickReadableFiles,
@@ -267,10 +309,12 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     onMoveQueuedTurnUp,
     onEditQueuedTurn,
     onRemoveQueuedTurn,
+    usagePanel,
+    taskListPanel,
+    onHeightChange,
   } = props;
   const { t } = useLocale();
-  const [composerIsEmpty, setComposerIsEmpty] = useState(true);
-  const composerLayerRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const queuePanelRef = useRef<HTMLDivElement | null>(null);
   const queueListRef = useRef<HTMLUListElement | null>(null);
   const queueScrollbarTrackRef = useRef<HTMLDivElement | null>(null);
@@ -280,6 +324,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
     startY: number;
   } | null>(null);
   const queueHadTurnsRef = useRef(false);
+  const [composerIsEmpty, setComposerIsEmpty] = useState(true);
   const [queueCollapsed, setQueueCollapsed] = useState(false);
   const [queueScrollbar, setQueueScrollbar] = useState<QueueScrollbarState>(
     DEFAULT_QUEUE_SCROLLBAR_STATE,
@@ -469,84 +514,46 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
   ]);
 
   useEffect(() => {
-    const composerLayer = composerLayerRef.current;
-    if (!composerLayer) {
-      return;
-    }
-    const chatFrame = composerLayer.closest(".gateway-chat-frame");
-    if (!(chatFrame instanceof HTMLElement)) {
-      return;
-    }
+    const root = rootRef.current;
+    if (!root || !onHeightChange) return;
 
-    const updateComposerOverlayHeight = () => {
-      const composerLayerHeight = composerLayer.getBoundingClientRect().height;
+    let animationFrame: number | null = null;
+    const measure = () => {
+      animationFrame = null;
+      const rootHeight = root.getBoundingClientRect().height;
       const queueHeight = queuePanelRef.current?.getBoundingClientRect().height ?? 0;
-      chatFrame.style.setProperty(
-        "--gateway-chat-composer-overlay-height",
-        `${Math.ceil(Math.max(0, composerLayerHeight - queueHeight))}px`,
-      );
+      onHeightChange(Math.ceil(Math.max(0, rootHeight - queueHeight)));
+    };
+    const scheduleMeasure = () => {
+      if (animationFrame !== null) return;
+      animationFrame = window.requestAnimationFrame(measure);
     };
 
-    updateComposerOverlayHeight();
-
-    if (typeof ResizeObserver === "undefined") {
-      return () => {
-        chatFrame.style.removeProperty("--gateway-chat-composer-overlay-height");
-      };
-    }
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateComposerOverlayHeight();
-    });
-    resizeObserver.observe(composerLayer);
+    scheduleMeasure();
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleMeasure);
+    resizeObserver?.observe(root);
+    window.addEventListener("resize", scheduleMeasure);
 
     return () => {
-      resizeObserver.disconnect();
-      chatFrame.style.removeProperty("--gateway-chat-composer-overlay-height");
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+      onHeightChange(0);
     };
-  }, []);
+  }, [onHeightChange]);
 
   return (
     <div
-      ref={composerLayerRef}
-      className="gateway-composer-layer pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center"
+      data-agent-composer
+      ref={rootRef}
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-4"
     >
-      <div className="gateway-chat-column pointer-events-auto relative">
-        {/* Pending uploaded files — above the composer card */}
-        {pendingUploadedFiles.length > 0 && (
-          <div className="upload-file-list mb-2.5 flex gap-2 overflow-x-auto px-0.5 pb-1">
-            {pendingUploadedFiles.map((file) => (
-              <div
-                key={file.relativePath}
-                title={file.relativePath}
-                className="group flex w-[calc(25%-6px)] min-w-[calc(25%-6px)] items-center gap-2 rounded-xl border border-white/45 bg-white/55 px-2.5 py-1.5 text-[calc(11px*var(--zone-font-scale,1))] shadow-[0_2px_8px_-2px_rgba(15,23,42,0.06)] backdrop-blur-2xl backdrop-saturate-150 transition-all hover:bg-white/75 hover:shadow-[0_4px_14px_-4px_rgba(15,23,42,0.10)] dark:border-white/10 dark:bg-white/[0.06] dark:hover:bg-white/[0.10]"
-              >
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-sky-500/12 dark:bg-sky-400/15">
-                  <Paperclip className="h-3 w-3 text-sky-600 dark:text-sky-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[calc(12px*var(--zone-font-scale,1))] font-medium tracking-tight text-foreground/90">
-                    {file.fileName}
-                  </div>
-                  <div className="truncate text-[calc(10px*var(--zone-font-scale,1))] text-muted-foreground">
-                    {formatUploadedFileSize(file.sizeBytes)}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  disabled={isInputDisabled}
-                  onClick={() => onRemovePendingUpload(file.relativePath)}
-                  className="shrink-0 rounded-full p-1 text-muted-foreground/70 opacity-0 transition-all hover:bg-foreground/5 hover:text-foreground group-hover:opacity-100 disabled:pointer-events-none"
-                  aria-label={`${t("chat.upload.removeFile")} ${file.fileName}`}
-                  title={t("chat.upload.removeFile")}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
+      <div className="pointer-events-auto relative w-full max-w-[768px]">
+        {usagePanel}
+        {taskListPanel}
         {queuedTurns.length > 0 ? (
           <div
             ref={queuePanelRef}
@@ -572,77 +579,79 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                           : "max-h-[76px] overflow-y-hidden pr-1",
                       )}
                     >
-                      {queuedTurns.map((item, index) => (
-                        <li
-                          key={item.id}
-                          className="relative grid h-9 min-h-9 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 rounded-md border border-black/[0.035] bg-white/42 px-2 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] backdrop-blur-xl backdrop-saturate-[150%] transition-[border-color,background-color] dark:border-white/[0.06] dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                        >
-                          <div className="flex shrink-0 items-center gap-0.5">
-                            {index > 0 ? (
-                              <button
-                                type="button"
-                                disabled={queueCollapsed}
-                                onClick={() => onMoveQueuedTurnUp(item.id)}
-                                aria-label={t("chat.queue.moveUp")}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground disabled:pointer-events-none disabled:opacity-35"
-                              >
-                                <ChevronUp className="h-3 w-3" />
-                              </button>
-                            ) : (
-                              <span aria-hidden className="h-6 w-6" />
-                            )}
-                            <Clock3 className="h-3 w-3 shrink-0 text-muted-foreground/65" />
-                          </div>
-                          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                            <span className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[calc(11px*var(--zone-font-scale,1))] leading-4 text-foreground/88">
-                              {item.previewText || t("chat.queue.emptyMessage")}
-                            </span>
-                            {item.fileCount > 0 ? (
-                              <span className="max-w-[4.5rem] shrink-0 overflow-hidden text-ellipsis whitespace-nowrap text-[calc(9px*var(--zone-font-scale,1))] leading-4 text-muted-foreground">
-                                {t("chat.queue.fileCount").replace(
-                                  "{count}",
-                                  String(item.fileCount),
-                                )}
+                      {queuedTurns.map((item, index) => {
+                        return (
+                          <li
+                            key={item.id}
+                            className="relative grid h-9 min-h-9 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 rounded-md border border-black/[0.035] bg-white/42 px-2 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] backdrop-blur-xl backdrop-saturate-[150%] transition-[border-color,background-color] dark:border-white/[0.06] dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                          >
+                            <div className="flex shrink-0 items-center gap-0.5">
+                              {index > 0 ? (
+                                <button
+                                  type="button"
+                                  disabled={queueCollapsed}
+                                  onClick={() => onMoveQueuedTurnUp(item.id)}
+                                  aria-label={t("chat.queue.moveUp")}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground disabled:pointer-events-none disabled:opacity-35"
+                                >
+                                  <ChevronUp className="h-3 w-3" />
+                                </button>
+                              ) : (
+                                <span aria-hidden className="h-6 w-6" />
+                              )}
+                              <Clock3 className="h-3 w-3 shrink-0 text-muted-foreground/65" />
+                            </div>
+                            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                              <span className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[calc(11px*var(--zone-font-scale,1))] leading-4 text-foreground/88">
+                                {item.previewText || t("chat.queue.emptyMessage")}
                               </span>
-                            ) : null}
-                          </div>
-                          <div className="flex shrink-0 items-center gap-0.5">
-                            <RuntimeControlTooltip label={t("chat.queue.edit")}>
-                              <button
-                                type="button"
-                                disabled={queueCollapsed}
-                                onClick={() => onEditQueuedTurn(item.id)}
-                                aria-label={t("chat.queue.edit")}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
-                              >
-                                <SquarePen className="h-3 w-3" />
-                              </button>
-                            </RuntimeControlTooltip>
-                            <RuntimeControlTooltip label={t("chat.queue.runNow")}>
-                              <button
-                                type="button"
-                                disabled={queueCollapsed}
-                                onClick={() => onRunQueuedTurnNow(item.id)}
-                                aria-label={t("chat.queue.runNow")}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
-                              >
-                                <Play className="h-3 w-3" />
-                              </button>
-                            </RuntimeControlTooltip>
-                            <RuntimeControlTooltip label={t("chat.queue.delete")}>
-                              <button
-                                type="button"
-                                disabled={queueCollapsed}
-                                onClick={() => onRemoveQueuedTurn(item.id)}
-                                aria-label={t("chat.queue.delete")}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </RuntimeControlTooltip>
-                          </div>
-                        </li>
-                      ))}
+                              {item.fileCount > 0 ? (
+                                <span className="max-w-[4.5rem] shrink-0 overflow-hidden text-ellipsis whitespace-nowrap text-[calc(9px*var(--zone-font-scale,1))] leading-4 text-muted-foreground">
+                                  {t("chat.queue.fileCount").replace(
+                                    "{count}",
+                                    String(item.fileCount),
+                                  )}
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className="flex shrink-0 items-center gap-0.5">
+                              <RuntimeControlTooltip label={t("chat.queue.edit")}>
+                                <button
+                                  type="button"
+                                  disabled={queueCollapsed}
+                                  onClick={() => onEditQueuedTurn(item.id)}
+                                  aria-label={t("chat.queue.edit")}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
+                                >
+                                  <SquarePen className="h-3 w-3" />
+                                </button>
+                              </RuntimeControlTooltip>
+                              <RuntimeControlTooltip label={t("chat.queue.runNow")}>
+                                <button
+                                  type="button"
+                                  disabled={queueCollapsed}
+                                  onClick={() => onRunQueuedTurnNow(item.id)}
+                                  aria-label={t("chat.queue.runNow")}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
+                                >
+                                  <Play className="h-3 w-3" />
+                                </button>
+                              </RuntimeControlTooltip>
+                              <RuntimeControlTooltip label={t("chat.queue.delete")}>
+                                <button
+                                  type="button"
+                                  disabled={queueCollapsed}
+                                  onClick={() => onRemoveQueuedTurn(item.id)}
+                                  aria-label={t("chat.queue.delete")}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </RuntimeControlTooltip>
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
                     {shouldShowQueueScrollbar ? (
                       <div
@@ -687,19 +696,48 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
           </div>
         ) : null}
 
-        <div className="agent-codex-composer composer-glass-card relative overflow-hidden rounded-[24px] border border-black/[0.055] bg-white/70 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22),0_2px_6px_-2px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.74)] backdrop-blur-2xl backdrop-saturate-[165%] transition-all focus-within:border-black/[0.075] focus-within:bg-white/74 focus-within:shadow-[0_16px_46px_-14px_rgba(15,23,42,0.26),0_4px_12px_-4px_rgba(15,23,42,0.10),inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-white/[0.10] dark:bg-white/[0.06] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.72),0_2px_6px_-2px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.08)] dark:focus-within:border-white/[0.15] dark:focus-within:bg-white/[0.08]">
-          {/* macOS material rim-light */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-5 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-white/85 to-transparent dark:via-white/15"
-          />
-          {/* subtle inner gloss gradient */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-gradient-to-b from-white/18 to-transparent opacity-70 dark:from-white/[0.04] dark:opacity-100"
-          />
+        <div
+          data-agent-composer-surface
+          className="agent-codex-composer relative z-10 overflow-hidden rounded-[20px] transition-[border-color,box-shadow,background-color]"
+        >
+          {pendingUploadedFiles.length > 0 ? (
+            <div
+              data-agent-composer-attachments
+              className="upload-file-list flex gap-2 overflow-x-auto px-3.5 pb-0.5 pt-3.5"
+            >
+              {pendingUploadedFiles.map((file) => (
+                <div
+                  key={file.relativePath}
+                  title={file.relativePath}
+                  className="group flex w-[min(220px,calc(50%-4px))] min-w-[160px] items-center gap-2.5 rounded-[14px] border border-border/65 bg-foreground/[0.025] px-2.5 py-2 text-[calc(11px*var(--zone-font-scale,1))] transition-colors hover:bg-foreground/[0.045] dark:bg-white/[0.045] dark:hover:bg-white/[0.07]"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-foreground/[0.055] text-muted-foreground dark:bg-white/[0.07]">
+                    <Paperclip className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[calc(12px*var(--zone-font-scale,1))] font-medium tracking-tight text-foreground/90">
+                      {file.fileName}
+                    </div>
+                    <div className="truncate text-[calc(10px*var(--zone-font-scale,1))] text-muted-foreground">
+                      {formatUploadedFileSize(file.sizeBytes)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isInputDisabled}
+                    onClick={() => onRemovePendingUpload(file.relativePath)}
+                    className="shrink-0 rounded-full p-1 text-muted-foreground/70 opacity-70 transition-all hover:bg-foreground/[0.06] hover:text-foreground group-hover:opacity-100 disabled:pointer-events-none"
+                    aria-label={`${t("chat.upload.removeFile")} ${file.fileName}`}
+                    title={t("chat.upload.removeFile")}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-          <div className="relative px-4 pt-3.5" onFocusCapture={onPrepareChatRuntime}>
+          <div className={cn("relative px-4", pendingUploadedFiles.length > 0 ? "pt-3" : "pt-4")}>
             <MentionComposer
               ref={composerRef}
               onSend={onSend}
@@ -714,99 +752,128 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
             />
           </div>
 
-          <div className="relative flex items-center justify-between gap-2 px-3 pb-2 pt-1">
-            <div className="flex min-w-0 flex-1 items-center gap-1">
-              <RuntimeControlTooltip label={uploadTooltip}>
-                <button
-                  type="button"
-                  disabled={uploadDisabled}
-                  onClick={onPickReadableFiles}
-                  aria-label={
-                    isUploadingFiles
-                      ? t("chat.upload.uploading")
-                      : !isAgentMode
-                        ? t("chat.upload.onlyInTools")
-                        : !workdir
-                          ? t("chat.upload.requireWorkdir")
-                          : t("chat.upload.selectFiles")
-                  }
-                  className={cn(
-                    "composer-toolbar-action relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-hidden transition-colors",
-                    "disabled:pointer-events-none disabled:opacity-40",
-                    pendingUploadedFiles.length > 0
-                      ? "text-sky-600 hover:text-sky-700 dark:text-sky-300 dark:hover:text-sky-200"
-                      : "text-muted-foreground hover:text-foreground dark:hover:text-white",
-                  )}
+          <div className="relative flex items-center justify-between gap-3 px-3 pb-3 pt-1.5">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  data-agent-composer-add
+                  disabled={isInputDisabled}
+                  className="agent-composer-add-trigger relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground outline-hidden transition-[background-color,color,transform] hover:bg-foreground/[0.09] active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t("chat.composer.add")}
+                  title={t("chat.composer.add")}
                 >
-                  {isUploadingFiles ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Paperclip className="h-4 w-4" />
-                  )}
+                  <Plus className="h-[18px] w-[18px]" />
                   {pendingUploadedFiles.length > 0 ? (
-                    <span
-                      aria-hidden
-                      className="absolute -right-0.5 -top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-sky-500 px-[3px] text-[calc(9px*var(--zone-font-scale,1))] font-semibold leading-none text-white shadow-[0_0_0_1.5px_rgba(255,255,255,0.95)] dark:bg-sky-400 dark:text-slate-900 dark:shadow-[0_0_0_1.5px_rgba(20,22,28,0.9)]"
-                    >
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 text-[9px] font-semibold leading-none text-background">
                       {pendingUploadedFiles.length}
                     </span>
                   ) : null}
-                </button>
-              </RuntimeControlTooltip>
-
-              <RuntimeControlTooltip label={thinkingTooltip}>
-                <button
-                  type="button"
-                  disabled={controlsDisabled || !thinkingSupported || thinkingAlwaysOn}
-                  onClick={() =>
-                    onChatRuntimeControlsChange({
-                      thinkingEnabled: !chatRuntimeControls.thinkingEnabled,
-                    })
-                  }
-                  aria-label={
-                    !thinkingSupported
-                      ? t("chat.runtime.thinkingUnavailable")
-                      : chatRuntimeControls.thinkingEnabled
-                        ? t("chat.runtime.thinkingOn")
-                        : t("chat.runtime.thinkingOff")
-                  }
-                  className={cn(
-                    "composer-toolbar-action inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-hidden transition-colors",
-                    "disabled:pointer-events-none disabled:opacity-40",
-                    chatRuntimeControls.thinkingEnabled && thinkingSupported
-                      ? "text-amber-600 hover:text-amber-700 dark:text-amber-300 dark:hover:text-amber-200"
-                      : "text-muted-foreground hover:text-foreground dark:hover:text-white",
-                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="top"
+                  align="start"
+                  sideOffset={10}
+                  collisionPadding={12}
+                  className="agent-composer-add-menu w-[min(330px,calc(100vw-24px))] rounded-[18px] border-border/70 bg-popover/98 p-2 shadow-[var(--agent-shadow-menu)]"
                 >
-                  <Lightbulb className="h-4 w-4" />
-                </button>
-              </RuntimeControlTooltip>
+                  <DropdownMenuLabel className="px-2.5 pb-1.5 pt-1 text-[calc(12px*var(--zone-font-scale,1))] font-medium text-muted-foreground">
+                    {t("chat.composer.add")}
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    data-agent-composer-tool="upload"
+                    disabled={uploadDisabled}
+                    onSelect={onPickReadableFiles}
+                    className="gap-3 rounded-xl px-2.5 py-2.5"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-foreground/[0.055] text-muted-foreground">
+                      {isUploadingFiles ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Paperclip className="h-4 w-4" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[calc(13px*var(--zone-font-scale,1))] font-medium text-foreground">
+                        {t("chat.composer.files")}
+                      </span>
+                      <span className="block truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
+                        {uploadTooltip}
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="mx-1 my-1.5 bg-border/60" />
+                  <DropdownMenuCheckboxItem
+                    data-agent-composer-tool="thinking"
+                    checked={chatRuntimeControls.thinkingEnabled}
+                    disabled={controlsDisabled || !thinkingSupported || thinkingAlwaysOn}
+                    onCheckedChange={(checked) =>
+                      onChatRuntimeControlsChange({ thinkingEnabled: checked })
+                    }
+                    className="rounded-xl py-2.5 pl-9 pr-2.5"
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <Lightbulb className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0">
+                        <span className="block text-[calc(13px*var(--zone-font-scale,1))] font-medium text-foreground">
+                          {t("chat.composer.thinking")}
+                        </span>
+                        <span className="block truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
+                          {thinkingTooltip}
+                        </span>
+                      </span>
+                    </span>
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    data-agent-composer-tool="web-search"
+                    checked={chatRuntimeControls.nativeWebSearchEnabled}
+                    disabled={controlsDisabled}
+                    onCheckedChange={(checked) =>
+                      onChatRuntimeControlsChange({ nativeWebSearchEnabled: checked })
+                    }
+                    className="rounded-xl py-2.5 pl-9 pr-2.5"
+                  >
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0">
+                        <span className="block text-[calc(13px*var(--zone-font-scale,1))] font-medium text-foreground">
+                          {t("chat.composer.webSearch")}
+                        </span>
+                        <span className="block truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
+                          {webSearchTooltip}
+                        </span>
+                      </span>
+                    </span>
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              <RuntimeControlTooltip label={webSearchTooltip}>
-                <button
-                  type="button"
-                  disabled={controlsDisabled}
-                  onClick={() =>
-                    onChatRuntimeControlsChange({
-                      nativeWebSearchEnabled: !chatRuntimeControls.nativeWebSearchEnabled,
-                    })
-                  }
-                  aria-label={
-                    chatRuntimeControls.nativeWebSearchEnabled
-                      ? t("chat.runtime.webSearchOn")
-                      : t("chat.runtime.webSearchOff")
-                  }
-                  className={cn(
-                    "composer-toolbar-action inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full outline-hidden transition-colors",
-                    "disabled:pointer-events-none disabled:opacity-40",
-                    chatRuntimeControls.nativeWebSearchEnabled
-                      ? "text-emerald-600 hover:text-emerald-700 dark:text-emerald-300 dark:hover:text-emerald-200"
-                      : "text-muted-foreground hover:text-foreground dark:hover:text-white",
-                  )}
-                >
-                  <Globe2 className="h-4 w-4" />
-                </button>
-              </RuntimeControlTooltip>
+              {isAgentMode ? (
+                <ChatAccessSelector
+                executionMode={executionMode ?? ("tools" as ExecutionMode)}
+                approvalPolicy={approvalPolicy ?? "ask"}
+                setSettings={setSettings ?? (() => {})}
+                onOpenSettings={onOpenSettings ?? (() => {})}
+              />
+              ) : null}
+            </div>
+
+            <div className="flex min-w-0 shrink-0 items-center justify-end gap-1">
+              <GitBranchSelector
+                workdir={workdir}
+                gitClient={gitClient}
+                workspaceActivityClient={workspaceActivityClient}
+                disabled={controlsDisabled}
+                canWrite={gitWriteEnabled}
+                disabledMessage={gitDisabledMessage}
+              />
+
+              <ChatModelSelector
+                hasModels={hasModels ?? true}
+                currentModelLabel={currentModelLabel ?? ""}
+                modelOptions={modelOptions ?? []}
+                selectedValue={selectedModelValue}
+                setSettings={setSettings ?? (() => {})}
+              />
 
               {reasoningOptions.length > 0 ? (
                 <Select
@@ -818,10 +885,10 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                 >
                   <SelectTrigger
                     className={cn(
-                      "composer-reasoning-trigger group/reasoning h-8 w-auto shrink-0 gap-0.5 rounded-full border pl-2 pr-1.5 text-xs font-medium shadow-none outline-hidden transition-all duration-200 ease-out disabled:opacity-45 [&>svg:last-child]:h-3 [&>svg:last-child]:w-3 [&>svg:last-child]:opacity-50 [&>svg:last-child]:transition-transform [&>svg:last-child]:duration-200 [&[data-state=open]>svg:last-child]:rotate-180",
-                      chatRuntimeControls.thinkingEnabled
-                        ? "border-violet-300/30 bg-violet-50/55 text-foreground hover:border-violet-300/45 hover:bg-violet-50/80 dark:border-violet-300/15 dark:bg-violet-400/[0.07] dark:text-foreground dark:hover:bg-violet-400/[0.13]"
-                        : "border-transparent bg-foreground/[0.04] text-muted-foreground hover:bg-foreground/[0.07] dark:bg-white/[0.04] dark:hover:bg-white/[0.08]",
+                      // Base UI wraps the chevron in an Icon <span>, so the
+                      // svg is a descendant (not a direct child) of the
+                      // trigger; the open state lives on data-popup-open.
+                      "composer-reasoning-trigger group/reasoning h-8 w-auto shrink-0 gap-0.5 rounded-full border border-transparent bg-transparent pl-2 pr-1.5 text-xs font-medium text-muted-foreground shadow-none outline-hidden transition-all duration-200 ease-out hover:bg-foreground/[0.055] hover:text-foreground disabled:opacity-45 dark:hover:bg-white/[0.065] [&_svg:last-child]:h-3 [&_svg:last-child]:w-3 [&_svg:last-child]:opacity-50 [&_svg:last-child]:transition-transform [&_svg:last-child]:duration-200 [&[data-popup-open]_svg:last-child]:rotate-180",
                     )}
                     aria-label={t("chat.runtime.reasoning")}
                   >
@@ -829,20 +896,26 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                       <Brain
                         className={cn(
                           "h-3.5 w-3.5 shrink-0 transition-colors",
-                          chatRuntimeControls.thinkingEnabled
-                            ? "text-violet-500 dark:text-violet-400"
-                            : "",
+                          chatRuntimeControls.thinkingEnabled ? "text-foreground/75" : "",
                         )}
                       />
-                      <SelectValue />
+                      <SelectValue>
+                        {(value) =>
+                          t(
+                            REASONING_I18N_KEYS[
+                              isReasoningLevel(value) ? value : selectedReasoning
+                            ],
+                          )
+                        }
+                      </SelectValue>
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="composer-reasoning-dropdown min-w-[7.5rem] rounded-xl border border-violet-200/40 bg-popover/85 p-1 shadow-[0_14px_34px_-16px_rgba(88,28,135,0.38)] ring-1 ring-white/15 backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-popover/70 dark:border-violet-300/15 dark:bg-popover/70">
+                  <SelectContent className="composer-reasoning-dropdown min-w-32 rounded-xl border border-border/70 bg-popover/98 p-1 shadow-[var(--agent-shadow-menu)]">
                     {reasoningOptions.map((value, index) => (
                       <SelectItem
                         key={value}
                         value={value}
-                        className="composer-reasoning-item rounded-md transition-all duration-150 ease-out focus:translate-x-0.5 focus:bg-violet-50/70 focus:text-foreground data-[state=checked]:bg-violet-50/80 data-[state=checked]:font-medium dark:focus:bg-violet-400/[0.12] dark:data-[state=checked]:bg-violet-400/[0.14]"
+                        className="composer-reasoning-item rounded-lg transition-all duration-150 ease-out data-[highlighted]:bg-foreground/[0.055] data-[highlighted]:text-foreground data-[selected]:bg-foreground/[0.065] data-[selected]:font-medium dark:data-[highlighted]:bg-white/[0.07] dark:data-[selected]:bg-white/[0.08]"
                         style={{ animationDelay: `${Math.min(index, 5) * 0.022}s` }}
                       >
                         {t(REASONING_I18N_KEYS[value])}
@@ -852,17 +925,6 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                 </Select>
               ) : null}
 
-              <GitBranchSelector
-                workdir={workdir}
-                gitClient={gitClient}
-                workspaceActivityClient={workspaceActivityClient}
-                disabled={controlsDisabled}
-                canWrite={gitWriteEnabled}
-                disabledMessage={gitDisabledMessage}
-              />
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1">
               <Button
                 disabled={isSending ? false : sendDisabled}
                 onClick={() => {
@@ -896,7 +958,7 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                       : undefined
                 }
                 className={cn(
-                  "h-8 w-8 shrink-0 rounded-full shadow-[0_1px_2px_rgba(15,23,42,0.12)] transition-all",
+                  "h-9 w-9 shrink-0 rounded-full shadow-none transition-all",
                   canQueueDraftWhileSending
                     ? "hover:brightness-105 hover:shadow-[0_8px_18px_-8px_rgba(5,150,105,0.72)] active:scale-95"
                     : isSending
@@ -905,11 +967,11 @@ export const ChatComposerBar = memo(function ChatComposerBar(props: {
                 )}
               >
                 {canQueueDraftWhileSending ? (
-                  <Send className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-4 w-4" />
                 ) : isSending ? (
                   <Square className="h-3 w-3 fill-current" />
                 ) : (
-                  <Send className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-4 w-4" />
                 )}
               </Button>
             </div>

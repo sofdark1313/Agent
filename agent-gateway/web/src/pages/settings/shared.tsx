@@ -1,7 +1,7 @@
 export {
   ConfirmActionPopover,
   ConfirmDeletePopover,
-} from "../../components/ui/confirm-action-popover";
+} from "@/components/ui/confirm-action-popover";
 
 export function PromptTag({ label, muted = false }: { label: string; muted?: boolean }) {
   return (
@@ -36,16 +36,16 @@ export function AgentActivationSwitch(props: {
       aria-label={title}
       disabled={disabled}
       onClick={disabled ? undefined : onToggle}
-      className={`relative h-5 w-9 shrink-0 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 ${
+      className={`relative h-5 w-9 shrink-0 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 ${
         checked
-          ? "bg-sky-500"
+          ? "bg-foreground"
           : disabled
             ? "bg-muted-foreground/15"
             : "bg-muted-foreground/20 hover:bg-muted-foreground/30"
       } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className ?? ""}`}
     >
       <span
-        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background shadow-sm ring-1 ring-foreground/10 transition-transform ${
           checked ? "translate-x-4" : "translate-x-0"
         }`}
       />

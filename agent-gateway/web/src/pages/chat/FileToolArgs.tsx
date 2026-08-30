@@ -1,4 +1,7 @@
-import type { FileToolFieldPreview, FileToolPreview } from "../../lib/chat/toolPreview";
+import type {
+  FileToolFieldPreview,
+  FileToolPreview,
+} from "@/lib/chat/toolPreview";
 import { EditDiffView } from "./EditDiffView";
 import {
   MetaTags,
@@ -6,7 +9,7 @@ import {
   ToolScrollablePre,
   ToolSurface,
   ToolSurfaceLabel,
-} from "./ToolSurfaces";
+} from "./assistant-bubble/ToolResultDisplay";
 
 // Streaming args display for the file-writing tools (Write / Edit /
 // NotebookEdit): live-updating path, true char/line counts and a bounded

@@ -66,7 +66,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "chat.memoryExtraction.noop": "本轮无需更新记忆。",
     "chat.memoryExtraction.partial": "记忆部分更新（{accepted} 条已应用，{rejected} 条被拒）。",
     "chat.recentConversation": "最近会话",
-    "chat.workspaceSection": "工作空间",
+    "chat.workspaceSection": "项目",
     "chat.workspaceCreate": "新建工作空间",
     "chat.workspaceNewConversation": "新对话",
     "chat.workspaceMore": "更多",

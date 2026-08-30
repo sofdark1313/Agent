@@ -1,30 +1,22 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Loader2 } from "../../../components/icons";
-import { Markdown } from "../../../components/Markdown";
-import { useLocale } from "../../../i18n";
-import { normalizeLiveToolStatus, VIBING_STATUS } from "../../../lib/chat/chatPageHelpers";
-import type { UiRound } from "../../../lib/chat/uiMessages";
-import { useScrollFollow } from "../../../lib/chat-scroll/useScrollFollow";
-import { TodoListBlock } from "../TodoListView";
-import {
-  groupRoundBlocks,
-  isBuiltinShareToolName,
-  normalizeAssistantLeadingIndent,
-} from "./assistantBubbleUtils";
+import { memo, useMemo, useState } from "react";
+
+import { ChevronRight, Loader2 } from "@/components/icons";
+import { Markdown } from "@/components/Markdown";
+import { useLocale } from "@/i18n";
+import type { UiRound } from "@/lib/chat/uiMessages";
+import { normalizeLiveToolStatus, VIBING_STATUS } from "@/lib/chat/chatPageHelpers";
+import { useScrollFollow } from "@/lib/chat-scroll/useScrollFollow";
+import { groupRoundBlocks, normalizeAssistantLeadingIndent } from "./assistantBubbleUtils";
 import { HostedSearchGroupView } from "./HostedSearchGroupView";
 import { CompactingText, VibingText } from "./StatusText";
 import { MemoToolCallItem } from "./ToolCallItem";
 import { getNativeDisplayImagePayload, NativeDisplayImageBlock } from "./ToolImages";
 import { ToolTraceGroup } from "./ToolTraceGroup";
-import { UsagePanel } from "./UsagePanel";
 
-const EMPTY_RUNNING_TOOL_CALL_IDS: string[] = [];
-
-function ThinkingBlock({ text, open }: { text: string; open?: boolean }) {
+function ThinkingBlock({ text }: { text: string }) {
   const hasText = /\S/.test(text || "");
   const { t } = useLocale();
-  const [isOpen, setIsOpen] = useState(typeof open === "boolean" ? open : false);
-  const userInteractedRef = useRef(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [thinkingPre, setThinkingPre] = useState<HTMLPreElement | null>(null);
   const [thinkingContent, setThinkingContent] = useState<HTMLElement | null>(null);
 
@@ -39,12 +31,6 @@ function ThinkingBlock({ text, open }: { text: string; open?: boolean }) {
     config: { reattachZonePx: 0 },
   });
 
-  useEffect(() => {
-    if (!userInteractedRef.current && typeof open === "boolean") {
-      setIsOpen(open);
-    }
-  }, [open]);
-
   if (!hasText) return null;
 
   return (
@@ -52,10 +38,7 @@ function ThinkingBlock({ text, open }: { text: string; open?: boolean }) {
       <button
         type="button"
         aria-expanded={isOpen}
-        onClick={() => {
-          userInteractedRef.current = true;
-          setIsOpen((prev) => !prev);
-        }}
+        onClick={() => setIsOpen((prev) => !prev)}
         className="thinking-block-toggle -ml-1 flex cursor-pointer select-none items-center gap-1.5 rounded-md px-1 py-1.5 text-[calc(13px*var(--zone-font-scale,1))] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronRight className={`h-3 w-3 transition-transform ${isOpen ? "rotate-90" : ""}`} />
@@ -83,42 +66,54 @@ export const RoundContent = memo(function RoundContent(props: {
   showUsage?: boolean;
   usageContextWindow?: number;
   isLive?: boolean;
-  isStreaming?: boolean;
   isActive?: boolean;
+  // Pinned per row (see AssistantBubble); falls back to the live flag for
+  // callers that render outside the transcript row model.
+  renderMode?: "streaming" | "static";
   toolStatus?: string | null;
   toolStatusVariant?: "default" | "compaction";
   runningToolCallIds?: string[];
   thinkingOpen?: boolean;
-  renderMode?: "streaming" | "static";
+  isStreaming?: boolean;
   readOnly?: boolean;
   redactToolContent?: boolean;
 }) {
   const {
     round,
     showLabel,
-    showUsage,
-    usageContextWindow,
     isLive,
-    isStreaming = isLive,
     isActive,
+    renderMode,
     toolStatus,
     toolStatusVariant,
     runningToolCallIds,
-    thinkingOpen,
-    renderMode,
-    readOnly = false,
-    redactToolContent = false,
   } = props;
-  const groupedBlocks = useMemo(() => groupRoundBlocks(round.blocks), [round.blocks]);
+  const activeThinkingBlockId = useMemo(() => {
+    if (!isLive || !isActive) return null;
+
+    for (let index = round.blocks.length - 1; index >= 0; index -= 1) {
+      const block = round.blocks[index];
+      if (!block) continue;
+      if (block.kind === "thinking") {
+        return block.text.trim() ? block.id : null;
+      }
+      if (block.kind === "text" && !block.text.trim()) continue;
+      return null;
+    }
+
+    return null;
+  }, [isActive, isLive, round.blocks]);
   const hasContent =
-    groupedBlocks.some((block) => {
-      if (
-        block.kind === "tool" ||
-        block.kind === "toolGroup" ||
-        block.kind === "hostedSearch" ||
-        block.kind === "hostedSearchGroup"
-      ) {
+    round.blocks.some((block) => {
+      if (block.kind === "tool") {
+        if (block.item.toolCall.name === "TodoWrite" && !block.item.toolResult?.isError) {
+          return false;
+        }
         return true;
+      }
+      if (block.kind === "hostedSearch") return true;
+      if (block.kind === "thinking") {
+        return block.id === activeThinkingBlockId && block.text.trim().length > 0;
       }
       return block.text.trim().length > 0;
     }) ||
@@ -127,14 +122,7 @@ export const RoundContent = memo(function RoundContent(props: {
     isActive && isLive ? normalizeLiveToolStatus(toolStatus ?? null) : null;
   const isCompactionStatus = toolStatusVariant === "compaction";
   const isVibingStatus = normalizedToolStatus === VIBING_STATUS;
-  const latestThinkingKey = useMemo(() => {
-    for (let index = groupedBlocks.length - 1; index >= 0; index -= 1) {
-      const block = groupedBlocks[index];
-      if (block?.kind === "thinking") return block.key;
-    }
-    return null;
-  }, [groupedBlocks]);
-  const autoOpenThinking = isLive ? Boolean(isActive && thinkingOpen) : false;
+  const groupedBlocks = useMemo(() => groupRoundBlocks(round.blocks), [round.blocks]);
 
   if (!hasContent) return null;
 
@@ -157,45 +145,24 @@ export const RoundContent = memo(function RoundContent(props: {
 
       {groupedBlocks.map((block) => {
         if (block.kind === "thinking") {
-          return (
-            <ThinkingBlock
-              key={block.key}
-              text={block.text}
-              open={autoOpenThinking && block.key === latestThinkingKey}
-            />
-          );
+          if (block.key !== activeThinkingBlockId) return null;
+          return <ThinkingBlock key={block.key} text={block.text} />;
         }
 
         if (block.kind === "tool") {
-          const isRedactedToolContent =
-            redactToolContent && isBuiltinShareToolName(block.item.toolCall.name);
           const displayImagePayload = getNativeDisplayImagePayload(block.item);
-          if (!isRedactedToolContent && displayImagePayload) {
-            return (
-              <NativeDisplayImageBlock
-                key={block.key}
-                payload={displayImagePayload}
-                readOnly={readOnly}
-              />
-            );
+          if (displayImagePayload) {
+            return <NativeDisplayImageBlock key={block.key} payload={displayImagePayload} />;
           }
 
-          if (
-            !isRedactedToolContent &&
-            block.item.toolCall.name === "Image" &&
-            !block.item.toolResult?.isError
-          ) {
+          if (block.item.toolCall.name === "Image" && !block.item.toolResult?.isError) {
             return null;
           }
 
-          // TodoWrite renders as a bare checklist in the reply flow; only
-          // failed calls fall through to the tool card so the error is visible.
-          if (
-            !isRedactedToolContent &&
-            block.item.toolCall.name === "TodoWrite" &&
-            !block.item.toolResult?.isError
-          ) {
-            return <TodoListBlock key={block.key} item={block.item} />;
+          // Successful TodoWrite snapshots are rendered once above the
+          // composer. Failed calls still fall through so the error is visible.
+          if (block.item.toolCall.name === "TodoWrite" && !block.item.toolResult?.isError) {
+            return null;
           }
 
           return (
@@ -207,8 +174,6 @@ export const RoundContent = memo(function RoundContent(props: {
                   block.item.toolCall.id &&
                   (runningToolCallIds || []).includes(block.item.toolCall.id),
               )}
-              readOnly={readOnly}
-              redactToolContent={redactToolContent}
             />
           );
         }
@@ -218,13 +183,7 @@ export const RoundContent = memo(function RoundContent(props: {
             <ToolTraceGroup
               key={block.key}
               items={block.items}
-              runningToolCallIds={
-                isLive
-                  ? (runningToolCallIds ?? EMPTY_RUNNING_TOOL_CALL_IDS)
-                  : EMPTY_RUNNING_TOOL_CALL_IDS
-              }
-              readOnly={readOnly}
-              redactToolContent={redactToolContent}
+              runningToolCallIds={isLive ? (runningToolCallIds ?? []) : []}
             />
           );
         }
@@ -234,7 +193,6 @@ export const RoundContent = memo(function RoundContent(props: {
             <HostedSearchGroupView
               key={block.key}
               items={block.kind === "hostedSearch" ? [block.item] : block.items}
-              readOnly={readOnly}
             />
           );
         }
@@ -246,16 +204,11 @@ export const RoundContent = memo(function RoundContent(props: {
             key={block.key}
             content={normalizeAssistantLeadingIndent(block.text)}
             className="agent-answer-markdown"
-            renderMode={renderMode}
-            showCaret={Boolean(isLive && isActive && isStreaming)}
-            readOnly={readOnly}
+            renderMode={renderMode ?? (isLive ? "streaming" : "static")}
+            showCaret={Boolean(isLive && isActive)}
           />
         );
       })}
-
-      {showUsage ? (
-        <UsagePanel usage={round.meta?.usage} contextWindow={usageContextWindow} />
-      ) : null}
     </div>
   );
 });

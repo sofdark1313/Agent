@@ -8,6 +8,7 @@ import { type FileTypeIconComponent, getFileTypeIcon } from "../chat/fileTypeIco
 import {
   AlertTriangle,
   ChevronRight,
+  ExternalLink,
   FilePenLine,
   FileText,
   Loader2,
@@ -17,6 +18,7 @@ import {
   RotateCwSquare,
   X,
 } from "../icons";
+const MacOsTitleBarSpacer = (props: any) => null;
 import { WorkspaceMarkdownPreview } from "./WorkspaceMarkdownPreview";
 import {
   getWorkspacePreviewKind,
@@ -176,6 +178,61 @@ function hashString(value: string) {
     hash = (hash * 31 + value.charCodeAt(index)) | 0;
   }
   return Math.abs(hash).toString(36);
+}
+
+const SANDBOXED_HTML_PREVIEW_BOOTSTRAP = [
+  "<script data-agent-html-preview-bootstrap>",
+  "(() => {",
+  "  function createStorage() {",
+  "    const values = new Map();",
+  "    const storage = {",
+  "      get length() { return values.size; },",
+  "      key(index) { return Array.from(values.keys())[Number(index)] ?? null; },",
+  "      getItem(key) { key = String(key); return values.has(key) ? values.get(key) : null; },",
+  "      setItem(key, value) { values.set(String(key), String(value)); },",
+  "      removeItem(key) { values.delete(String(key)); },",
+  "      clear() { values.clear(); }",
+  "    };",
+  "    return new Proxy(storage, {",
+  "      get(target, key, receiver) {",
+  "        if (typeof key !== 'string' || key in target) return Reflect.get(target, key, receiver);",
+  "        return target.getItem(key);",
+  "      },",
+  "      set(target, key, value, receiver) {",
+  "        if (typeof key !== 'string' || key in target) return Reflect.set(target, key, value, receiver);",
+  "        target.setItem(key, value);",
+  "        return true;",
+  "      },",
+  "      deleteProperty(target, key) {",
+  "        if (typeof key === 'string') { target.removeItem(key); return true; }",
+  "        return Reflect.deleteProperty(target, key);",
+  "      }",
+  "    });",
+  "  }",
+  "  for (const name of ['localStorage', 'sessionStorage']) {",
+  "    try {",
+  "      Object.defineProperty(window, name, { value: createStorage(), configurable: true });",
+  "    } catch {}",
+  "  }",
+  "})();",
+  "</" + "script>",
+].join("");
+
+function buildSandboxedHtmlPreviewSource(html: string) {
+  const source = html.startsWith("\uFEFF") ? html.slice(1) : html;
+  const headMatch = /<head(?:\s[^>]*)?>/i.exec(source);
+  if (headMatch) {
+    const insertionIndex = headMatch.index + headMatch[0].length;
+    return `${source.slice(0, insertionIndex)}${SANDBOXED_HTML_PREVIEW_BOOTSTRAP}${source.slice(
+      insertionIndex,
+    )}`;
+  }
+
+  const doctypeMatch = /^\s*<!doctype[^>]*>\s*/i.exec(source);
+  const insertionIndex = doctypeMatch ? doctypeMatch[0].length : 0;
+  return `${source.slice(0, insertionIndex)}${SANDBOXED_HTML_PREVIEW_BOOTSTRAP}${source.slice(
+    insertionIndex,
+  )}`;
 }
 
 function getPreviewIcon(kind: WorkspacePreviewKind): FileTypeIconComponent {
@@ -357,13 +414,18 @@ export function WorkspaceFilePreviewOverlay(props: WorkspaceFilePreviewOverlayPr
         if (loadSequenceRef.current !== sequence) return;
         const bytes = base64ToBytes(response.data);
         const kind = resolvePreviewKind(response.path || request.path, response.mimeType);
-        const blob = new Blob([bytesToArrayBuffer(bytes)], { type: response.mimeType });
+        const text = isTextPreviewKind(kind) ? decodePreviewText(bytes) : null;
+        const blobBytes =
+          kind === "html" && text !== null
+            ? new TextEncoder().encode(buildSandboxedHtmlPreviewSource(text))
+            : bytes;
+        const blob = new Blob([bytesToArrayBuffer(blobBytes)], { type: response.mimeType });
         const loaded: LoadedPreview = {
           ...response,
           blobUrl: URL.createObjectURL(blob),
           bytes,
           kind,
-          text: isTextPreviewKind(kind) ? decodePreviewText(bytes) : null,
+          text,
         };
         replacePreview(loaded);
       } catch (loadError) {
@@ -409,6 +471,7 @@ export function WorkspaceFilePreviewOverlay(props: WorkspaceFilePreviewOverlayPr
     [activePath, activePreviewRequest?.imagePaths, kind],
   );
   const canOpenEditor = Boolean(activePreviewRequest && isWorkspaceEditablePreviewPath(activePath));
+  const canOpenExternal = Boolean(activePreviewRequest && activePath && !canOpenEditor);
 
   const openImagePath = useCallback(
     (path: string, transitionDirection: ImagePreviewTransitionDirection = 0) => {
@@ -418,15 +481,31 @@ export function WorkspaceFilePreviewOverlay(props: WorkspaceFilePreviewOverlayPr
     [activePath, activePreviewRequest, loadPreview],
   );
 
+  const openExternal = useCallback(async () => {
+    if (!activePreviewRequest) return;
+    const path = activePath || activePreviewRequest.path;
+    try {
+      setError(null);
+      await invokeFs("fs_open_workspace_path", {
+        workdir: activePreviewRequest.workdir,
+        path,
+        mode: "open",
+      });
+    } catch (openError) {
+      setError(toMessage(openError, t("workspaceFilePreview.openExternalFailed")));
+    }
+  }, [activePath, activePreviewRequest, t]);
+
   return (
     <div
       className={cn(
-        "workspace-file-preview-overlay absolute inset-0 z-40 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+        "workspace-file-preview-overlay absolute inset-0 z-50 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
         isVisible
           ? "pointer-events-auto translate-x-0 opacity-100 shadow-2xl"
           : "pointer-events-none -translate-x-2 opacity-0 shadow-lg",
       )}
     >
+      <MacOsTitleBarSpacer className="bg-muted/45" />
       <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-muted/45 px-3">
         <PreviewIcon className="h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
@@ -450,6 +529,17 @@ export function WorkspaceFilePreviewOverlay(props: WorkspaceFilePreviewOverlayPr
               }
             >
               <FilePenLine className="h-4 w-4" />
+            </button>
+          ) : null}
+          {canOpenExternal ? (
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title={t("workspaceFilePreview.openExternal")}
+              aria-label={t("workspaceFilePreview.openExternal")}
+              onClick={() => void openExternal()}
+            >
+              <ExternalLink className="h-4 w-4" />
             </button>
           ) : null}
           <button

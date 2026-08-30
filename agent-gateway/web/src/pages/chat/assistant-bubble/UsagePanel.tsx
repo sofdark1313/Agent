@@ -1,5 +1,6 @@
-import { useLocale } from "../../../i18n";
-import type { Usage } from "../../../lib/agentTypes";
+import type { Usage } from "@/lib/agentTypes";
+
+import { useLocale } from "@/i18n";
 
 function hasDisplayableUsage(usage: Usage | undefined): usage is Usage {
   if (!usage) return false;

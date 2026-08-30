@@ -1,4 +1,5 @@
-import { cn } from "../../../lib/shared/utils";
+import iconSimpleUrl from "../../../../../src-tauri/icons/icon-simple.png";
+import { cn } from "@/lib/shared/utils";
 
 export function AssistantAvatar(props: { className?: string }) {
   const { className } = props;
@@ -10,7 +11,7 @@ export function AssistantAvatar(props: { className?: string }) {
       )}
     >
       <img
-        src="/icon-simple.png"
+        src={iconSimpleUrl}
         alt=""
         aria-hidden="true"
         draggable={false}

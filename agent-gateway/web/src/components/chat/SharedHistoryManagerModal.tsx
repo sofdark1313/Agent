@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocale } from "../../i18n";
-import type { ChatHistorySummary } from "../../lib/chat/chatHistory";
-import { cn } from "../../lib/shared/utils";
+import { useLocale } from "@/i18n";
+import type { ChatHistorySummary } from "@/lib/chat/chatHistory";
+import { cn } from "@/lib/shared/utils";
 import {
-  AlertCircle,
   Check,
   Copy,
   ExternalLink,
@@ -132,6 +131,7 @@ function RedactionPicker(props: {
 }) {
   const { value, disabled, onChange } = props;
   const { t } = useLocale();
+  const redactionGroupName = useId();
   return (
     <div
       role="radiogroup"
@@ -141,36 +141,46 @@ function RedactionPicker(props: {
         disabled && "pointer-events-none opacity-60",
       )}
     >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={value}
-        disabled={disabled}
-        onClick={() => onChange(true)}
+      <label
         className={cn(
-          "relative rounded-full px-2.5 py-0.5 text-[calc(11px*var(--zone-font-scale,1))] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 disabled:cursor-not-allowed",
+          "cursor-pointer",
+          disabled && "cursor-not-allowed",
+          "relative rounded-full px-2.5 py-0.5 text-[calc(11px*var(--zone-font-scale,1))] font-medium transition-colors has-[:focus-visible]:outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-500/35 disabled:cursor-not-allowed",
           value
             ? "bg-emerald-500 text-white shadow-sm"
             : "text-muted-foreground hover:text-foreground",
         )}
       >
+        <input
+          type="radio"
+          name={redactionGroupName}
+          className="sr-only"
+          checked={value}
+          disabled={disabled}
+          onChange={() => onChange(true)}
+        />
         {t("settings.enable")}
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={!value}
-        disabled={disabled}
-        onClick={() => onChange(false)}
+      </label>
+      <label
         className={cn(
-          "relative rounded-full px-2.5 py-0.5 text-[calc(11px*var(--zone-font-scale,1))] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/35 disabled:cursor-not-allowed",
+          "cursor-pointer",
+          disabled && "cursor-not-allowed",
+          "relative rounded-full px-2.5 py-0.5 text-[calc(11px*var(--zone-font-scale,1))] font-medium transition-colors has-[:focus-visible]:outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sky-500/35 disabled:cursor-not-allowed",
           !value
             ? "bg-background text-foreground shadow-sm"
             : "text-muted-foreground hover:text-foreground",
         )}
       >
+        <input
+          type="radio"
+          name={redactionGroupName}
+          className="sr-only"
+          checked={!value}
+          disabled={disabled}
+          onChange={() => onChange(false)}
+        />
         {t("settings.disable")}
-      </button>
+      </label>
     </div>
   );
 }
@@ -203,7 +213,6 @@ export function SharedHistoryManagerModal({
   loadingIds,
   updatingIds,
   errors,
-  listError,
   shareOrigin,
   shareOriginLoading = false,
   onRefresh,
@@ -331,16 +340,6 @@ export function SharedHistoryManagerModal({
             </div>
           ) : null}
 
-          {listError ? (
-            <div
-              role="alert"
-              className="mt-3 flex items-start gap-2 rounded-2xl border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive"
-            >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span className="min-w-0 break-words">{listError}</span>
-            </div>
-          ) : null}
-
           <div className="mt-4 flex items-center gap-2">
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -348,7 +347,7 @@ export function SharedHistoryManagerModal({
                 value={query}
                 onChange={(event) => setQuery(event.currentTarget.value)}
                 placeholder={t("sharedHistory.searchPlaceholder")}
-                className="h-9 w-full rounded-xl border border-border/70 bg-background px-9 text-xs outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-sky-500/45 focus:ring-2 focus:ring-sky-500/15"
+                className="h-9 w-full rounded-xl border border-border/70 bg-background px-9 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-sky-500/45 focus:ring-2 focus:ring-sky-500/15"
               />
             </div>
             <Button

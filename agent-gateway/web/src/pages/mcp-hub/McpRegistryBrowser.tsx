@@ -16,19 +16,19 @@ import {
   Sparkles,
   Terminal,
   X,
-} from "../../components/icons";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { Textarea } from "../../components/ui/textarea";
-import { useLocale } from "../../i18n";
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useLocale } from "@/i18n";
 import {
   applyMcpRegistryInstallConfig,
   createUniqueMcpServerId,
@@ -41,10 +41,10 @@ import {
   resolveMcpRegistryInstallDraft,
   searchMcpRegistry,
   withUniqueMcpServerId,
-} from "../../lib/mcpRegistry";
-import { type AppSettings, type McpServerConfig, updateMcp } from "../../lib/settings";
-import { useModalMotion } from "../../lib/shared/modalMotion";
-import { cn } from "../../lib/shared/utils";
+} from "@/lib/mcpRegistry";
+import { type AppSettings, type McpServerConfig, updateMcp } from "@/lib/settings";
+import { useModalMotion } from "@/lib/shared/modalMotion";
+import { cn } from "@/lib/shared/utils";
 
 const STORE_PAGE_LIMIT = 18;
 
@@ -724,9 +724,11 @@ function RegistryCard(props: {
   const headerPadding = hasVersionSelector ? (link ? "pr-36" : "pr-28") : link ? "pr-8" : undefined;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: The card contains nested controls and cannot be a native button.
     <div
       role="button"
       tabIndex={0}
+      aria-label={card.displayName}
       onClick={() => onPreview(card)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -1211,12 +1213,14 @@ function McpRegistryPreviewDrawer(props: {
               variant="outline"
               size="sm"
               className="h-9 flex-1 gap-1.5 rounded-xl border-border/50 bg-background/70"
-              asChild
+              render={
+                <a href={primaryLink} target="_blank" rel="noreferrer">
+                  <span className="sr-only">{t("mcpHub.storeOpenExternal")}</span>
+                </a>
+              }
             >
-              <a href={primaryLink} target="_blank" rel="noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" />
-                {t("mcpHub.storeOpenExternal")}
-              </a>
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t("mcpHub.storeOpenExternal")}
             </Button>
           ) : null}
           <Button

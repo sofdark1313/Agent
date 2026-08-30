@@ -31,7 +31,6 @@ import { normalizeIntegerDraftInput, parseIntegerDraftValue } from "./remoteInpu
 import { AgentActivationSwitch } from "./shared";
 import type { SettingsSectionProps } from "./types";
 
-const REMOTE_GRPC_PORT_MAX = 65_535;
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -230,14 +229,7 @@ function formatTimestamp(value?: number | null) {
 export function RemoteSection(props: SettingsSectionProps) {
   const { settings, setSettings } = props;
   const { t } = useLocale();
-  const remoteGrpcPortDraft = usePositiveIntegerDraft(
-    settings.remote.grpcPort,
-    { min: 1, max: REMOTE_GRPC_PORT_MAX },
-    (grpcPort) =>
-      updateRemoteSettings(setSettings, {
-        grpcPort,
-      }),
-  );
+
   const remoteHeartbeatDraft = usePositiveIntegerDraft(
     settings.remote.heartbeatInterval,
     { min: 1 },
@@ -371,29 +363,17 @@ export function RemoteSection(props: SettingsSectionProps) {
             <Link2 className="h-3 w-3" />
             {t("settings.remoteGatewayUrl")}
           </label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="url"
-              value={settings.remote.gatewayUrl}
-              onChange={(e) =>
-                updateRemoteSettings(setSettings, {
-                  gatewayUrl: e.target.value,
-                })
-              }
-              placeholder="https://gateway.example.com"
-              className="min-w-0 flex-1 font-mono text-[13px]"
-            />
-            <span className="shrink-0 text-xs text-muted-foreground/50">:</span>
-            <Input
-              type="text"
-              inputMode="numeric"
-              value={remoteGrpcPortDraft.draft}
-              onBlur={remoteGrpcPortDraft.handleBlur}
-              onChange={(e) => remoteGrpcPortDraft.handleChange(e.target.value)}
-              placeholder="50051"
-              className="w-24 shrink-0 font-mono text-[13px]"
-            />
-          </div>
+          <Input
+            type="url"
+            value={settings.remote.gatewayUrl}
+            onChange={(e) =>
+              updateRemoteSettings(setSettings, {
+                gatewayUrl: e.target.value,
+              })
+            }
+            placeholder="http://localhost:50052"
+            className="font-mono text-[13px]"
+          />
           <p className="text-[11px] leading-relaxed text-muted-foreground/70">
             {t("settings.remoteGatewayUrlHint")}
           </p>

@@ -11,18 +11,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocale } from "../../i18n";
-import type { GitClient } from "../../lib/git/types";
-import { ensureManagedProcessInit, useManagedProcesses } from "../../lib/managed-process/store";
+import { useLocale } from "@/i18n";
+import type { GitClient } from "@/lib/git/types";
+import { ensureManagedProcessInit, useManagedProcesses } from "@/lib/managed-process/store";
 import type {
   RightDockFileTreeState,
   RightDockFileTreeStatePatch,
   RightDockProjectState,
   SshHostConfig,
-} from "../../lib/settings";
-import { cn } from "../../lib/shared/utils";
-import type { TerminalClient, TerminalSession } from "../../lib/terminal/types";
-import type { WorkspaceActivityClient } from "../../lib/workspace-activity/types";
+} from "@/lib/settings";
+import { cn } from "@/lib/shared/utils";
+import type { TerminalClient, TerminalSession } from "@/lib/terminal/types";
+import type { WorkspaceActivityClient } from "@/lib/workspace-activity/types";
 import { X } from "../icons";
 import { Button } from "../ui/button";
 import type { GitCommitContextPayload, GitFileContextPayload } from "./git-review";
@@ -688,13 +688,14 @@ export const RightDockPanel = memo(function RightDockPanel(props: RightDockPanel
   return (
     <RightDockToolContext.Provider value={toolContextValue}>
       <aside
+        data-agent-context-dock
         ref={panelRef}
         aria-hidden={!isOpen}
         inert={!isOpen}
         data-state={isOpen ? "open" : "closed"}
         data-project-tools-resizing={isResizing ? "true" : undefined}
         className={cn(
-          "project-tools-panel zone-font-scale fixed inset-x-0 bottom-0 z-40 flex h-[min(72vh,34rem)] min-h-0 w-full shrink-0 flex-col overflow-hidden bg-background shadow-2xl transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none md:relative md:inset-auto md:z-10 md:h-full md:overflow-visible md:shadow-none",
+          "project-tools-panel zone-font-scale fixed inset-x-0 bottom-0 z-40 flex h-[min(72vh,34rem)] min-h-0 w-full shrink-0 flex-col overflow-hidden bg-[hsl(var(--agent-surface-raised))] shadow-[var(--agent-shadow-float)] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none md:relative md:inset-auto md:z-10 md:h-full md:overflow-visible md:shadow-none",
           isOpen
             ? "pointer-events-auto translate-y-0 border-t border-border opacity-100 md:w-[var(--project-tools-panel-width)] md:translate-x-0 md:border-l md:border-t-0"
             : "pointer-events-none translate-y-full border-t border-transparent opacity-0 md:translate-x-3 md:translate-y-0 md:border-l-0 md:border-t-0",

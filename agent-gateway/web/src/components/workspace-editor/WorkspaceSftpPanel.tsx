@@ -301,15 +301,6 @@ function isLeavingCurrentTarget(event: React.DragEvent) {
   return !related || !(related instanceof Node) || !event.currentTarget.contains(related);
 }
 
-const MOBILE_SFTP_MEDIA_QUERY = "(max-width: 820px)";
-
-function isMobileSftpLayout() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  return window.matchMedia(MOBILE_SFTP_MEDIA_QUERY).matches;
-}
-
 export function WorkspaceSftpPanel(props: WorkspaceSftpPanelProps) {
   const { session, client, isActive, onError } = props;
   const { t } = useLocale();
@@ -345,23 +336,6 @@ export function WorkspaceSftpPanel(props: WorkspaceSftpPanelProps) {
   const [renamingEntry, setRenamingEntry] = useState(false);
   const [copyPathDialog, setCopyPathDialog] = useState<string | null>(null);
   const [copyToastVisible, setCopyToastVisible] = useState(false);
-  const [isMobileLayout, setIsMobileLayout] = useState(isMobileSftpLayout);
-  const [mobilePane, setMobilePane] = useState<SftpSide>("remote");
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const mediaQueryList = window.matchMedia(MOBILE_SFTP_MEDIA_QUERY);
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsMobileLayout(event.matches);
-    };
-    setIsMobileLayout(mediaQueryList.matches);
-    mediaQueryList.addEventListener("change", handleChange);
-    return () => {
-      mediaQueryList.removeEventListener("change", handleChange);
-    };
-  }, []);
 
   const workdir = session.cwd;
   const projectPathKey = session.projectPathKey || session.cwd;
@@ -1041,329 +1015,294 @@ export function WorkspaceSftpPanel(props: WorkspaceSftpPanelProps) {
 
   return (
     <div ref={panelRef} className="relative flex h-full min-h-0 flex-col bg-background">
-      {isMobileLayout ? (
-        <div className="flex shrink-0 items-center gap-1 border-b border-border bg-muted/30 p-1">
-          {panes.map(({ side, label }) => (
-            <button
-              key={side}
-              type="button"
-              className={cn(
-                "flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-                mobilePane === side
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              onClick={() => setMobilePane(side)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "flex min-h-0 flex-1 overflow-y-hidden",
-          isMobileLayout ? "overflow-x-hidden" : "overflow-x-auto",
-        )}
-      >
-        <div
-          className={cn(
-            "grid h-full min-h-0 flex-1 divide-x divide-border",
-            isMobileLayout ? "grid-cols-1" : "min-w-[860px] grid-cols-2",
-          )}
-        >
-          {(isMobileLayout ? panes.filter((entry) => entry.side === mobilePane) : panes).map(
-            ({ side, label, root, pane }) => {
-              const dropMode =
-                activeDragSource?.side === "local" && side === "remote"
-                  ? "upload"
-                  : activeDragSource?.side === "remote" && side === "local"
-                    ? "download"
-                    : null;
-              const dropActive = dropMode !== null && dropTarget?.side === side;
-              const DropIcon = dropMode === "download" ? Download : Upload;
-              const dropPath = dropActive ? dropTarget?.path || pane.path : pane.path;
-              const PaneFolderIcon = getFileTypeIcon(root || pane.path, "dir", { expanded: true });
+      <div className="flex min-h-0 flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="grid h-full min-h-0 min-w-[860px] flex-1 grid-cols-2 divide-x divide-border">
+          {panes.map(({ side, label, root, pane }) => {
+            const dropMode =
+              activeDragSource?.side === "local" && side === "remote"
+                ? "upload"
+                : activeDragSource?.side === "remote" && side === "local"
+                  ? "download"
+                  : null;
+            const dropActive = dropMode !== null && dropTarget?.side === side;
+            const DropIcon = dropMode === "download" ? Download : Upload;
+            const dropPath = dropActive ? dropTarget?.path || pane.path : pane.path;
+            const PaneFolderIcon = getFileTypeIcon(root || pane.path, "dir", { expanded: true });
 
-              return (
-                <div
-                  key={side}
-                  data-sftp-drop-side={side}
-                  data-sftp-drop-path={pane.path}
-                  className={cn(
-                    "relative flex min-h-0 min-w-0 flex-col overflow-hidden transition-colors",
-                    dropMode && "bg-muted/20",
-                    dropActive && "bg-emerald-500/5",
-                  )}
-                  onDragOver={(event) => handleDragOver(event, side, pane.path)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(event) => handleDrop(event, side, pane.path)}
-                  onContextMenu={(event) =>
-                    openContextMenu(event, side, pane.path, "directory", false)
-                  }
-                >
-                  <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background text-muted-foreground">
-                      <PaneFolderIcon className="h-4 w-4" />
+            return (
+              <div
+                key={side}
+                data-sftp-drop-side={side}
+                data-sftp-drop-path={pane.path}
+                className={cn(
+                  "relative flex min-h-0 min-w-0 flex-col overflow-hidden transition-colors",
+                  dropMode && "bg-muted/20",
+                  dropActive && "bg-emerald-500/5",
+                )}
+                onDragOver={(event) => handleDragOver(event, side, pane.path)}
+                onDragLeave={handleDragLeave}
+                onDrop={(event) => handleDrop(event, side, pane.path)}
+                onContextMenu={(event) =>
+                  openContextMenu(event, side, pane.path, "directory", false)
+                }
+              >
+                <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background text-muted-foreground">
+                    <PaneFolderIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-foreground">{label}</div>
+                    <div className="truncate font-mono text-[11px] text-muted-foreground">
+                      {root}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-foreground">{label}</div>
-                      <div className="truncate font-mono text-[11px] text-muted-foreground">
-                        {root}
-                      </div>
-                    </div>
-                    {pane.selectedPaths.length ? (
-                      <button
-                        type="button"
-                        className="inline-flex h-7 max-w-[112px] shrink-0 items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 text-[11px] font-medium text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-300"
-                        title={t("workspaceSftp.clearSelection")}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          clearSelection(side);
-                        }}
-                      >
-                        <span className="truncate">
-                          {t("workspaceSftp.selectedCount").replace(
-                            "{count}",
-                            String(pane.selectedPaths.length),
-                          )}
-                        </span>
-                      </button>
-                    ) : null}
+                  </div>
+                  {pane.selectedPaths.length ? (
                     <button
                       type="button"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-background hover:text-foreground"
-                      title={t("workspaceSftp.refresh")}
-                      onClick={() => refreshPane(side)}
+                      className="inline-flex h-7 max-w-[112px] shrink-0 items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 text-[11px] font-medium text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-300"
+                      title={t("workspaceSftp.clearSelection")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        clearSelection(side);
+                      }}
                     >
-                      <RefreshCw className={cn("h-4 w-4", pane.loading && "animate-spin")} />
-                    </button>
-                  </div>
-
-                  <div className="flex h-9 shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-3 text-xs">
-                    {pathCrumbs(pane.path, side, t("workspaceSftp.projectRoot")).map(
-                      (crumb, index) => (
-                        <button
-                          key={`${crumb.path}-${index}`}
-                          type="button"
-                          className="shrink-0 rounded px-1.5 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          onClick={() => void loadPane(side, crumb.path)}
-                        >
-                          {crumb.label || t("workspaceSftp.projectRoot")}
-                        </button>
-                      ),
-                    )}
-                  </div>
-
-                  {pane.error ? (
-                    <div className="m-3 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span className="min-w-0 break-words">{pane.error}</span>
-                    </div>
-                  ) : null}
-
-                  <div
-                    className="relative min-h-0 flex-1 overscroll-contain overflow-auto p-2"
-                    onClick={(event) => {
-                      const target = event.target;
-                      if (target instanceof HTMLElement && target.closest("[data-sftp-entry]"))
-                        return;
-                      clearSelection(side);
-                    }}
-                  >
-                    {dropMode ? (
-                      <div
-                        className={cn(
-                          "pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-lg bg-background/80 text-center opacity-75 shadow-inner backdrop-blur-[1px] transition-all",
-                          dropActive && "bg-emerald-500/10 opacity-100",
+                      <span className="truncate">
+                        {t("workspaceSftp.selectedCount").replace(
+                          "{count}",
+                          String(pane.selectedPaths.length),
                         )}
+                      </span>
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-background hover:text-foreground"
+                    title={t("workspaceSftp.refresh")}
+                    onClick={() => refreshPane(side)}
+                  >
+                    <RefreshCw className={cn("h-4 w-4", pane.loading && "animate-spin")} />
+                  </button>
+                </div>
+
+                <div className="flex h-9 shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-3 text-xs">
+                  {pathCrumbs(pane.path, side, t("workspaceSftp.projectRoot")).map(
+                    (crumb, index) => (
+                      <button
+                        key={`${crumb.path}-${index}`}
+                        type="button"
+                        className="shrink-0 rounded px-1.5 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        onClick={() => void loadPane(side, crumb.path)}
                       >
-                        <span
+                        {crumb.label || t("workspaceSftp.projectRoot")}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                {pane.error ? (
+                  <div className="m-3 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span className="min-w-0 break-words">{pane.error}</span>
+                  </div>
+                ) : null}
+
+                <div
+                  className="relative min-h-0 flex-1 overscroll-contain overflow-auto p-2"
+                  onClick={(event) => {
+                    const target = event.target;
+                    if (target instanceof HTMLElement && target.closest("[data-sftp-entry]"))
+                      return;
+                    clearSelection(side);
+                  }}
+                >
+                  {dropMode ? (
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-lg bg-background/80 text-center opacity-75 shadow-inner backdrop-blur-[1px] transition-all",
+                        dropActive && "bg-emerald-500/10 opacity-100",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute left-0 top-0 h-14 w-14 rounded-tl-lg border-l-2 border-t-2",
+                          dropActive ? "border-emerald-600" : "border-foreground/65",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "absolute right-0 top-0 h-14 w-14 rounded-tr-lg border-r-2 border-t-2",
+                          dropActive ? "border-emerald-600" : "border-foreground/65",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "absolute bottom-0 left-0 h-14 w-14 rounded-bl-lg border-b-2 border-l-2",
+                          dropActive ? "border-emerald-600" : "border-foreground/65",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "absolute bottom-0 right-0 h-14 w-14 rounded-br-lg border-b-2 border-r-2",
+                          dropActive ? "border-emerald-600" : "border-foreground/65",
+                        )}
+                      />
+                      <div className="flex max-w-[75%] flex-col items-center gap-3">
+                        <div
                           className={cn(
-                            "absolute left-0 top-0 h-14 w-14 rounded-tl-lg border-l-2 border-t-2",
-                            dropActive ? "border-emerald-600" : "border-foreground/65",
+                            "flex h-14 w-14 items-center justify-center rounded-xl border-2 bg-background/90 shadow-sm",
+                            dropActive
+                              ? "border-emerald-600 text-emerald-700 dark:text-emerald-300"
+                              : "border-foreground/70 text-foreground",
                           )}
-                        />
-                        <span
-                          className={cn(
-                            "absolute right-0 top-0 h-14 w-14 rounded-tr-lg border-r-2 border-t-2",
-                            dropActive ? "border-emerald-600" : "border-foreground/65",
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "absolute bottom-0 left-0 h-14 w-14 rounded-bl-lg border-b-2 border-l-2",
-                            dropActive ? "border-emerald-600" : "border-foreground/65",
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "absolute bottom-0 right-0 h-14 w-14 rounded-br-lg border-b-2 border-r-2",
-                            dropActive ? "border-emerald-600" : "border-foreground/65",
-                          )}
-                        />
-                        <div className="flex max-w-[75%] flex-col items-center gap-3">
-                          <div
-                            className={cn(
-                              "flex h-14 w-14 items-center justify-center rounded-xl border-2 bg-background/90 shadow-sm",
-                              dropActive
-                                ? "border-emerald-600 text-emerald-700 dark:text-emerald-300"
-                                : "border-foreground/70 text-foreground",
+                        >
+                          <DropIcon className="h-7 w-7" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">
+                            {t("workspaceSftp.dropHere")}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {t(
+                              dropMode === "upload"
+                                ? "workspaceSftp.drop.upload"
+                                : "workspaceSftp.drop.download",
                             )}
-                          >
-                            <DropIcon className="h-7 w-7" />
                           </div>
-                          <div>
-                            <div className="text-sm font-semibold text-foreground">
-                              {t("workspaceSftp.dropHere")}
+                          {dropPath ? (
+                            <div className="mx-auto mt-2 max-w-full truncate rounded bg-background/70 px-2 py-1 font-mono text-[11px] text-muted-foreground">
+                              {normalizePath(dropPath, side)}
                             </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {t(
-                                dropMode === "upload"
-                                  ? "workspaceSftp.drop.upload"
-                                  : "workspaceSftp.drop.download",
-                              )}
-                            </div>
-                            {dropPath ? (
-                              <div className="mx-auto mt-2 max-w-full truncate rounded bg-background/70 px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                                {normalizePath(dropPath, side)}
-                              </div>
-                            ) : null}
-                          </div>
+                          ) : null}
                         </div>
                       </div>
-                    ) : null}
-                    {pane.loading && pane.entries.length === 0 ? (
-                      <div className="flex h-full items-center justify-center gap-2 text-xs text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t("workspaceSftp.loading")}
-                      </div>
-                    ) : pane.entries.length === 0 ? (
-                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                        {t("workspaceSftp.empty")}
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {pane.entries.map((entry) => {
-                          const isSelected = pane.selectedPaths.includes(entry.path);
-                          return (
-                            <button
-                              key={entry.path}
-                              type="button"
-                              draggable={false}
-                              data-sftp-entry="true"
-                              data-sftp-drop-side={entry.kind === "directory" ? side : undefined}
-                              data-sftp-drop-path={
-                                entry.kind === "directory" ? entry.path : undefined
+                    </div>
+                  ) : null}
+                  {pane.loading && pane.entries.length === 0 ? (
+                    <div className="flex h-full items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t("workspaceSftp.loading")}
+                    </div>
+                  ) : pane.entries.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                      {t("workspaceSftp.empty")}
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {pane.entries.map((entry) => {
+                        const isSelected = pane.selectedPaths.includes(entry.path);
+                        return (
+                          <button
+                            key={entry.path}
+                            type="button"
+                            draggable={false}
+                            data-sftp-entry="true"
+                            data-sftp-drop-side={entry.kind === "directory" ? side : undefined}
+                            data-sftp-drop-path={
+                              entry.kind === "directory" ? entry.path : undefined
+                            }
+                            aria-pressed={isSelected}
+                            className={cn(
+                              "grid w-full touch-none cursor-default grid-cols-[minmax(0,1fr)_5.5rem] items-center gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted",
+                              isSelected &&
+                                "bg-emerald-500/10 text-foreground ring-1 ring-emerald-500/20",
+                              activeDragSource?.side === side &&
+                                dragItems(activeDragSource).some(
+                                  (item) => item.path === entry.path,
+                                ) &&
+                                "bg-muted text-muted-foreground opacity-70 ring-1 ring-border",
+                              dropTarget?.side === side &&
+                                dropTarget.path === entry.path &&
+                                entry.kind === "directory" &&
+                                "bg-emerald-500/10 text-foreground",
+                            )}
+                            onClick={(event) => {
+                              if (suppressNextClickRef.current) {
+                                suppressNextClickRef.current = false;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                return;
                               }
-                              aria-selected={isSelected}
-                              className={cn(
-                                "grid w-full cursor-default grid-cols-[minmax(0,1fr)_5.5rem] items-center gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted",
-                                !isMobileLayout && "touch-none",
-                                isSelected &&
-                                  "bg-emerald-500/10 text-foreground ring-1 ring-emerald-500/20",
-                                activeDragSource?.side === side &&
-                                  dragItems(activeDragSource).some(
-                                    (item) => item.path === entry.path,
-                                  ) &&
-                                  "bg-muted text-muted-foreground opacity-70 ring-1 ring-border",
-                                dropTarget?.side === side &&
-                                  dropTarget.path === entry.path &&
-                                  entry.kind === "directory" &&
-                                  "bg-emerald-500/10 text-foreground",
-                              )}
-                              onClick={(event) => {
-                                if (suppressNextClickRef.current) {
-                                  suppressNextClickRef.current = false;
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  return;
-                                }
-                                selectEntry(side, entry.path, event.ctrlKey || event.metaKey);
-                              }}
-                              onDoubleClick={() => {
-                                if (entry.kind === "directory") void loadPane(side, entry.path);
-                              }}
-                              onDragOver={(event) => {
-                                if (entry.kind === "directory") {
-                                  handleDragOver(event, side, entry.path);
-                                }
-                              }}
-                              onDragLeave={(event) => {
-                                if (entry.kind === "directory") {
-                                  handleDragLeave(event);
-                                }
-                              }}
-                              onDrop={(event) => {
-                                if (entry.kind === "directory") {
-                                  handleDrop(event, side, entry.path);
-                                }
-                              }}
-                              onDragStart={(event) => {
-                                const payload = createDragPayload(side, entry);
-                                nativeDragPayloadRef.current = payload;
-                                setActiveDragSource(payload);
-                                writeDragPayload(event.dataTransfer, payload);
-                              }}
-                              onPointerDown={(event) => {
-                                if (
-                                  event.button === 0 &&
-                                  event.isPrimary &&
-                                  (event.ctrlKey || event.metaKey)
-                                ) {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  selectEntry(side, entry.path, true);
-                                  suppressNextClickRef.current = true;
-                                  suppressNextContextMenuRef.current = event.ctrlKey;
-                                  window.setTimeout(() => {
-                                    suppressNextContextMenuRef.current = false;
-                                  }, 250);
-                                  return;
-                                }
-                                // On mobile, leave the pointer to the browser so the list scrolls
-                                // natively; transfers happen through the long-press context menu.
-                                if (isMobileLayout) return;
-                                try {
-                                  event.currentTarget.setPointerCapture(event.pointerId);
-                                } catch {
-                                  // Some WebViews reject capture during synthetic pointer streams.
-                                }
-                                beginPointerDrag(event, createDragPayload(side, entry));
-                              }}
-                              onDragEnd={() => {
-                                nativeDragPayloadRef.current = null;
-                                setDropTarget(null);
-                                setActiveDragSource(null);
-                                setDragPreview(null);
-                              }}
-                              onContextMenu={(event) => {
-                                if (suppressNextContextMenuRef.current) {
-                                  event.preventDefault();
-                                  event.stopPropagation();
+                              selectEntry(side, entry.path, event.ctrlKey || event.metaKey);
+                            }}
+                            onDoubleClick={() => {
+                              if (entry.kind === "directory") void loadPane(side, entry.path);
+                            }}
+                            onDragOver={(event) => {
+                              if (entry.kind === "directory") {
+                                handleDragOver(event, side, entry.path);
+                              }
+                            }}
+                            onDragLeave={(event) => {
+                              if (entry.kind === "directory") {
+                                handleDragLeave(event);
+                              }
+                            }}
+                            onDrop={(event) => {
+                              if (entry.kind === "directory") {
+                                handleDrop(event, side, entry.path);
+                              }
+                            }}
+                            onDragStart={(event) => {
+                              const payload = createDragPayload(side, entry);
+                              nativeDragPayloadRef.current = payload;
+                              setActiveDragSource(payload);
+                              writeDragPayload(event.dataTransfer, payload);
+                            }}
+                            onPointerDown={(event) => {
+                              if (
+                                event.button === 0 &&
+                                event.isPrimary &&
+                                (event.ctrlKey || event.metaKey)
+                              ) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                selectEntry(side, entry.path, true);
+                                suppressNextClickRef.current = true;
+                                suppressNextContextMenuRef.current = event.ctrlKey;
+                                window.setTimeout(() => {
                                   suppressNextContextMenuRef.current = false;
-                                  return;
-                                }
-                                openContextMenu(event, side, entry.path, entry.kind, true);
-                              }}
-                            >
-                              <span className="flex min-w-0 items-center gap-2">
-                                {entryIcon(entry)}
-                                <span className="truncate">{entry.name}</span>
-                              </span>
-                              <span className="text-right font-mono text-[11px] text-muted-foreground">
-                                {entry.kind === "directory" ? "--" : formatBytes(entry.sizeBytes)}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                                }, 250);
+                                return;
+                              }
+                              try {
+                                event.currentTarget.setPointerCapture(event.pointerId);
+                              } catch {
+                                // Some WebViews reject capture during synthetic pointer streams.
+                              }
+                              beginPointerDrag(event, createDragPayload(side, entry));
+                            }}
+                            onDragEnd={() => {
+                              nativeDragPayloadRef.current = null;
+                              setDropTarget(null);
+                              setActiveDragSource(null);
+                              setDragPreview(null);
+                            }}
+                            onContextMenu={(event) => {
+                              if (suppressNextContextMenuRef.current) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                suppressNextContextMenuRef.current = false;
+                                return;
+                              }
+                              openContextMenu(event, side, entry.path, entry.kind, true);
+                            }}
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              {entryIcon(entry)}
+                              <span className="truncate">{entry.name}</span>
+                            </span>
+                            <span className="text-right font-mono text-[11px] text-muted-foreground">
+                              {entry.kind === "directory" ? "--" : formatBytes(entry.sizeBytes)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              );
-            },
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -1646,9 +1585,8 @@ function CreateFolderDialog(props: {
           <input
             id="workspace-sftp-new-folder-name"
             value={value}
-            autoFocus
             disabled={submitting}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
             onChange={(event) => onChange(event.currentTarget.value)}
           />
         </div>
@@ -1719,7 +1657,6 @@ function CopyPathDialog(props: {
           <textarea
             value={text}
             readOnly
-            autoFocus
             className="min-h-28 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
             onFocus={(event) => event.currentTarget.select()}
           />
@@ -1829,9 +1766,8 @@ function RenameEntryDialog(props: {
           <input
             id="workspace-sftp-rename-entry-name"
             value={value}
-            autoFocus
             disabled={submitting}
-            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
             onChange={(event) => onChange(event.currentTarget.value)}
           />
         </div>

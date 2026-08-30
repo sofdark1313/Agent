@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocale } from "../../i18n";
+import { useLocale } from "@/i18n";
 import type {
   GitBranch as GitBranchInfo,
   GitClient,
   GitRepositoryState,
-} from "../../lib/git/types";
-import { emptyGitRepositoryState } from "../../lib/git/types";
-import { cn } from "../../lib/shared/utils";
-import type { WorkspaceActivityClient } from "../../lib/workspace-activity/types";
-import { useWorkspaceInvalidation } from "../../lib/workspace-activity/useWorkspaceInvalidation";
+} from "@/lib/git/types";
+import { emptyGitRepositoryState } from "@/lib/git/types";
+import { cn } from "@/lib/shared/utils";
+import type { WorkspaceActivityClient } from "@/lib/workspace-activity/types";
+import { useWorkspaceInvalidation } from "@/lib/workspace-activity/useWorkspaceInvalidation";
 import {
   Check,
   CloudDownload,
@@ -26,9 +26,9 @@ import {
   Trash2,
   Upload,
   X,
-} from "../icons";
-import { Button } from "../ui/button";
-import { useConfirmDialog } from "../ui/confirm-dialog";
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,9 +39,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function assertGitOperationResult(value: unknown, fallbackMessage: string) {
   if (!value || typeof value !== "object") return;
@@ -200,7 +200,7 @@ function GitInitModal(props: {
               id={branchId}
               value={branch}
               onChange={(event) => onBranchChange(event.target.value)}
-              className="h-9 text-xs"
+              className="h-9 text-sm"
               placeholder="main"
               autoFocus
               disabled={loading}
@@ -215,7 +215,7 @@ function GitInitModal(props: {
                 id={userNameId}
                 value={userName}
                 onChange={(event) => onUserNameChange(event.target.value)}
-                className="h-9 text-xs"
+                className="h-9 text-sm"
                 disabled={loading}
               />
             </div>
@@ -227,7 +227,7 @@ function GitInitModal(props: {
                 id={userEmailId}
                 value={userEmail}
                 onChange={(event) => onUserEmailChange(event.target.value)}
-                className="h-9 text-xs"
+                className="h-9 text-sm"
                 disabled={loading}
               />
             </div>
@@ -1014,7 +1014,7 @@ export function GitBranchSelector(props: {
         <DropdownMenuTrigger
           disabled={disabled || !gitClient || !workdir.trim()}
           className={cn(
-            "composer-reasoning-trigger inline-flex h-8 min-w-0 max-w-[13rem] items-center gap-1 rounded-full border px-2 text-xs font-medium outline-hidden transition-colors",
+            "composer-branch-trigger composer-reasoning-trigger inline-flex h-8 min-w-0 max-w-[13rem] items-center gap-1 rounded-full border px-2 text-xs font-medium outline-hidden transition-colors",
             noRepo
               ? "border-transparent bg-foreground/[0.04] text-muted-foreground"
               : "border-emerald-300/25 bg-emerald-50/65 text-foreground hover:bg-emerald-50 dark:border-emerald-300/15 dark:bg-emerald-400/[0.08] dark:hover:bg-emerald-400/[0.13]",

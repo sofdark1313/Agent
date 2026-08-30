@@ -28,13 +28,11 @@ import {
   FilePenLine,
   FolderTree,
   GitCommitHorizontal,
-  Loader2,
   MoreHorizontal,
   RefreshCw,
   Trash2,
 } from "../../icons";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
 import { useRightDockToolContext } from "../RightDockContext";
 import { DiffReviewCard } from "./DiffView";
 import {
@@ -82,10 +80,8 @@ export function GitReviewStatusView(props: {
   const {
     activeDiffView,
     collapsedSections,
-    commitMessage,
     data,
     onActiveDiffViewChange,
-    onCommitMessageChange,
     onStackedPaneChange,
     onToggleSection,
     panelRef,
@@ -194,7 +190,6 @@ export function GitReviewStatusView(props: {
   );
   const hiddenStagedEntryCount = Math.max(0, stagedEntries.length - visibleStagedEntries.length);
   const hiddenWorkingEntryCount = Math.max(0, workingEntries.length - visibleWorkingEntries.length);
-  const operationBusy = busy !== "";
   const hasStageableChanges = state.dirtyCounts.unstaged > 0 || state.dirtyCounts.untracked > 0;
   const hasStagedChanges = state.dirtyCounts.staged > 0;
   const hasDiscardableChanges = entries.length > 0;
@@ -569,6 +564,32 @@ export function GitReviewStatusView(props: {
           useSplitReviewLayout ? `grid ${GIT_REVIEW_SPLIT_GRID_CLASS}` : "flex flex-col",
         )}
       >
+        <main
+          ref={detailPaneRef}
+          className={cn(
+            "h-full min-h-0 flex-col overflow-hidden",
+            useSplitReviewLayout || stackedPane === "detail" ? "flex" : "hidden",
+            !useSplitReviewLayout && "flex-1",
+          )}
+        >
+          {selectedEntry ? (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <DiffReviewCard
+                activeView={activeDiffView}
+                branchDiff={branchDiff}
+                branchError={branchError}
+                diffLoading={diffLoading}
+                onActiveViewChange={onActiveDiffViewChange}
+                showStat={useSplitReviewLayout}
+                worktreeDiff={worktreeDiff}
+              />
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
+              {t("projectTools.gitReview.selectFileToViewDiff")}
+            </div>
+          )}
+        </main>
         <aside
           ref={listPaneRef}
           className={cn(
@@ -622,69 +643,6 @@ export function GitReviewStatusView(props: {
             )}
           </div>
         </aside>
-        <main
-          ref={detailPaneRef}
-          className={cn(
-            "h-full min-h-0 flex-col overflow-hidden",
-            useSplitReviewLayout || stackedPane === "detail" ? "flex" : "hidden",
-            !useSplitReviewLayout && "flex-1",
-          )}
-        >
-          <div className="mb-3 flex shrink-0 items-center gap-2">
-            <GitCommitHorizontal className="h-4 w-4 text-muted-foreground" />
-            <Input
-              value={commitMessage}
-              onChange={(event) => onCommitMessageChange(event.target.value)}
-              placeholder={t("projectTools.gitReview.commitMessagePlaceholder")}
-              disabled={writeDisabled || operationBusy}
-              className="h-8 text-[calc(11px*var(--zone-font-scale,1))] placeholder:text-[calc(11px*var(--zone-font-scale,1))] focus-visible:ring-1 focus-visible:ring-border/40"
-            />
-            <Button
-              size="sm"
-              disabled={writeDisabled || operationBusy || !commitMessage.trim()}
-              onClick={() => {
-                void runOperation(
-                  "commit",
-                  () => gitClient!.commit(cwd, commitMessage),
-                  "commit",
-                ).then((ok) => {
-                  if (ok) onCommitMessageChange("");
-                });
-              }}
-            >
-              {busy === "commit" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                t("projectTools.gitReview.commit")
-              )}
-            </Button>
-          </div>
-          {selectedEntry ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-              <div className="flex shrink-0 items-center gap-2 rounded-md border border-border/70 bg-muted/20 px-3 py-2 text-xs">
-                <span className="text-muted-foreground">
-                  {t("projectTools.gitReview.selected")}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-medium" title={selectedEntry.path}>
-                  {selectedEntry.path}
-                </span>
-              </div>
-              <DiffReviewCard
-                activeView={activeDiffView}
-                branchDiff={branchDiff}
-                branchError={branchError}
-                diffLoading={diffLoading}
-                onActiveViewChange={onActiveDiffViewChange}
-                showStat={useSplitReviewLayout}
-                worktreeDiff={worktreeDiff}
-              />
-            </div>
-          ) : (
-            <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
-              {t("projectTools.gitReview.selectFileToViewDiff")}
-            </div>
-          )}
-        </main>
       </div>
       {changesMenu ? (
         <div

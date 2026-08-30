@@ -1,12 +1,18 @@
 import type { KnownProvider, ModelThinkingLevel } from "@earendil-works/pi-ai";
-import { getSupportedThinkingLevels } from "@earendil-works/pi-ai";
 import { getBuiltinModels } from "@earendil-works/pi-ai/providers/all";
-import { DEFAULT_LOCALE, type Locale, normalizeLocale } from "../../i18n/config";
-import { mergeAlwaysEnabledSkillNames } from "../skills/builtin";
-import { SYSTEM_TOOL_OPTIONS, type SystemToolId } from "../tools/systemToolOptions";
-import { normalizeApiKey, normalizeBaseUrl, normalizeModels } from "./normalize";
+import { DEFAULT_LOCALE, type Locale, normalizeLocale } from "@/i18n/config";
+import { getAvailableThinkingLevelsForModel } from "../providers/runtime/modelFactory";
+import { mergeAlwaysEnabledSkillNames } from "@/lib/skills/builtin";
+import { SYSTEM_TOOL_OPTIONS, type SystemToolId } from "@/lib/tools/systemToolOptions";
+import {
+  type ApprovalPolicy,
+  type CustomApprovalRules,
+  DEFAULT_CUSTOM_APPROVAL_RULES,
+} from "@/lib/tools/toolApprovalPolicy";
+import { normalizeApiKey, normalizeBaseUrl, normalizeModels } from "@/lib/settings/normalize";
 
-export type { SystemToolId } from "../tools/systemToolOptions";
+export type { SystemToolId } from "@/lib/tools/systemToolOptions";
+export type { ApprovalPolicy, CustomApprovalRules } from "@/lib/tools/toolApprovalPolicy";
 
 export type ProviderId = "codex" | "claude_code" | "gemini";
 
@@ -127,8 +133,14 @@ export type CustomSettings = {
   fontScale: FontScaleSettings;
 };
 
+export type UpdateSettings = {
+  includePrereleases: boolean;
+};
+
 export type SystemSettings = {
   executionMode: ExecutionMode;
+  approvalPolicy: ApprovalPolicy;
+  customApprovalRules: CustomApprovalRules;
   workdir: string;
   selectedSystemTools: SystemToolId[];
   workspaceProjects: WorkspaceProject[];
@@ -264,6 +276,7 @@ export type AppSettings = {
   remote: RemoteSettings;
   memory: MemorySettings;
   customSettings: CustomSettings;
+  updates: UpdateSettings;
   skills: SkillsSettings;
   chatRuntimeControls: ChatRuntimeControls;
   selectedModel?: SelectedModel;
@@ -390,6 +403,47 @@ function normalizeExecutionMode(input: unknown): ExecutionMode {
     default:
       return "tools";
   }
+}
+
+function normalizeApprovalPolicy(
+  input: unknown,
+  legacyExecutionMode: ExecutionMode,
+): ApprovalPolicy {
+  switch (input) {
+    case "ask":
+    case "agent":
+    case "full":
+    case "custom":
+      return input;
+    default:
+      if (legacyExecutionMode === "text") return "ask";
+      if (legacyExecutionMode === "agent-dev") return "full";
+      return "agent";
+  }
+}
+
+function normalizeCustomApprovalRules(input: unknown): CustomApprovalRules {
+  const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  return {
+    allowWorkspaceWrites:
+      typeof obj.allowWorkspaceWrites === "boolean"
+        ? obj.allowWorkspaceWrites
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowWorkspaceWrites,
+    allowCommands:
+      typeof obj.allowCommands === "boolean"
+        ? obj.allowCommands
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowCommands,
+    allowNetwork:
+      typeof obj.allowNetwork === "boolean"
+        ? obj.allowNetwork
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowNetwork,
+    allowMcp:
+      typeof obj.allowMcp === "boolean" ? obj.allowMcp : DEFAULT_CUSTOM_APPROVAL_RULES.allowMcp,
+    allowOutsideWorkspace:
+      typeof obj.allowOutsideWorkspace === "boolean"
+        ? obj.allowOutsideWorkspace
+        : DEFAULT_CUSTOM_APPROVAL_RULES.allowOutsideWorkspace,
+  };
 }
 
 export function isAgentExecutionMode(mode: ExecutionMode): boolean {
@@ -603,10 +657,7 @@ export function resolveWorkspaceProjects(
       ? { lastConversationAt: defaultExisting.lastConversationAt }
       : {}),
     ...(defaultExisting?.isPinned
-      ? {
-          isPinned: true,
-          pinnedAt: defaultExisting.pinnedAt ?? defaultExisting.updatedAt,
-        }
+      ? { isPinned: true, pinnedAt: defaultExisting.pinnedAt ?? defaultExisting.updatedAt }
       : {}),
   };
 
@@ -744,8 +795,18 @@ export function getChatRuntimeReasoningLevelsForProvider(params: {
   providerId?: ProviderId;
   requestFormat?: CodexRequestFormat;
   modelId?: string;
+  baseUrl?: string;
+  modelConfig?: ProviderModelConfig;
 }): ReasoningLevel[] {
-  return getKnownModelThinkingLevels(params.providerId ?? "claude_code", params.modelId);
+  const modelId = params.modelId?.trim();
+  if (!modelId) return [];
+  return getAvailableThinkingLevelsForModel(
+    params.providerId ?? "claude_code",
+    modelId,
+    params.baseUrl ?? "",
+    params.requestFormat,
+    params.modelConfig,
+  );
 }
 
 export function normalizeChatRuntimeControlsForProvider(
@@ -754,6 +815,8 @@ export function normalizeChatRuntimeControlsForProvider(
     providerId?: ProviderId;
     requestFormat?: CodexRequestFormat;
     modelId?: string;
+    baseUrl?: string;
+    modelConfig?: ProviderModelConfig;
   },
 ): ChatRuntimeControls {
   const controls = normalizeChatRuntimeControls(input);
@@ -784,6 +847,8 @@ export function updateChatRuntimeControlsForProvider(
     providerId?: ProviderId;
     requestFormat?: CodexRequestFormat;
     modelId?: string;
+    baseUrl?: string;
+    modelConfig?: ProviderModelConfig;
   },
 ): ChatRuntimeControls {
   const key = getChatRuntimeReasoningProviderKey(params);
@@ -921,48 +986,17 @@ function toKnownProvider(providerId: ProviderId): KnownProvider {
   return "anthropic";
 }
 
-function findKnownModel(providerId: ProviderId, modelId: string | undefined) {
-  const trimmedId = modelId?.trim();
-  if (!trimmedId) return undefined;
-  return getBuiltinModels(toKnownProvider(providerId)).find((model) => model.id === trimmedId);
-}
-
 function getKnownModelLimits(
   providerId: ProviderId,
   modelId: string | undefined,
 ): Pick<ProviderModelConfig, "contextWindow" | "maxOutputToken"> | undefined {
-  const known = findKnownModel(providerId, modelId);
+  const trimmedId = modelId?.trim();
+  if (!trimmedId) return undefined;
+  const known = getBuiltinModels(toKnownProvider(providerId)).find(
+    (model) => model.id === trimmedId,
+  );
   if (!known) return undefined;
   return { contextWindow: known.contextWindow, maxOutputToken: known.maxTokens };
-}
-
-export function getKnownModelThinkingLevels(
-  providerId: ProviderId,
-  modelId: string | undefined,
-): ReasoningLevel[] {
-  const trimmedId = modelId?.trim();
-  if (!trimmedId) return [];
-  const known = findKnownModel(providerId, trimmedId);
-  // 目录之外的自定义模型（deepseek/glm 等三方聚合）无法从 id 判断推理能力，
-  // 与桌面端 modelFactory 自定义分支一致按可推理处理：标准档位，xhigh/max
-  // 仍需目录 opt-in；deepseek 走 codex 时镜像桌面端 DeepSeek 适配层的 xhigh 档。
-  const model =
-    known ??
-    ({
-      reasoning: true,
-      ...(providerId === "codex" && trimmedId.toLowerCase().includes("deepseek")
-        ? { thinkingLevelMap: { xhigh: "max" } }
-        : {}),
-    } as Parameters<typeof getSupportedThinkingLevels>[0]);
-  return getSupportedThinkingLevels(model).filter((level) => level !== "off");
-}
-
-export function isThinkingAlwaysOnForModel(
-  providerId: ProviderId,
-  modelId: string | undefined,
-): boolean {
-  const known = findKnownModel(providerId, modelId);
-  return known ? !getSupportedThinkingLevels(known).includes("off") : false;
 }
 
 export function getProviderModelDefaults(
@@ -1258,8 +1292,18 @@ function normalizeSshProjectHostAssociations(
 
 export function normalizeSystemSettings(input: unknown): SystemSettings {
   const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const legacyExecutionMode = normalizeExecutionMode(obj.executionMode);
+  const hasExplicitApprovalPolicy =
+    obj.approvalPolicy === "ask" ||
+    obj.approvalPolicy === "agent" ||
+    obj.approvalPolicy === "full" ||
+    obj.approvalPolicy === "custom";
+  const executionMode =
+    legacyExecutionMode === "text" && !hasExplicitApprovalPolicy ? "tools" : legacyExecutionMode;
   return {
-    executionMode: normalizeExecutionMode(obj.executionMode),
+    executionMode,
+    approvalPolicy: normalizeApprovalPolicy(obj.approvalPolicy, legacyExecutionMode),
+    customApprovalRules: normalizeCustomApprovalRules(obj.customApprovalRules),
     workdir: normalizeWorkdir(obj.workdir),
     selectedSystemTools: normalizeSystemToolSelection(obj.selectedSystemTools),
     workspaceProjects: normalizeWorkspaceProjects(obj.workspaceProjects),
@@ -1351,10 +1395,8 @@ export function resolveEffectiveTheme(theme: Theme): EffectiveTheme {
   return window.matchMedia(SYSTEM_THEME_MEDIA_QUERY).matches ? "dark" : "light";
 }
 
-export function getNextTheme(theme: Theme): Theme {
-  if (theme === "light") return "dark";
-  if (theme === "dark") return "system";
-  return "light";
+export function getNextTheme(theme: Theme): EffectiveTheme {
+  return resolveEffectiveTheme(theme) === "dark" ? "light" : "dark";
 }
 
 export function subscribeToSystemThemePreference(listener: () => void): () => void {
@@ -1759,11 +1801,20 @@ export function normalizeCustomSettings(
   };
 }
 
+export function normalizeUpdateSettings(input: unknown): UpdateSettings {
+  const obj = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  return {
+    includePrereleases: obj.includePrereleases === true,
+  };
+}
+
 export function getDefaultSettings(): AppSettings {
   const customProviders = getBuiltinCustomProviders();
   return {
     system: {
       executionMode: "tools",
+      approvalPolicy: "agent",
+      customApprovalRules: { ...DEFAULT_CUSTOM_APPROVAL_RULES },
       workdir: "",
       selectedSystemTools: [],
       workspaceProjects: [],
@@ -1797,6 +1848,7 @@ export function getDefaultSettings(): AppSettings {
     },
     memory: normalizeMemorySettings({}, customProviders),
     customSettings: normalizeCustomSettings({}, customProviders),
+    updates: normalizeUpdateSettings({}),
     skills: {
       enabled: true,
       selected: mergeAlwaysEnabledSkillNames([]),
@@ -1831,6 +1883,7 @@ export function normalizeSettings(input?: Partial<AppSettings> | null): AppSetti
       obj.customSettings ?? defaults.customSettings,
       customProviders,
     ),
+    updates: normalizeUpdateSettings(obj.updates ?? defaults.updates),
     skills: normalizeSkillsSettings(obj.skills ?? defaults.skills),
     chatRuntimeControls: normalizeChatRuntimeControls(
       obj.chatRuntimeControls ?? defaults.chatRuntimeControls,
@@ -2237,6 +2290,19 @@ export function updateRightDockFileTreeState(
   });
 }
 
+export function updateUpdateSettings(
+  prev: AppSettings,
+  patch: Partial<UpdateSettings>,
+): AppSettings {
+  return normalizeSettings({
+    ...prev,
+    updates: {
+      ...prev.updates,
+      ...patch,
+    },
+  });
+}
+
 export function updateCustomProviders(
   prev: AppSettings,
   customProviders: CustomProvider[],
@@ -2256,3 +2322,12 @@ export function setSelectedModel(
     selectedModel,
   });
 }
+
+export {
+  applyMcpOps,
+  applyMcpOpsToAppSettings,
+  type McpSettingsOp,
+  selectEnabledMcpServers,
+} from "./mcpOps";
+
+export { isThinkingAlwaysOnForModel } from "../providers/runtime/modelFactory";

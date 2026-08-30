@@ -73,6 +73,7 @@ function useStableCallback<Args extends unknown[], Return>(
 }
 
 export type GatewaySidebarContainerProps = {
+  approvalPolicy?: any;
   store: SidebarStore;
   currentConversationId: string;
   isOpen: boolean;
@@ -316,7 +317,7 @@ export function GatewaySidebarContainer(props: GatewaySidebarContainerProps) {
       renameDraft={renameDraft}
       isOpen={props.isOpen}
       headerModeSelector={
-        <ChatModeSelector executionMode={props.executionMode} setSettings={props.setSettings} />
+        <ChatModeSelector executionMode={props.executionMode} approvalPolicy={props.approvalPolicy} setSettings={props.setSettings} />
       }
       fontScale={props.fontScale}
       activeView={props.activeView}

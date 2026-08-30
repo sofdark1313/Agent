@@ -34,37 +34,48 @@
     color-scheme: light;
 
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 12%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 30 6% 96%;
+    --secondary-foreground: 0 0% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 6% 96%;
+    --muted-foreground: 0 0% 43%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 30 6% 94%;
+    --accent-foreground: 0 0% 12%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 30 5% 88%;
+    --input: 30 5% 84%;
+    --ring: 0 0% 35%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+
+    --agent-canvas: 0 0% 100%;
+    --agent-sidebar: 36 8% 96%;
+    --agent-surface-raised: 0 0% 100%;
+    --agent-surface-subtle: 30 6% 97%;
+    --agent-sidebar-width: 260px;
+    --agent-topbar-height: 44px;
+    --agent-content-width: 860px;
+    --agent-dock-width: 420px;
+    --agent-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(0, 0, 0, 0.05);
+    --agent-shadow-menu: 0 16px 40px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
 
     /* Sidebar */
-    --sidebar-bg: 220 14% 96%;
+    --sidebar-bg: var(--agent-sidebar);
 
     /* Hub pages (MCP/Skills) canvas — in dark it sits below --background so
        background-tinted glass panels read as elevated surfaces. */
@@ -77,8 +88,8 @@
     --send-disabled-bg: 220 13% 91%;
 
     /* Chat-specific tokens */
-    --chat-user-bg: 220 9% 91%;
-    --chat-user-fg: 222 84% 5%;
+    --chat-user-bg: 30 5% 93%;
+    --chat-user-fg: 0 0% 12%;
     --chat-assistant-bg: 0 0% 100%;
     --chat-assistant-fg: 222.2 84% 4.9%;
     --chat-tool-bg: 0 0% 100%;
@@ -113,33 +124,40 @@
   .dark {
     color-scheme: dark;
 
-    --background: 224 22% 9%;
-    --foreground: 210 30% 96%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 92%;
 
-    --card: 224 22% 10%;
-    --card-foreground: 210 30% 96%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 224 20% 12%;
-    --popover-foreground: 210 30% 96%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 210 30% 96%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 92%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 18% 17%;
-    --secondary-foreground: 210 30% 96%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 220 18% 17%;
-    --muted-foreground: 215 18% 76%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 64%;
 
-    --accent: 220 18% 17%;
-    --accent-foreground: 210 30% 96%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 94%;
 
     --destructive: 0 62.8% 36%;
     --destructive-foreground: 210 30% 96%;
 
-    --border: 220 14% 26%;
-    --input: 220 14% 26%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 0 0% 22%;
+    --input: 0 0% 28%;
+    --ring: 0 0% 62%;
+
+    --agent-canvas: 0 0% 8%;
+    --agent-sidebar: 0 0% 10.5%;
+    --agent-surface-raised: 0 0% 12%;
+    --agent-surface-subtle: 0 0% 11%;
+    --agent-shadow-float: 0 16px 40px rgba(0, 0, 0, 0.42), 0 2px 10px rgba(0, 0, 0, 0.32);
+    --agent-shadow-menu: 0 20px 48px rgba(0, 0, 0, 0.56), 0 4px 12px rgba(0, 0, 0, 0.36);
 
     /* Chip / pill buttons (dark) */
     --chip-bg: 220 16% 24%;
@@ -151,15 +169,15 @@
     --hub-canvas: 224 24% 6.5%;
 
     /* Chat-specific tokens (dark) */
-    --sidebar-bg: 224 22% 11%;
-    --chat-user-bg: 220 14% 28%;
-    --chat-user-fg: 210 30% 96%;
-    --chat-assistant-bg: 224 22% 9%;
-    --chat-assistant-fg: 210 30% 96%;
-    --chat-tool-bg: 224 22% 9%;
-    --chat-tool-border: 220 14% 24%;
-    --chat-thinking-bg: 220 18% 13%;
-    --chat-thinking-border: 220 14% 22%;
+    --sidebar-bg: var(--agent-sidebar);
+    --chat-user-bg: 0 0% 18%;
+    --chat-user-fg: 0 0% 94%;
+    --chat-assistant-bg: 0 0% 8%;
+    --chat-assistant-fg: 0 0% 92%;
+    --chat-tool-bg: 0 0% 10%;
+    --chat-tool-border: 0 0% 22%;
+    --chat-thinking-bg: 0 0% 11%;
+    --chat-thinking-border: 0 0% 20%;
     --chat-success: 152 56% 52%;
     --chat-error: 0 75% 65%;
     --chat-running: 252 60% 70%;
@@ -250,6 +268,57 @@
     background: hsl(var(--muted-foreground) / 0.35);
   }
 
+  .project-tools-panel-tabs {
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .project-tools-panel-tabs::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .project-tools-panel-tabs-scrollbar {
+    position: relative;
+    height: 4px;
+    flex: 0 0 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: hsl(var(--muted) / 0.42);
+    opacity: 0;
+    pointer-events: none;
+    touch-action: none;
+    transition:
+      background-color 160ms ease,
+      opacity 160ms ease;
+  }
+  .project-tools-panel-tabs-scrollbar-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .project-tools-panel-tabs-scrollbar-thumb {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    min-width: 28px;
+    border-radius: inherit;
+    background: hsl(var(--muted-foreground) / 0.22);
+    box-shadow: inset 0 0 0 1px hsl(var(--background) / 0.82);
+    transition:
+      background-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .project-tools-panel-tabs-scrollbar:hover,
+  .project-tools-panel-tabs-scrollbar-dragging {
+    background: hsl(var(--muted) / 0.5);
+  }
+  .project-tools-panel-tabs-scrollbar:hover .project-tools-panel-tabs-scrollbar-thumb,
+  .project-tools-panel-tabs-scrollbar-dragging .project-tools-panel-tabs-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.36);
+  }
+
   /* Upload file list scrollbar */
   .upload-file-list {
     scrollbar-width: thin;
@@ -278,6 +347,49 @@
     background: hsl(var(--muted-foreground) / 0.4);
   }
 
+  .chat-queue-scroll {
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .chat-queue-scroll::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .chat-queue-scrollbar {
+    position: absolute;
+    top: 2px;
+    right: 1px;
+    bottom: 2px;
+    z-index: 2;
+    width: 8px;
+    border-radius: 999px;
+    background: hsl(var(--muted) / 0.36);
+    box-shadow: inset 0 0 0 1px hsl(var(--background) / 0.42);
+    cursor: default;
+    touch-action: none;
+  }
+  .chat-queue-scrollbar-thumb {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: 0;
+    min-height: 24px;
+    border-radius: 999px;
+    background: hsl(var(--muted-foreground) / 0.42);
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--background) / 0.55),
+      0 1px 2px hsl(220 22% 10% / 0.08);
+    transition: background-color 0.16s ease;
+  }
+  .chat-queue-scrollbar:hover .chat-queue-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.56);
+  }
+  .chat-queue-scrollbar-thumb:active {
+    background: hsl(var(--muted-foreground) / 0.7);
+  }
+
   .tool-text-scroll {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
@@ -304,6 +416,57 @@
   }
   .tool-text-scroll:hover::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.38);
+  }
+
+  /* SSH/Bash terminal viewport - keep padding on .xterm so fit() measures rows correctly. */
+  .project-terminal-viewport {
+    --project-terminal-padding-x: 0.75rem;
+    --project-terminal-padding-y: 0.625rem;
+    --project-terminal-scrollbar-size: 8px;
+    --project-terminal-background: hsl(var(--background));
+    background: var(--project-terminal-background);
+  }
+  .project-terminal-viewport .xterm {
+    background: var(--project-terminal-background);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: var(--project-terminal-padding-y) var(--project-terminal-padding-x)
+      var(--project-terminal-padding-y) var(--project-terminal-padding-x);
+  }
+  .project-terminal-viewport .xterm-viewport,
+  .project-terminal-viewport .xterm-screen,
+  .project-terminal-viewport .xterm-scrollable-element {
+    background: var(--project-terminal-background) !important;
+  }
+  .project-terminal-viewport .xterm-scrollable-element > .scrollbar.vertical > .slider {
+    border-radius: 999px;
+  }
+  .project-terminal-viewport .xterm-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.2s ease;
+  }
+  .project-terminal-viewport:hover .xterm-viewport {
+    scrollbar-color: hsl(var(--muted-foreground) / 0.32) transparent;
+  }
+  .project-terminal-viewport .xterm-viewport::-webkit-scrollbar {
+    width: var(--project-terminal-scrollbar-size);
+    height: var(--project-terminal-scrollbar-size);
+  }
+  .project-terminal-viewport .xterm-viewport::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .project-terminal-viewport .xterm-viewport::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.2s ease;
+  }
+  .project-terminal-viewport:hover .xterm-viewport::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.28);
+  }
+  .project-terminal-viewport .xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45);
   }
 
   .git-review-transient-scrollbar {
@@ -587,6 +750,42 @@
     margin-bottom: 0;
   }
 
+  .release-notes-markdown {
+    @apply text-xs leading-relaxed text-muted-foreground;
+  }
+  .release-notes-markdown p {
+    @apply my-2 text-xs leading-relaxed text-muted-foreground;
+  }
+  .release-notes-markdown [data-streamdown="heading-1"] {
+    @apply mb-2 mt-3 text-sm font-semibold text-foreground;
+  }
+  .release-notes-markdown [data-streamdown="heading-2"] {
+    @apply mb-2 mt-3 text-sm font-semibold text-foreground;
+  }
+  .release-notes-markdown [data-streamdown="heading-3"] {
+    @apply mb-1.5 mt-3 text-xs font-semibold text-foreground;
+  }
+  .release-notes-markdown [data-streamdown="unordered-list"] {
+    @apply my-2 ml-0 list-disc space-y-1 pl-5;
+  }
+  .release-notes-markdown [data-streamdown="ordered-list"] {
+    @apply my-2 ml-0 list-decimal space-y-1 pl-5;
+  }
+  .release-notes-markdown [data-streamdown="list-item"] {
+    @apply pl-1 text-xs leading-relaxed text-muted-foreground;
+  }
+  .release-notes-markdown [data-streamdown="blockquote"] {
+    @apply my-2 border-l-2 border-border/70 pl-3 text-xs not-italic text-muted-foreground;
+  }
+  .release-notes-markdown [data-streamdown="inline-code"] {
+    @apply rounded border border-border/50 bg-muted/60 px-1 py-0.5 font-mono text-[calc(11px*var(--zone-font-scale,1))] text-foreground/90;
+  }
+
+  /* Smooth entrance for chat bubbles */
+  .chat-bubble-enter {
+    animation: chatBubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   /*
    * User bubble text wrapping rules.
    * Width constraints live on the parent wrapper (.chat-user-bubble-wrap)
@@ -597,6 +796,58 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+
+  @keyframes chatBubbleIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Jump-to-bottom affordance: mounted only while scroll-follow is detached,
+   * so it only needs an entrance animation. Centering lives here because the
+   * animation transform would override a Tailwind translate utility.
+   * Frosted-glass treatment follows the .hub-frost-hero idiom (translucent
+   * theme tint + blur/saturate, white-tint override in dark). */
+  .chat-jump-to-bottom {
+    transform: translateX(-50%);
+    animation: chatJumpToBottomIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid hsl(var(--border) / 0.55);
+    background: hsl(var(--background) / 0.45);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.45) inset,
+      0 8px 24px -14px hsl(0 0% 0% / 0.35);
+  }
+  .chat-jump-to-bottom:hover {
+    background: hsl(var(--background) / 0.65);
+  }
+  .dark .chat-jump-to-bottom {
+    border-color: hsl(0 0% 100% / 0.12);
+    background: hsl(0 0% 100% / 0.06);
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.08) inset,
+      0 8px 24px -14px hsl(0 0% 0% / 0.6);
+  }
+  .dark .chat-jump-to-bottom:hover {
+    background: hsl(0 0% 100% / 0.11);
+  }
+
+  @keyframes chatJumpToBottomIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   }
 
   /* Settings page section transitions */
@@ -640,6 +891,40 @@
     overflow: hidden;
   }
 
+  /* Settings modal open/close motion (mirrors the gateway web styles.css). */
+  .settings-modal-overlay {
+    opacity: 0;
+    transition: opacity 180ms ease;
+    will-change: opacity;
+  }
+
+  .settings-modal-overlay[data-state="open"] {
+    opacity: 1;
+  }
+
+  .settings-modal-overlay[data-state="closed"] {
+    pointer-events: none;
+  }
+
+  .settings-modal-panel {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+    transition:
+      opacity 180ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .settings-modal-overlay[data-state="open"] .settings-modal-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .settings-modal-overlay[data-state="closed"] .settings-modal-panel {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
   @keyframes settingsSectionIn {
     from {
       opacity: 0;
@@ -655,6 +940,24 @@
     from {
       opacity: 0;
       transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Settings system-tools tab views: soft enter when switching between the
+   * built-in and custom tabs (the view wrapper is keyed by tab). */
+  .settings-tools-view-enter {
+    animation: settingsToolsViewIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+  }
+
+  @keyframes settingsToolsViewIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
     }
     to {
       opacity: 1;
@@ -681,17 +984,21 @@
   }
 
   /* Sidebar workspace / recent-conversation context menus: grow out of the
-   * anchor with a soft slide instead of popping in. Radix drives the popup
-   * lifecycle, so enter/exit are keyed off data-state and the closing
-   * animation delays unmount. */
+   * anchor with a soft slide instead of popping in. Base UI drives the popup
+   * lifecycle, so enter/exit are keyed off data-starting-style /
+   * data-ending-style and the transition delays unmount. */
   .sidebar-context-menu {
     /* Slide from the anchor side; flipped placements override per data-side. */
     --sidebar-menu-slide-x: -6px;
     --sidebar-menu-slide-y: 0px;
-    transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .sidebar-context-menu[data-side="left"] {
+  .sidebar-context-menu[data-side="left"],
+  .sidebar-context-menu[data-side="inline-start"] {
     --sidebar-menu-slide-x: 6px;
   }
 
@@ -705,62 +1012,36 @@
     --sidebar-menu-slide-y: 6px;
   }
 
-  .sidebar-context-menu[data-state="open"] {
-    animation: sidebarMenuIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Override shadcn default animate-in */
-    --tw-enter-opacity: initial;
-    --tw-enter-scale: initial;
-    --tw-enter-translate-x: initial;
+  .sidebar-context-menu[data-starting-style],
+  .sidebar-context-menu[data-ending-style] {
+    opacity: 0;
+    transform: translate(var(--sidebar-menu-slide-x), var(--sidebar-menu-slide-y)) scale(0.96);
   }
 
-  .sidebar-context-menu[data-state="closed"] {
-    animation: sidebarMenuOut 0.12s cubic-bezier(0.4, 0, 1, 1);
-    /* Override shadcn default animate-out */
-    --tw-exit-opacity: initial;
-    --tw-exit-scale: initial;
-    --tw-exit-translate-x: initial;
+  .sidebar-context-menu[data-ending-style] {
+    transition-duration: 0.12s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    transform: translate(
+        calc(var(--sidebar-menu-slide-x) / 2),
+        calc(var(--sidebar-menu-slide-y) / 2)
+      )
+      scale(0.98);
   }
 
-  @keyframes sidebarMenuIn {
-    from {
-      opacity: 0;
-      transform: translate(var(--sidebar-menu-slide-x), var(--sidebar-menu-slide-y)) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translate(0, 0) scale(1);
-    }
-  }
-
-  @keyframes sidebarMenuOut {
-    from {
-      opacity: 1;
-      transform: translate(0, 0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translate(
-          calc(var(--sidebar-menu-slide-x) / 2),
-          calc(var(--sidebar-menu-slide-y) / 2)
-        )
-        scale(0.98);
-    }
-  }
-
-  .sidebar-context-menu[data-state="open"] [role="menuitem"] {
+  .sidebar-context-menu[data-open] [role="menuitem"] {
     animation: sidebarMenuItemIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .sidebar-context-menu[data-state="open"] [role="menuitem"]:nth-child(2) {
+  .sidebar-context-menu[data-open] [role="menuitem"]:nth-child(2) {
     animation-delay: 0.02s;
   }
-  .sidebar-context-menu[data-state="open"] [role="menuitem"]:nth-child(3) {
+  .sidebar-context-menu[data-open] [role="menuitem"]:nth-child(3) {
     animation-delay: 0.04s;
   }
-  .sidebar-context-menu[data-state="open"] [role="menuitem"]:nth-child(4) {
+  .sidebar-context-menu[data-open] [role="menuitem"]:nth-child(4) {
     animation-delay: 0.06s;
   }
-  .sidebar-context-menu[data-state="open"] [role="menuitem"]:nth-child(n + 5) {
+  .sidebar-context-menu[data-open] [role="menuitem"]:nth-child(n + 5) {
     animation-delay: 0.08s;
   }
 
@@ -778,9 +1059,39 @@
     }
   }
 
+  /* Confirm-action popover (reply retry, settings deletes): grow out of the
+   * anchor. Base UI drives the popup lifecycle, so enter/exit key off
+   * data-starting-style / data-ending-style and the transition delays
+   * unmount. */
+  .confirm-action-popover-popup {
+    /* Slide from the anchor side; top placement overrides per data-side. */
+    --confirm-popover-slide-y: -6px;
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .confirm-action-popover-popup[data-side="top"] {
+    --confirm-popover-slide-y: 6px;
+  }
+
+  .confirm-action-popover-popup[data-starting-style],
+  .confirm-action-popover-popup[data-ending-style] {
+    opacity: 0;
+    transform: translateY(var(--confirm-popover-slide-y)) scale(0.96);
+  }
+
+  .confirm-action-popover-popup[data-ending-style] {
+    transition-duration: 0.12s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    transform: translateY(calc(var(--confirm-popover-slide-y) / 2)) scale(0.98);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .settings-section-enter,
     .settings-section-title-enter,
+    .settings-tools-view-enter,
     .chat-history-scope-enter {
       animation: none;
     }
@@ -791,8 +1102,15 @@
       transition: none !important;
     }
 
+    .confirm-action-popover-popup {
+      animation: none !important;
+      transition: none !important;
+    }
+
     .ssh-auth-panel,
-    .ssh-collapsible {
+    .ssh-collapsible,
+    .settings-modal-overlay,
+    .settings-modal-panel {
       transition-duration: 1ms;
     }
   }
@@ -1179,29 +1497,10 @@
     animation-delay: 0.12s;
   }
 
-  /* Composer reasoning select animations */
-  @keyframes composerReasoningDropdownIn {
-    from {
-      opacity: 0;
-      transform: translateY(6px) scale(0.97);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @keyframes composerReasoningDropdownOut {
-    from {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(5px) scale(0.975);
-    }
-  }
-
+  /* Composer reasoning select / branch selector animations.
+   * Base UI drives both popups, so open styling keys off data-popup-open on
+   * the trigger and enter/exit key off data-starting-style / data-ending-style
+   * on the popup (data-state rules never match Base UI). */
   @keyframes composerReasoningItemIn {
     from {
       opacity: 0;
@@ -1213,92 +1512,73 @@
     }
   }
 
-  .composer-reasoning-trigger[data-state="open"] {
+  .composer-reasoning-trigger[data-popup-open] {
     box-shadow:
       0 8px 18px -14px rgba(88, 28, 135, 0.55),
       inset 0 0 0 1px rgba(167, 139, 250, 0.12);
   }
 
-  .composer-reasoning-dropdown[data-state="open"] {
-    animation: composerReasoningDropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: var(--radix-select-content-transform-origin);
-    --tw-enter-opacity: initial;
-    --tw-enter-scale: initial;
-    --tw-enter-translate-y: initial;
+  .composer-reasoning-dropdown,
+  .composer-branch-dropdown {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .composer-reasoning-dropdown[data-state="closed"] {
-    animation: composerReasoningDropdownOut 0.12s cubic-bezier(0.4, 0, 1, 1);
-    transform-origin: var(--radix-select-content-transform-origin);
-    --tw-exit-opacity: initial;
-    --tw-exit-scale: initial;
-    --tw-exit-translate-y: initial;
+  .composer-reasoning-dropdown[data-starting-style],
+  .composer-reasoning-dropdown[data-ending-style],
+  .composer-branch-dropdown[data-starting-style],
+  .composer-branch-dropdown[data-ending-style] {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+
+  .composer-reasoning-dropdown[data-ending-style],
+  .composer-branch-dropdown[data-ending-style] {
+    transition-duration: 0.12s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    transform: translateY(5px) scale(0.975);
   }
 
   /* `backwards` (not `both`): a filled forwards animation would keep holding
    * transform after it ends and suppress the item highlight translate. */
-  .composer-reasoning-dropdown[data-state="open"] .composer-reasoning-item {
+  .composer-reasoning-dropdown[data-open] .composer-reasoning-item {
     animation: composerReasoningItemIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
-  /* Branch selector dropdown shares the reasoning-select motion. */
-  .composer-branch-dropdown[data-state="open"] {
-    animation: composerReasoningDropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    transform-origin: var(--radix-dropdown-menu-content-transform-origin, bottom left);
-  }
-
-  .composer-branch-dropdown[data-state="closed"] {
-    animation: composerReasoningDropdownOut 0.12s cubic-bezier(0.4, 0, 1, 1) forwards;
-    transform-origin: var(--radix-dropdown-menu-content-transform-origin, bottom left);
-  }
-
   /* Chat header model selector: grow out of the trigger with a soft slide.
-   * Radix keeps the popup mounted while the data-state="closed" animation
-   * plays, so exit stays keyframe-driven; `forwards` holds the final frame
-   * until unmount. */
+   * Base UI drives the popup lifecycle, so enter/exit are keyed off
+   * data-starting-style / data-ending-style and the transition delays
+   * unmount (data-state rules never match Base UI popups). */
   .model-selector-dropdown {
     /* Slide from the anchor side; flipped placement overrides per data-side. */
     --model-menu-slide-y: -6px;
-    transform-origin: var(--radix-dropdown-menu-content-transform-origin, top left);
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .model-selector-dropdown[data-side="top"] {
     --model-menu-slide-y: 6px;
   }
 
-  .model-selector-dropdown[data-state="open"] {
-    animation: modelSelectorDropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  .model-selector-dropdown[data-starting-style],
+  .model-selector-dropdown[data-ending-style] {
+    opacity: 0;
+    transform: translateY(var(--model-menu-slide-y)) scale(0.96);
   }
 
-  .model-selector-dropdown[data-state="closed"] {
-    animation: modelSelectorDropdownOut 0.12s cubic-bezier(0.4, 0, 1, 1) forwards;
-  }
-
-  @keyframes modelSelectorDropdownIn {
-    from {
-      opacity: 0;
-      transform: translateY(var(--model-menu-slide-y)) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @keyframes modelSelectorDropdownOut {
-    from {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(calc(var(--model-menu-slide-y) / 2)) scale(0.98);
-    }
+  .model-selector-dropdown[data-ending-style] {
+    transition-duration: 0.12s;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+    transform: translateY(calc(var(--model-menu-slide-y) / 2)) scale(0.98);
   }
 
   /* `backwards` (not `both`): a filled forwards animation would keep holding
    * transform after it ends and suppress the item highlight translate. */
-  .model-selector-dropdown[data-state="open"] .model-selector-item {
+  .model-selector-dropdown[data-open] .model-selector-item {
     animation: modelSelectorItemIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
@@ -1326,7 +1606,10 @@
     }
 
     .composer-reasoning-trigger,
-    .composer-reasoning-trigger > svg:last-child,
+    .composer-reasoning-trigger svg:last-child,
+    .composer-reasoning-dropdown,
+    .composer-branch-dropdown,
+    .model-selector-dropdown,
     .model-selector-trigger,
     .model-selector-trigger svg {
       transition: none !important;
@@ -2117,6 +2400,240 @@
 }
 
 /*
+ * SSH settings — responsive helpers. Unlayered so these win over the
+ * Tailwind flex/align/gap/padding utilities on the same elements
+ * (utilities layer > components layer in Tailwind v4 cascade).
+ */
+/* Codex-style settings document. Unlayered so it wins over utility classes. */
+.agent-settings-document {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 32px;
+  padding-bottom: 48px;
+}
+
+.agent-settings-group {
+  width: 100%;
+}
+
+.agent-settings-group-header {
+  display: flex;
+  min-height: 38px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 12px;
+}
+
+.agent-settings-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.agent-settings-group-title > svg {
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-settings-group-description {
+  margin-top: 5px;
+  max-width: 620px;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.agent-settings-option-list {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border) / 0.72);
+  border-radius: 10px;
+  background: hsl(var(--agent-surface-raised));
+}
+
+.agent-settings-option {
+  display: flex;
+  width: 100%;
+  min-height: 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  transition: background-color 140ms ease;
+}
+
+.agent-settings-option + .agent-settings-option {
+  border-top: 1px solid hsl(var(--border) / 0.58);
+}
+
+.agent-settings-option:hover {
+  background: hsl(var(--foreground) / 0.035);
+}
+
+.agent-settings-option[data-selected="true"] {
+  background: hsl(var(--foreground) / 0.055);
+}
+
+.agent-settings-option-icon {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid hsl(var(--border) / 0.65);
+  border-radius: 7px;
+  background: hsl(var(--background) / 0.72);
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-settings-option[data-selected="true"] .agent-settings-option-icon {
+  color: hsl(var(--foreground));
+}
+
+.agent-settings-control-list {
+  border-top: 1px solid hsl(var(--border) / 0.72);
+}
+
+.agent-settings-control-row {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid hsl(var(--border) / 0.58);
+  padding: 10px 0;
+}
+
+.agent-settings-control-copy {
+  min-width: 140px;
+  flex: 1;
+}
+
+.agent-settings-control-label {
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.agent-settings-control-hint {
+  margin-top: 3px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+}
+
+.agent-settings-segmented {
+  display: inline-flex;
+  max-width: 100%;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  border: 1px solid hsl(var(--border) / 0.58);
+  border-radius: 8px;
+  background: hsl(var(--muted) / 0.46);
+  padding: 2px;
+}
+
+.agent-settings-segmented > button {
+  display: inline-flex;
+  min-height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.agent-settings-segmented > button:hover {
+  color: hsl(var(--foreground));
+}
+
+.agent-settings-segmented > button[data-selected="true"] {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.08);
+}
+
+.agent-settings-reset {
+  flex: none;
+  border-radius: 6px;
+  padding: 5px 9px;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.agent-settings-reset:hover {
+  background: hsl(var(--foreground) / 0.05);
+  color: hsl(var(--foreground));
+}
+
+@media (max-width: 760px) {
+  [data-agent-settings-nav] {
+    width: 196px !important;
+  }
+
+  [data-agent-settings-header],
+  [data-agent-settings-body] {
+    padding-right: 20px !important;
+    padding-left: 20px !important;
+  }
+
+  .agent-settings-control-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 0;
+  }
+
+  .agent-settings-segmented {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-section-heading-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .settings-section-title-group {
+    min-width: 0;
+  }
+
+  .settings-section-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .settings-hover-actions {
+    opacity: 1 !important;
+  }
+
+  .settings-card-row {
+    padding: 12px;
+  }
+}
+
+/*
  * Code block copy-button overrides — MUST be outside @layer to beat
  * the inline Tailwind utilities emitted by the streamdown library
  * (utilities layer > components layer in Tailwind v4 cascade).
@@ -2215,6 +2732,17 @@ body > div:not(#root) [data-streamdown="mermaid"] svg {
   transform: translateZ(0);
 }
 
+.chat-history-sidebar,
+.chat-history-row {
+  contain: layout paint style;
+}
+
+/*
+ * The history list already virtualizes once it grows large. Avoid
+ * content-visibility on rows: after pin/unpin reorders the list, WKWebView can
+ * keep the moved row in a skipped paint state and render only the white row
+ * background, making the conversation title look blank.
+ */
 /* Git review diff views live under app chrome that disables selection by default. */
 .git-review-diff-selectable-content,
 .git-review-diff-selectable-content pre,
@@ -2427,6 +2955,150 @@ body > div:not(#root) [data-streamdown="mermaid"] svg {
   display: none;
 }
 
+/* Agent application shell */
+.agent-shell {
+  background: hsl(var(--agent-canvas));
+}
+
+.agent-sidebar {
+  width: var(--agent-sidebar-width);
+  background: hsl(var(--agent-sidebar));
+}
+
+.agent-topbar {
+  min-height: var(--agent-topbar-height);
+}
+
+.agent-floating-surface {
+  border: 1px solid hsl(var(--border) / 0.72);
+  background: hsl(var(--agent-surface-raised) / 0.97);
+  box-shadow: var(--agent-shadow-float);
+}
+
+.agent-codex-composer {
+  border: 1px solid hsl(var(--border) / 0.78);
+  background: hsl(var(--agent-surface-raised));
+  box-shadow:
+    0 20px 54px -36px hsl(220 22% 16% / 0.38),
+    0 2px 8px -5px hsl(220 22% 16% / 0.16);
+}
+
+.agent-codex-composer:focus-within {
+  border-color: hsl(var(--foreground) / 0.2);
+  box-shadow:
+    0 24px 62px -38px hsl(220 22% 16% / 0.46),
+    0 0 0 1px hsl(var(--foreground) / 0.025);
+}
+
+.dark .agent-codex-composer {
+  border-color: hsl(0 0% 100% / 0.1);
+  background: hsl(var(--agent-surface-raised));
+  box-shadow:
+    0 24px 66px -36px hsl(0 0% 0% / 0.78),
+    0 2px 10px -5px hsl(0 0% 0% / 0.62);
+}
+
+.dark .agent-codex-composer:focus-within {
+  border-color: hsl(0 0% 100% / 0.18);
+  box-shadow:
+    0 26px 72px -38px hsl(0 0% 0% / 0.86),
+    0 0 0 1px hsl(0 0% 100% / 0.025);
+}
+
+.agent-composer-add-trigger {
+  background: hsl(var(--foreground) / 0.055);
+}
+
+.agent-composer-add-trigger[data-popup-open] {
+  background: hsl(var(--foreground) / 0.11);
+}
+
+.agent-composer-add-menu {
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-composer-add-menu[data-starting-style],
+.agent-composer-add-menu[data-ending-style] {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+.agent-codex-composer .composer-branch-trigger {
+  border-color: transparent;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+
+.agent-codex-composer .composer-branch-trigger:hover,
+.agent-codex-composer .composer-branch-trigger[data-popup-open] {
+  border-color: transparent;
+  background: hsl(var(--foreground) / 0.055);
+  color: hsl(var(--foreground));
+}
+
+.agent-codex-composer .composer-branch-trigger svg {
+  color: currentColor;
+}
+
+@media (max-width: 720px) {
+  .agent-codex-composer .composer-branch-trigger {
+    max-width: 7rem;
+  }
+
+  [data-agent-composer-access] span {
+    display: none;
+  }
+}
+
+.agent-nav-item {
+  border-radius: 8px;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.agent-nav-item:hover {
+  background: hsl(var(--foreground) / 0.045);
+}
+
+.agent-nav-item[data-active="true"] {
+  background: hsl(var(--foreground) / 0.065);
+  color: hsl(var(--foreground));
+}
+
+@media (max-width: 1100px) {
+  .project-tools-panel {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    z-index: 45;
+    max-width: min(var(--agent-dock-width), calc(100vw - 48px));
+    box-shadow: -20px 0 48px hsl(0 0% 0% / 0.16);
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --agent-sidebar-width: min(280px, calc(100vw - 40px));
+  }
+
+  .chat-history-sidebar {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: 50;
+    box-shadow: 20px 0 48px hsl(0 0% 0% / 0.15);
+  }
+
+  .chat-history-sidebar-inner {
+    width: var(--agent-sidebar-width);
+    min-width: var(--agent-sidebar-width);
+  }
+}
+
 @keyframes editorContextMenuIn {
   from {
     opacity: 0;
@@ -2451,4 +3123,26 @@ body > div:not(#root) [data-streamdown="mermaid"] svg {
     transparent 100%
   );
   mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 1.25rem), transparent 100%);
+}
+
+/*
+ * Right-dock header metrics — the dock markup is byte-mirrored with the
+ * gateway WebUI and therefore carries the web-sized utilities (h-11 header,
+ * h-8 tab row, no vertical padding). The desktop GUI restores its own
+ * metrics here. MUST stay outside @layer so these rules beat the Tailwind
+ * utility classes baked into the mirrored markup (unlayered styles win over
+ * the utilities layer in Tailwind v4).
+ */
+.project-tools-panel-header {
+  height: 3.25rem;
+}
+.project-tools-panel-tabs {
+  height: 2.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+/* Mobile drag handle from the mirrored WebUI markup; the desktop GUI has no
+ * mobile sheet presentation, so it is never shown here. */
+.project-tools-panel-handle {
+  display: none;
 }

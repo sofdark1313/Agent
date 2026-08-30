@@ -67,6 +67,7 @@ import { ConfirmActionPopover } from "./ui/confirm-action-popover";
 
 type GatewayTranscriptProps = {
   conversationId?: string;
+  scrollViewport?: HTMLDivElement | null;
   // The whole transcript as one row list, rendered by one virtualizer. Rows
   // come from one store assembly, so a row can never render twice.
   rows: readonly TranscriptRow[];
@@ -122,7 +123,10 @@ type GatewayTranscriptVirtualItem =
   | { key: string; kind: "pendingBubble" };
 
 function resolveNearestScrollViewport(element: HTMLElement | null) {
-  return element?.closest("[data-radix-scroll-area-viewport]") as HTMLDivElement | null;
+  return (element?.closest("[data-scroll-viewport]") ??
+    element?.closest("[data-radix-scroll-area-viewport]") ??
+    element?.closest(".gateway-transcript-scroll") ??
+    element?.parentElement) as HTMLDivElement | null;
 }
 
 function TypingDots() {
@@ -1195,8 +1199,9 @@ const GatewayTranscriptListRegion = memo(function GatewayTranscriptListRegion(pr
     if (!readOnly && hasMoreHistory) {
       next.push({ key: "load-remote-history", kind: "loadRemoteHistory" });
     }
-    for (const row of rows) {
-      next.push({ key: row.key, kind: "row", row });
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      next.push({ key: `${row.key}-${index}`, kind: "row", row });
     }
     if (shouldShowPendingLiveBubble) {
       next.push({ key: "live-pending-bubble", kind: "pendingBubble" });
@@ -1451,6 +1456,7 @@ const GatewayTranscriptListRegion = memo(function GatewayTranscriptListRegion(pr
 export function GatewayTranscript({
   conversationId,
   rows,
+  scrollViewport: externalScrollViewport,
   liveStartIndex = -1,
   activeTurnKey = null,
   error,
@@ -1477,7 +1483,7 @@ export function GatewayTranscript({
   redactToolContent = false,
 }: GatewayTranscriptProps) {
   const transcriptListRef = useRef<HTMLDivElement | null>(null);
-  const [transcriptScrollViewport, setTranscriptScrollViewport] = useState<HTMLDivElement | null>(
+  const [internalScrollViewport, setInternalScrollViewport] = useState<HTMLDivElement | null>(
     null,
   );
   const rowCount = rows.length;
@@ -1491,8 +1497,13 @@ export function GatewayTranscript({
 
   useLayoutEffect(() => {
     const nextViewport = resolveNearestScrollViewport(transcriptListRef.current);
-    setTranscriptScrollViewport((current) => (current === nextViewport ? current : nextViewport));
+    setInternalScrollViewport((current) => (current === nextViewport ? current : nextViewport));
   });
+
+  const effectiveScrollViewport =
+    externalScrollViewport ??
+    internalScrollViewport ??
+    resolveNearestScrollViewport(transcriptListRef.current);
 
   if (rowCount === 0 && isLoading) {
     return <HistoryLoadingState title={loadingTitle} />;
@@ -1501,8 +1512,8 @@ export function GatewayTranscript({
   if (rowCount === 0 && !isStreaming) {
     const showNoModelsState = !hasModels;
     return (
-      <div className="gateway-transcript-shell">
-        <div className="gateway-chat-column gateway-empty-state">
+      <div className="mx-auto w-full max-w-[var(--agent-content-width)] px-5 py-4">
+        <div className="flex min-h-[calc(100vh-220px)] flex-col items-center justify-center">
           <ChatEmptyState
             variant={showNoModelsState ? "no-models" : "start-chat"}
             onOpenSettings={onOpenSettings}
@@ -1515,17 +1526,17 @@ export function GatewayTranscript({
   }
 
   return (
-    <div className="gateway-transcript-shell">
+    <div className="mx-auto w-full max-w-[var(--agent-content-width)] px-5 py-4">
       <div
         ref={transcriptListRef}
-        className="gateway-chat-column gateway-transcript-list select-text"
+        className="select-text"
       >
         <GatewayTranscriptListRegion
           conversationId={conversationId}
           rows={rows}
           liveStartIndex={liveStartIndex}
           activeTurnKey={activeTurnKey}
-          scrollViewport={transcriptScrollViewport}
+          scrollViewport={effectiveScrollViewport}
           hasMoreHistory={hasMoreHistory}
           isLoadingMoreHistory={isLoadingMoreHistory}
           onLoadFullHistory={onLoadFullHistory}
@@ -1543,10 +1554,10 @@ export function GatewayTranscript({
           redactToolContent={redactToolContent}
         />
         {shouldShowInlineError ? (
-          <div className="gateway-inline-error">{inlineErrorText}</div>
+          <div className="mt-3 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{inlineErrorText}</div>
         ) : null}
       </div>
-      <div className="gateway-transcript-bottom-spacer" />
+      <div className="h-40" />
     </div>
   );
 }

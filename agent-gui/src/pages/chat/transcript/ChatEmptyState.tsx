@@ -2,80 +2,45 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   useCallback,
-  useEffect,
-  useState,
 } from "react";
 
-import { AgentMark } from "../../../components/brand/AgentMark";
-import { FolderTree, Lightbulb, Settings, Wrench } from "../../../components/icons";
+import { Cloud, Lightbulb, Settings, Sparkles, Wrench } from "../../../components/icons";
 import { useLocale } from "../../../i18n";
 import type { SectionId } from "../../settings/types";
-
-type GreetingPeriod = "morning" | "noon" | "afternoon" | "evening" | "night";
-
-const GREETING_KEYS: Record<GreetingPeriod, string> = {
-  morning: "chat.greetingMorning",
-  noon: "chat.greetingNoon",
-  afternoon: "chat.greetingAfternoon",
-  evening: "chat.greetingEvening",
-  night: "chat.greetingNight",
-};
-
-function resolveGreetingPeriod(hour: number): GreetingPeriod {
-  if (hour >= 5 && hour < 12) return "morning";
-  if (hour >= 12 && hour < 14) return "noon";
-  if (hour >= 14 && hour < 18) return "afternoon";
-  if (hour >= 18 && hour < 23) return "evening";
-  return "night";
-}
-
-function useGreetingPeriod() {
-  const [period, setPeriod] = useState<GreetingPeriod>(() =>
-    resolveGreetingPeriod(new Date().getHours()),
-  );
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setPeriod(resolveGreetingPeriod(new Date().getHours()));
-    }, 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return period;
-}
 
 const SUGGESTION_CARDS = [
   {
     key: "explore",
-    icon: FolderTree,
+    icon: Sparkles,
     accent: "199 89% 48%",
-    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
-    titleKey: "chat.suggestExploreTitle",
-    hintKey: "chat.suggestExploreHint",
+    chipClassName: "bg-sky-500/10 text-sky-500 group-hover:bg-sky-500/15",
+    title: "探索并理解代码",
+    hint: "梳理架构与核心模块职责",
     promptKey: "chat.suggestExplorePrompt",
   },
   {
     key: "fix",
     icon: Wrench,
     accent: "38 92% 50%",
-    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
-    titleKey: "chat.suggestFixTitle",
-    hintKey: "chat.suggestFixHint",
+    chipClassName: "bg-amber-500/10 text-amber-500 group-hover:bg-amber-500/15",
+    title: "修复问题",
+    hint: "描述问题，一起修复",
     promptKey: "chat.suggestFixPrompt",
   },
   {
     key: "ideate",
     icon: Lightbulb,
     accent: "160 84% 39%",
-    chipClassName: "bg-foreground/[0.055] text-foreground/70 group-hover:bg-foreground/[0.08]",
-    titleKey: "chat.suggestIdeateTitle",
-    hintKey: "chat.suggestIdeateHint",
+    chipClassName: "bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500/15",
+    title: "头脑风暴",
+    hint: "从想法到落地方案",
     promptKey: "chat.suggestIdeatePrompt",
   },
 ] as const;
 
 export type ChatEmptyStateProps = {
   variant: "no-models" | "start-chat";
+  projectName?: string;
   onOpenSettings?: (section?: SectionId) => void;
   onSuggestionSelect?: (text: string) => void;
   /** Locks the suggestion cards while a picked prompt is still typing in. */
@@ -84,14 +49,13 @@ export type ChatEmptyStateProps = {
 
 export function ChatEmptyState({
   variant,
+  projectName = "Agent",
   onOpenSettings,
   onSuggestionSelect,
   suggestionsDisabled = false,
 }: ChatEmptyStateProps) {
   const { t } = useLocale();
-  const period = useGreetingPeriod();
 
-  // Drives the accent spotlight that follows the cursor inside each card.
   const handleCardPointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     const card = event.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -101,8 +65,8 @@ export function ChatEmptyState({
 
   return (
     <div data-agent-empty-state className="relative flex w-full flex-col items-center">
-      <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
-        <AgentMark className="h-7 w-7" />
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-foreground/[0.03] text-foreground shadow-xs">
+        <Cloud className="h-7 w-7 text-foreground/80" />
       </div>
 
       {variant === "no-models" ? (
@@ -129,18 +93,15 @@ export function ChatEmptyState({
         </>
       ) : (
         <>
-          <div className="mb-2.5 text-center text-[calc(24px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-[-0.02em] text-foreground">
-            {t(GREETING_KEYS[period])}
-          </div>
-          <div className="hero-entrance-delay-2 flex items-center justify-center gap-1.5 text-center text-sm leading-relaxed text-muted-foreground">
-            <Lightbulb
-              aria-hidden="true"
-              className="h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-400"
-            />
-            {t("chat.greetingSubtitle")}
+          <div className="mb-8 text-center text-[calc(26px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-[-0.02em] text-foreground">
+            你想让我们在{" "}
+            <span className="underline decoration-muted-foreground/40 underline-offset-8">
+              {projectName}
+            </span>{" "}
+            中构建什么？
           </div>
           {onSuggestionSelect ? (
-            <div className="mt-8 grid w-full max-w-[640px] grid-cols-1 gap-2 px-6 sm:grid-cols-3 sm:px-4">
+            <div className="grid w-full max-w-[640px] grid-cols-1 gap-2.5 px-6 sm:grid-cols-3 sm:px-4">
               {SUGGESTION_CARDS.map((card, index) => (
                 <button
                   key={card.key}
@@ -154,19 +115,19 @@ export function ChatEmptyState({
                       "--card-accent": card.accent,
                     } as CSSProperties
                   }
-                  className="group flex items-center gap-3 rounded-xl border border-border/70 bg-background px-3.5 py-3 text-left transition-colors hover:bg-accent/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-55"
+                  className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-foreground/[0.025] px-4 py-3.5 text-left transition-all hover:bg-foreground/[0.06] hover:border-border/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-55"
                 >
                   <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 ${card.chipClassName}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors duration-150 ${card.chipClassName}`}
                   >
-                    <card.icon className="h-4 w-4" />
+                    <card.icon className="h-4.5 w-4.5" />
                   </span>
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate text-[calc(13px*var(--zone-font-scale,1))] font-medium leading-tight text-foreground/90">
-                      {t(card.titleKey)}
+                    <span className="truncate text-[calc(13px*var(--zone-font-scale,1))] font-medium leading-tight text-foreground/90 group-hover:text-foreground">
+                      {card.title}
                     </span>
                     <span className="truncate text-xs leading-tight text-muted-foreground">
-                      {t(card.hintKey)}
+                      {card.hint}
                     </span>
                   </span>
                 </button>

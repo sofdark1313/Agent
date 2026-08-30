@@ -963,6 +963,80 @@ export function GitReviewHistoryView(props: {
           useSplitReviewLayout ? `grid ${GIT_REVIEW_SPLIT_GRID_CLASS}` : "flex flex-col",
         )}
       >
+        <main
+          ref={detailPaneRef}
+          className={cn(
+            "h-full min-h-0 flex-col overflow-hidden",
+            useSplitReviewLayout || stackedPane === "detail" ? "flex" : "hidden",
+            !useSplitReviewLayout && "flex-1",
+          )}
+        >
+          {selectedCommit ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+              <div className="flex shrink-0 items-start gap-2 rounded-md border border-border/70 bg-muted/20 px-3 py-2 text-xs">
+                <GitCommitHorizontal className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="truncate font-medium text-foreground"
+                    title={commitHistoryTitle(selectedCommit)}
+                  >
+                    {selectedCommit.subject || selectedCommit.shortSha}
+                  </div>
+                  <CommitRefTags
+                    refs={selectedCommit.refs}
+                    selected={false}
+                    remoteName={state.remoteName}
+                    variant="detail"
+                    limit={COMMIT_DETAIL_REF_TAG_LIMIT}
+                  />
+                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
+                    <span className="font-mono">{selectedCommit.shortSha}</span>
+                    <span>{selectedCommit.authorName}</span>
+                    <span>{formatCommitDate(selectedCommit.authorDate)}</span>
+                  </div>
+                </div>
+              </div>
+              {selectedCommitFile || commitDiff || commitDiffLoading || historyError ? (
+                <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/70 bg-background">
+                  <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-border/70 bg-background px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-semibold">
+                        {historyDiffTitle || t("projectTools.gitReview.commitDiff")}
+                      </div>
+                      <div
+                        className="truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground"
+                        title={
+                          historyDiffSubtitle || selectedCommitFile?.path || selectedCommit.sha
+                        }
+                      >
+                        {historyDiffSubtitle ||
+                          `${selectedCommit.shortSha || selectedCommit.sha.slice(0, 7)} - ${selectedCommit.subject}`}
+                      </div>
+                    </div>
+                    {commitDiffLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+                    ) : null}
+                  </div>
+                  <DiffContent
+                    title={historyDiffTitle || t("projectTools.gitReview.commitDiff")}
+                    diff={commitDiff}
+                    error={historyError}
+                    loading={commitDiffLoading}
+                    showStat={useSplitReviewLayout}
+                  />
+                </section>
+              ) : (
+                <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
+                  {t("projectTools.gitReview.selectCommitFileToViewDiff")}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
+              {historyError || t("projectTools.gitReview.selectCommitToViewFiles")}
+            </div>
+          )}
+        </main>
         <aside
           ref={listPaneRef}
           className={cn(
@@ -1177,80 +1251,6 @@ export function GitReviewHistoryView(props: {
             )}
           </div>
         </aside>
-        <main
-          ref={detailPaneRef}
-          className={cn(
-            "h-full min-h-0 flex-col overflow-hidden",
-            useSplitReviewLayout || stackedPane === "detail" ? "flex" : "hidden",
-            !useSplitReviewLayout && "flex-1",
-          )}
-        >
-          {selectedCommit ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-              <div className="flex shrink-0 items-start gap-2 rounded-md border border-border/70 bg-muted/20 px-3 py-2 text-xs">
-                <GitCommitHorizontal className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div
-                    className="truncate font-medium text-foreground"
-                    title={commitHistoryTitle(selectedCommit)}
-                  >
-                    {selectedCommit.subject || selectedCommit.shortSha}
-                  </div>
-                  <CommitRefTags
-                    refs={selectedCommit.refs}
-                    selected={false}
-                    remoteName={state.remoteName}
-                    variant="detail"
-                    limit={COMMIT_DETAIL_REF_TAG_LIMIT}
-                  />
-                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
-                    <span className="font-mono">{selectedCommit.shortSha}</span>
-                    <span>{selectedCommit.authorName}</span>
-                    <span>{formatCommitDate(selectedCommit.authorDate)}</span>
-                  </div>
-                </div>
-              </div>
-              {selectedCommitFile || commitDiff || commitDiffLoading || historyError ? (
-                <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/70 bg-background">
-                  <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-border/70 bg-background px-3 py-2">
-                    <div className="min-w-0">
-                      <div className="truncate text-xs font-semibold">
-                        {historyDiffTitle || t("projectTools.gitReview.commitDiff")}
-                      </div>
-                      <div
-                        className="truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground"
-                        title={
-                          historyDiffSubtitle || selectedCommitFile?.path || selectedCommit.sha
-                        }
-                      >
-                        {historyDiffSubtitle ||
-                          `${selectedCommit.shortSha || selectedCommit.sha.slice(0, 7)} - ${selectedCommit.subject}`}
-                      </div>
-                    </div>
-                    {commitDiffLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-                    ) : null}
-                  </div>
-                  <DiffContent
-                    title={historyDiffTitle || t("projectTools.gitReview.commitDiff")}
-                    diff={commitDiff}
-                    error={historyError}
-                    loading={commitDiffLoading}
-                    showStat={useSplitReviewLayout}
-                  />
-                </section>
-              ) : (
-                <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
-                  {t("projectTools.gitReview.selectCommitFileToViewDiff")}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-4 text-center text-xs text-muted-foreground">
-              {historyError || t("projectTools.gitReview.selectCommitToViewFiles")}
-            </div>
-          )}
-        </main>
       </div>
       {historyContextMenu &&
       historyContextCommit &&

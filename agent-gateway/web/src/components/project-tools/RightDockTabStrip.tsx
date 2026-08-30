@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
-import { useLocale } from "../../i18n";
-import type { RightDockTabKind } from "../../lib/settings";
-import { cn } from "../../lib/shared/utils";
-import type { TerminalSession } from "../../lib/terminal/types";
+import { useLocale } from "@/i18n";
+import type { RightDockTabKind } from "@/lib/settings";
+import { cn } from "@/lib/shared/utils";
+import type { TerminalSession } from "@/lib/terminal/types";
 import { Check, Cpu, Terminal, X } from "../icons";
 import { formatTerminalSessionTitle, type RightDockVisibleTab } from "./rightDockModel";
 import { getRightDockToolDefinition, type RightDockSingletonTabKind } from "./rightDockRegistry";
@@ -146,7 +146,7 @@ export function RightDockTabStrip(props: RightDockTabStripProps) {
   );
 
   return (
-    <>
+    <div data-agent-dock-tabs className="contents">
       {tabs.map((tab) => {
         if (tab.kind === "backgroundTasks") {
           // Derived tab; closing only hides it (a newly started task or the
@@ -204,6 +204,6 @@ export function RightDockTabStrip(props: RightDockTabStripProps) {
           onClose: () => onCloseTerminalRequest(session),
         });
       })}
-    </>
+    </div>
   );
 }

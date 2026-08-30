@@ -9,11 +9,11 @@ import {
   RefreshCw,
   Search,
   Sparkles,
-} from "../../components/icons";
+} from "@/components/icons";
 
-import { Button } from "../../components/ui/button";
-import { useLocale } from "../../i18n";
-import { updateSkills } from "../../lib/settings";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "@/i18n";
+import { updateSkills } from "@/lib/settings";
 import {
   discoverSkills,
   isAlwaysEnabledSkillName,
@@ -21,7 +21,7 @@ import {
   mergeAlwaysEnabledSkillNames,
   notifySkillsDiscoveryUpdated,
   type SkillSummary,
-} from "../../lib/skills";
+} from "@/lib/skills";
 import type { SettingsSectionProps } from "./types";
 
 export function SkillsSettingsForm(props: SettingsSectionProps) {
@@ -86,9 +86,9 @@ export function SkillsSettingsForm(props: SettingsSectionProps) {
   }
 
   return (
-    <div className="settings-skills-section space-y-5">
-      <div className="settings-section-heading-row flex items-start justify-between gap-4">
-        <div className="settings-section-title-group flex items-center gap-2">
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
@@ -98,7 +98,7 @@ export function SkillsSettingsForm(props: SettingsSectionProps) {
           </div>
         </div>
 
-        <div className="settings-section-actions flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {selectableSkills.length > 0 ? (
             <div className="flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-1">
               <div
@@ -232,7 +232,7 @@ export function SkillsSettingsForm(props: SettingsSectionProps) {
                 value={filter}
                 onChange={(e) => setFilter(e.currentTarget.value)}
                 placeholder={t("settings.skillsSearch")}
-                className="h-9 w-full rounded-lg border bg-background pl-9 pr-3 text-xs outline-hidden transition-colors placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                className="h-9 w-full rounded-lg border bg-background pl-9 pr-3 text-sm outline-hidden transition-colors placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
               />
             </div>
           ) : null}
@@ -295,7 +295,7 @@ export function SkillsSettingsForm(props: SettingsSectionProps) {
                   return (
                     <div
                       key={`${skill.name}-${scanGeneration}`}
-                      className="settings-card-row skill-card-enter flex w-full items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3 text-left shadow-xs"
+                      className="skill-card-enter flex w-full items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 p-3 text-left shadow-xs"
                     >
                       {content}
                     </div>
@@ -307,7 +307,7 @@ export function SkillsSettingsForm(props: SettingsSectionProps) {
                     key={`${skill.name}-${scanGeneration}`}
                     type="button"
                     onClick={() => toggleSkill(skill.name, !checked)}
-                    className={`settings-card-row skill-card-enter group flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                    className={`skill-card-enter group flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                       checked
                         ? "border-primary/40 bg-primary/5 shadow-xs"
                         : "border-border/60 bg-background hover:border-border hover:bg-accent/30"

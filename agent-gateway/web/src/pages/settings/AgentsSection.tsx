@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, Eye, Pencil, Plus, Trash2, X } from "../../components/icons";
+import { BookOpen, Eye, Pencil, Plus, Trash2, X } from "@/components/icons";
 
-import { Button } from "../../components/ui/button";
-import { useLocale } from "../../i18n";
-import { type AgentPromptTemplate, updateAgents } from "../../lib/settings";
-import { useModalMotion } from "../../lib/shared/modalMotion";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "@/i18n";
+import { type AgentPromptTemplate, updateAgents } from "@/lib/settings";
 import { AgentPromptTemplateModal } from "./AgentPromptTemplateModal";
 import { AgentActivationSwitch, ConfirmDeletePopover } from "./shared";
 import type { SettingsSectionProps } from "./types";
@@ -50,6 +49,7 @@ export function AgentsSection(props: SettingsSectionProps) {
       };
       return updateAgents(prev, [...prev.agents, newTemplate]);
     });
+    closeModal();
   }
 
   function handleDelete(id: string) {
@@ -80,9 +80,9 @@ export function AgentsSection(props: SettingsSectionProps) {
 
   return (
     <>
-      <div className="settings-agents-section space-y-5">
-        <div className="settings-section-heading-row flex items-center justify-between gap-4">
-          <div className="settings-section-title-group flex items-center gap-3">
+      <div className="space-y-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10">
               <BookOpen className="h-[18px] w-[18px] text-sky-500" />
             </div>
@@ -92,7 +92,7 @@ export function AgentsSection(props: SettingsSectionProps) {
             </div>
           </div>
 
-          <div className="settings-section-actions flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {templates.length > 0 ? (
               <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
                 <span className="tabular-nums font-medium text-foreground">{templates.length}</span>
@@ -148,7 +148,7 @@ export function AgentsSection(props: SettingsSectionProps) {
                       : "border-border/60 bg-card hover:border-border"
                   }`}
                 >
-                  <div className="settings-card-row flex items-center gap-3 px-4 py-3">
+                  <div className="flex items-center gap-3 px-4 py-3">
                     <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
                       <BookOpen className="h-4 w-4" />
                       {template.enabled ? (
@@ -177,13 +177,13 @@ export function AgentsSection(props: SettingsSectionProps) {
                       ) : null}
                     </div>
 
-                    <div className="settings-card-actions flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5">
                       <AgentActivationSwitch
                         checked={template.enabled}
                         title={template.enabled ? t("settings.disable") : t("settings.enable")}
                         onToggle={() => handleToggleEnabled(template.id)}
                       />
-                      <div className="settings-hover-actions ml-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="ml-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -251,12 +251,10 @@ type AgentPromptViewModalProps = {
 
 function AgentPromptViewModal({ template, onClose }: AgentPromptViewModalProps) {
   const { t } = useLocale();
-  const { modalState, requestClose } = useModalMotion(onClose);
 
   return createPortal(
     <div
-      className="settings-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-      data-state={modalState}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="agent-prompt-view-title"
@@ -264,12 +262,12 @@ function AgentPromptViewModal({ template, onClose }: AgentPromptViewModalProps) 
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
-        onClick={requestClose}
+        onClick={onClose}
         aria-label={t("settings.cancel")}
       />
 
-      <div className="settings-modal-panel relative z-10 flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
-        <div className="settings-modal-header flex items-center gap-3 border-b px-6 py-4">
+      <div className="relative z-10 flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
+        <div className="flex items-center gap-3 border-b px-6 py-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
             <Eye className="h-5 w-5" />
           </div>
@@ -283,14 +281,14 @@ function AgentPromptViewModal({ template, onClose }: AgentPromptViewModalProps) 
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={requestClose}
+            onClick={onClose}
             aria-label={t("settings.cancel")}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="settings-modal-body flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           {template.description ? (
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
               {template.description}

@@ -1,4 +1,6 @@
-import type { IconComponent } from "../../../components/icons";
+import type { ToolResultMessage } from "@/lib/agentTypes";
+
+import type { IconComponent } from "@/components/icons";
 import {
   Bot,
   Brain,
@@ -16,16 +18,18 @@ import {
   Terminal,
   Trash2,
   Wrench,
-} from "../../../components/icons";
-import type { ToolResultMessage } from "../../../lib/agentTypes";
-import type { HostedSearchBlock } from "../../../lib/chat/hostedSearch";
+} from "@/components/icons";
+import type { HostedSearchBlock } from "@/lib/chat/hostedSearch";
 import {
   safeStringify,
   shouldDisplayToolTraceItem,
   type ToolTraceItem,
   type UiRound,
-} from "../../../lib/chat/uiMessages";
-import type { SubagentCardDetails, SubagentReportDetails } from "../../../lib/subagents/protocol";
+} from "@/lib/chat/uiMessages";
+import type {
+  SubagentCardDetails,
+  SubagentReportDetails,
+} from "@/lib/subagents/protocol";
 
 export function getToolMeta(name: string): {
   Icon: IconComponent;
@@ -75,6 +79,8 @@ export function getToolMeta(name: string): {
       return { Icon: Wrench, accent: "var(--tool-file-accent)", category: "other" };
   }
 }
+
+export type MetaTag = { label: string; value: string };
 
 export function displayString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -167,6 +173,40 @@ export type GroupedRoundBlock =
       items: ToolTraceItem[];
     };
 
+export type ShellResultDetails = {
+  exit_code: number;
+  shell: string;
+  stdout: string;
+  stderr: string;
+  stdout_truncated: boolean;
+  stderr_truncated: boolean;
+  timed_out: boolean;
+  cancelled?: boolean;
+  effective_timeout_ms?: number;
+  duration_ms: number;
+};
+
+export function isShellResultDetails(value: unknown): value is ShellResultDetails {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.exit_code === "number" &&
+    typeof candidate.shell === "string" &&
+    typeof candidate.stdout === "string" &&
+    typeof candidate.stderr === "string" &&
+    typeof candidate.stdout_truncated === "boolean" &&
+    typeof candidate.stderr_truncated === "boolean" &&
+    typeof candidate.timed_out === "boolean" &&
+    typeof candidate.duration_ms === "number"
+  );
+}
+
+export function summarizeShellStream(text: string, truncated: boolean) {
+  const length = text.length;
+  if (length === 0) return "empty";
+  return truncated ? `${length} chars, truncated` : `${length} chars`;
+}
+
 const stableValueSignatureCache = new WeakMap<object, string>();
 
 export function getStableValueSignature(value: unknown) {
@@ -245,23 +285,14 @@ export function groupRoundBlocks(blocks: UiRound["blocks"]): GroupedRoundBlock[]
 
   const flushPendingTools = () => {
     if (pendingTools.length === 0) return;
-    if (pendingTools.length === 1) {
-      const item = pendingTools[0];
-      groupedBlocks.push({
-        kind: "tool",
-        key: `tool-${getToolTraceKey(item, pendingStartIndex)}`,
-        item,
-      });
-    } else {
-      groupedBlocks.push({
-        kind: "toolGroup",
-        // Anchored to the group's start only: appending tools to a streaming
-        // group must keep the key stable, or the remount would wipe the
-        // user's manual expand/collapse state mid-run.
-        key: `tool-group-${pendingStartIndex}-${getToolTraceKey(pendingTools[0], pendingStartIndex)}`,
-        items: pendingTools,
-      });
-    }
+    groupedBlocks.push({
+      kind: "toolGroup",
+      // Anchored to the group's start only: appending tools to a streaming
+      // group must keep the key stable, or the remount would wipe the
+      // user's manual expand/collapse state mid-run.
+      key: `tool-group-${pendingStartIndex}-${getToolTraceKey(pendingTools[0], pendingStartIndex)}`,
+      items: pendingTools,
+    });
     pendingTools = [];
   };
 
@@ -323,36 +354,55 @@ export function groupRoundBlocks(blocks: UiRound["blocks"]): GroupedRoundBlock[]
   return groupedBlocks;
 }
 
+export function getToolGroupCounts(items: ToolTraceItem[], runningToolCallIds: string[]) {
+  const runningIds = new Set(runningToolCallIds);
+  let running = 0;
+  let failed = 0;
+  let completed = 0;
+  let waiting = 0;
+
+  for (const item of items) {
+    if (item.toolCall.id && runningIds.has(item.toolCall.id)) {
+      running += 1;
+      continue;
+    }
+    if (!item.toolResult) {
+      waiting += 1;
+      continue;
+    }
+    if (item.toolResult.isError) {
+      failed += 1;
+      continue;
+    }
+    completed += 1;
+  }
+
+  return { running, failed, completed, waiting };
+}
+
+export function getToolGroupComposition(items: ToolTraceItem[]) {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const name = getToolDisplayName(item.toolCall.name);
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 4)
+    .map(([name, count]) => `${name} ${count}`)
+    .join(" · ");
+}
+
+export function getDominantToolName(items: ToolTraceItem[]) {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    counts.set(item.toolCall.name, (counts.get(item.toolCall.name) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Tool";
+}
+
 export function getBuiltinResultKind(result?: ToolResultMessage) {
   if (!result?.details || typeof result.details !== "object") return null;
   const kind = (result.details as { kind?: unknown }).kind;
   return typeof kind === "string" ? kind : null;
-}
-
-export function isBuiltinShareToolName(name: string) {
-  const trimmed = name.trim();
-  if (trimmed.startsWith("mcp_")) {
-    return true;
-  }
-  return [
-    "Agent",
-    "Bash",
-    "CronTaskManager",
-    "Delete",
-    "Edit",
-    "Glob",
-    "Grep",
-    "HttpGetTest",
-    "Image",
-    "List",
-    "ManagedProcess",
-    "McpManager",
-    "MemoryManager",
-    "Read",
-    "SkillsManager",
-    "SSHManager",
-    "SshManager",
-    "TunnelManager",
-    "Write",
-  ].includes(trimmed);
 }

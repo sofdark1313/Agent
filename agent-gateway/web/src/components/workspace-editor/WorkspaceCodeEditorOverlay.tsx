@@ -34,6 +34,7 @@ import {
   Undo2,
   X,
 } from "../icons";
+const MacOsTitleBarSpacer = (props: any) => null;
 import { isWorkspacePreviewPath } from "./workspaceImagePreview";
 
 type MonacoEnvironmentGlobal = typeof globalThis & {
@@ -813,15 +814,17 @@ export function WorkspaceCodeEditorOverlay(props: WorkspaceCodeEditorOverlayProp
 
   return (
     <div
+      data-agent-editor-workspace
       ref={overlayRef}
       className={cn(
-        "workspace-code-editor-overlay absolute inset-0 z-40 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+        "absolute inset-0 z-50 flex min-h-0 min-w-0 transform-gpu flex-col overflow-hidden border-r border-border/60 bg-background transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none",
         isVisible
           ? "pointer-events-auto translate-x-0 opacity-100 shadow-2xl"
           : "pointer-events-none -translate-x-2 opacity-0 shadow-lg",
       )}
     >
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-muted/45 px-3">
+      <MacOsTitleBarSpacer className="bg-[hsl(var(--agent-surface-subtle))]" />
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border/60 bg-[hsl(var(--agent-surface-subtle))] px-3">
         <FilePenLine className="h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold leading-tight">
@@ -890,9 +893,8 @@ export function WorkspaceCodeEditorOverlay(props: WorkspaceCodeEditorOverlayProp
         {tabs.map((tab) => {
           const dirty = tab.content !== tab.savedContent;
           return (
-            <button
+            <div
               key={tab.key}
-              type="button"
               className={cn(
                 "group flex h-8 max-w-[14rem] shrink-0 items-center gap-1.5 rounded-t-md border border-b-0 px-2 text-xs transition-colors",
                 tab.key === activeKey
@@ -900,34 +902,33 @@ export function WorkspaceCodeEditorOverlay(props: WorkspaceCodeEditorOverlayProp
                   : "border-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
               title={tab.path}
-              onClick={() => setActiveKey(tab.key)}
             >
-              {tab.status === "conflict" ? (
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-              ) : (
-                <FilePenLine className="h-3.5 w-3.5 shrink-0" />
-              )}
-              <span className="min-w-0 truncate">{basename(tab.path)}</span>
-              {dirty ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" /> : null}
-              <span
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                onClick={() => setActiveKey(tab.key)}
+              >
+                {tab.status === "conflict" ? (
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                ) : (
+                  <FilePenLine className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="min-w-0 truncate">{basename(tab.path)}</span>
+                {dirty ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" /> : null}
+              </button>
+              <button
+                type="button"
                 className="ml-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/75 hover:bg-background hover:text-foreground"
                 title={t("workspaceEditor.closeTab")}
+                aria-label={t("workspaceEditor.closeTab")}
                 onClick={(event) => {
-                  event.stopPropagation();
-                  requestCloseTab(tab.key);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
                   event.stopPropagation();
                   requestCloseTab(tab.key);
                 }}
               >
                 <X className="h-3 w-3" />
-              </span>
-            </button>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -1117,7 +1118,7 @@ function ContextMenuItem(props: {
 }
 
 function ContextMenuSeparator() {
-  return <div className="mx-1 my-1 h-px bg-border/60" role="separator" />;
+  return <hr className="mx-1 my-1 h-px border-0 bg-border/60" />;
 }
 
 function IconButton(props: {

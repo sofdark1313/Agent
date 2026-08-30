@@ -9,18 +9,18 @@ import {
   Plus,
   Terminal,
   Trash2,
-} from "../../components/icons";
+} from "@/components/icons";
 
-import { Button } from "../../components/ui/button";
-import { useLocale } from "../../i18n";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "@/i18n";
 import {
   applyCronOps,
   type CronTask,
   type CronTaskType,
   useAutomation,
-} from "../../lib/automation";
-import { buildModelOptions } from "../../lib/chat/chatPageHelpers";
-import { isAgentExecutionMode } from "../../lib/settings";
+} from "@/lib/automation";
+import { buildModelOptions } from "@/lib/chat/chatPageHelpers";
+import { isAgentExecutionMode } from "@/lib/settings";
 import { type CronTaskFormData, CronTaskModal } from "./CronTaskModal";
 import { CronTaskViewModal } from "./CronTaskViewModal";
 import { AgentActivationSwitch, ConfirmDeletePopover } from "./shared";
@@ -65,8 +65,8 @@ function formatRemainingExecutionsLabel(t: (key: string) => string, task: CronTa
     : `${task.remainingExecutions} ${t("settings.cronRemainingExecutionsUnit")}`;
 }
 
-export function CronSection(props: SettingsSectionProps) {
-  const { settings } = props;
+export function CronSection(props: SettingsSectionProps & { hubMode?: boolean }) {
+  const { settings, hubMode = false } = props;
   const { t } = useLocale();
   const [modal, setModal] = useState<ModalState>({ open: false });
   const [actionError, setActionError] = useState<string | null>(null);
@@ -113,45 +113,51 @@ export function CronSection(props: SettingsSectionProps) {
   }
 
   const enabledCount = tasks.filter((task) => task.enabled).length;
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+        <span className="tabular-nums font-medium text-foreground">{tasks.length}</span>
+        {t("settings.cronCount")}
+        <span className="text-border">|</span>
+        <span className="flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="tabular-nums font-medium text-emerald-600 dark:text-emerald-400">
+            {enabledCount}
+          </span>
+        </span>
+      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={() => setModal({ open: true, mode: "add" })}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        {t("settings.cronAdd")}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10">
-            <Clock3 className="h-[18px] w-[18px] text-amber-500" />
+      {hubMode ? (
+        <div className="flex justify-end">{headerActions}</div>
+      ) : (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10">
+              <Clock3 className="h-[18px] w-[18px] text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">{t("settings.cronTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("settings.cronDesc")}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold">{t("settings.cronTitle")}</h3>
-            <p className="text-xs text-muted-foreground">{t("settings.cronDesc")}</p>
-          </div>
+          {headerActions}
         </div>
-
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
-            <span className="tabular-nums font-medium text-foreground">{tasks.length}</span>
-            {t("settings.cronCount")}
-            <span className="text-border">|</span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="tabular-nums font-medium text-emerald-600 dark:text-emerald-400">
-                {enabledCount}
-              </span>
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setModal({ open: true, mode: "add" })}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t("settings.cronAdd")}
-          </Button>
-        </div>
-      </div>
+      )}
 
       {!autoPromptSupported ? (
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.05] px-4 py-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300">

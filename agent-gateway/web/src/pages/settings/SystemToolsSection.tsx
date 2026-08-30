@@ -13,6 +13,7 @@ import {
   Brain,
   CheckCircle2,
   Clock3,
+  Cpu,
   Eye,
   FilePenLine,
   FileText,
@@ -30,16 +31,17 @@ import {
   ScrollText,
   Search,
   Server,
+  Shield,
   SkillIcon,
   Terminal,
   Trash2,
   Wrench,
   X,
-} from "../../components/icons";
-import { Button } from "../../components/ui/button";
-import { useLocale } from "../../i18n";
-import { updateSystem } from "../../lib/settings";
-import { useModalMotion } from "../../lib/shared/modalMotion";
+} from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "@/i18n";
+import { type ApprovalPolicy, type CustomApprovalRules, updateSystem } from "@/lib/settings";
+import { useModalMotion } from "@/lib/shared/modalMotion";
 import {
   BUILTIN_TOOL_CATALOG,
   BUILTIN_TOOL_CATEGORIES,
@@ -47,8 +49,8 @@ import {
   type BuiltinToolCategoryId,
   CUSTOM_TOOL_PRESENTATION,
   type ToolCatalogIconId,
-} from "../../lib/tools/builtinToolCatalog";
-import { SYSTEM_TOOL_OPTIONS, type SystemToolOption } from "../../lib/tools/systemToolOptions";
+} from "@/lib/tools/builtinToolCatalog";
+import { SYSTEM_TOOL_OPTIONS, type SystemToolOption } from "@/lib/tools/systemToolOptions";
 import { AgentActivationSwitch } from "./shared";
 import type { SettingsSectionProps } from "./types";
 
@@ -146,6 +148,49 @@ type ToolDetail =
   | { kind: "builtin"; entry: BuiltinToolCatalogEntry }
   | { kind: "custom"; option: SystemToolOption };
 
+const APPROVAL_POLICY_OPTIONS: Array<{
+  id: ApprovalPolicy;
+  icon: IconComponent;
+  labelKey: string;
+}> = [
+  { id: "ask", icon: MessageSquare, labelKey: "chat.access.askApproval" },
+  { id: "agent", icon: Wrench, labelKey: "chat.access.agentAutomatic" },
+  { id: "full", icon: Cpu, labelKey: "chat.access.fullAccess" },
+  { id: "custom", icon: Shield, labelKey: "chat.access.custom" },
+];
+
+const CUSTOM_APPROVAL_RULE_OPTIONS: Array<{
+  id: keyof CustomApprovalRules;
+  labelKey: string;
+  descriptionKey: string;
+}> = [
+  {
+    id: "allowWorkspaceWrites",
+    labelKey: "settings.approval.allowWorkspaceWrites",
+    descriptionKey: "settings.approval.allowWorkspaceWritesDesc",
+  },
+  {
+    id: "allowCommands",
+    labelKey: "settings.approval.allowCommands",
+    descriptionKey: "settings.approval.allowCommandsDesc",
+  },
+  {
+    id: "allowNetwork",
+    labelKey: "settings.approval.allowNetwork",
+    descriptionKey: "settings.approval.allowNetworkDesc",
+  },
+  {
+    id: "allowMcp",
+    labelKey: "settings.approval.allowMcp",
+    descriptionKey: "settings.approval.allowMcpDesc",
+  },
+  {
+    id: "allowOutsideWorkspace",
+    labelKey: "settings.approval.allowOutsideWorkspace",
+    descriptionKey: "settings.approval.allowOutsideWorkspaceDesc",
+  },
+];
+
 export function SystemToolsSection(props: SettingsSectionProps) {
   const { settings, setSettings } = props;
   const { t } = useLocale();
@@ -227,8 +272,99 @@ export function SystemToolsSection(props: SettingsSectionProps) {
     setSettings((prev) => updateSystem(prev, { selectedSystemTools: next }));
   }
 
+  function selectApprovalPolicy(approvalPolicy: ApprovalPolicy) {
+    setSettings((prev) =>
+      updateSystem(prev, {
+        approvalPolicy,
+        executionMode:
+          prev.system.executionMode === "text"
+            ? "text"
+            : approvalPolicy === "full"
+              ? "agent-dev"
+              : "tools",
+      }),
+    );
+  }
+
+  function toggleCustomApprovalRule(rule: keyof CustomApprovalRules) {
+    setSettings((prev) =>
+      updateSystem(prev, {
+        approvalPolicy: "custom",
+        executionMode: prev.system.executionMode === "text" ? "text" : "tools",
+        customApprovalRules: {
+          ...prev.system.customApprovalRules,
+          [rule]: !prev.system.customApprovalRules[rule],
+        },
+      }),
+    );
+  }
+
   return (
     <div className="settings-tools-section space-y-4">
+      <section className="overflow-hidden rounded-xl border border-border/65 bg-card/45">
+        <div className="flex flex-wrap items-start justify-between gap-3 px-4 pb-3 pt-4">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold">{t("settings.approval.title")}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {t("settings.approval.description")}
+            </p>
+          </div>
+          <span className="rounded-full bg-orange-500/10 px-2.5 py-1 text-[11px] font-medium text-orange-600 dark:text-orange-300">
+            {t(
+              APPROVAL_POLICY_OPTIONS.find((option) => option.id === settings.system.approvalPolicy)
+                ?.labelKey ?? "chat.access.agentAutomatic",
+            )}
+          </span>
+        </div>
+
+        <div className="grid gap-1 border-y border-border/55 bg-muted/20 p-1.5 sm:grid-cols-4">
+          {APPROVAL_POLICY_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const active = settings.system.approvalPolicy === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectApprovalPolicy(option.id)}
+                className={`flex h-9 items-center justify-center gap-2 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 ${
+                  active
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/55"
+                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t(option.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+
+        {settings.system.approvalPolicy === "custom" ? (
+          <div className="divide-y divide-border/50 px-4">
+            {CUSTOM_APPROVAL_RULE_OPTIONS.map((rule) => (
+              <div key={rule.id} className="flex items-center gap-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-medium text-foreground">{t(rule.labelKey)}</div>
+                  <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+                    {t(rule.descriptionKey)}
+                  </p>
+                </div>
+                <AgentActivationSwitch
+                  checked={settings.system.customApprovalRules[rule.id]}
+                  title={t(rule.labelKey)}
+                  onToggle={() => toggleCustomApprovalRule(rule.id)}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="px-4 py-3 text-[11px] leading-4 text-muted-foreground">
+            {t(`settings.approval.mode.${settings.system.approvalPolicy}`)}
+          </p>
+        )}
+      </section>
+
       <div className="settings-tools-header flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">

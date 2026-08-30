@@ -160,18 +160,6 @@ function isTerminalSessionNotFoundError(error: unknown) {
   return message.includes("terminal session not found") || message.includes("session not found");
 }
 
-let workspaceSshTerminalOverlayPreload: Promise<unknown> | null = null;
-
-function preloadWorkspaceSshTerminalOverlay() {
-  workspaceSshTerminalOverlayPreload ??= import(
-    "@/components/workspace-editor/WorkspaceSshTerminalOverlay"
-  ).catch((error) => {
-    workspaceSshTerminalOverlayPreload = null;
-    throw error;
-  });
-  return workspaceSshTerminalOverlayPreload;
-}
-
 function HostMetaTags(props: { host: SshHostConfig }) {
   const { host } = props;
   const { t } = useLocale();
@@ -270,7 +258,6 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
   const canCreate = Boolean(
     canShowCreateButton && selectedCreateHost && !selectedHostMessage && !creating,
   );
-
   useEffect(() => {
     if (canShowCreateButton || view !== "create") return;
     setView("list");
@@ -801,7 +788,7 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
                     align="start"
                     sideOffset={6}
                     collisionPadding={12}
-                    className="z-[80] w-max max-w-[calc(100vw-2rem)] min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl border-border/70 bg-popover/95 p-1 shadow-[0_18px_46px_-24px_hsl(160_84%_25%_/_0.42),0_8px_24px_-18px_hsl(0_0%_0%_/_0.32)] backdrop-blur-xl"
+                    className="z-[80] w-max max-w-[calc(100vw-2rem)] min-w-[var(--anchor-width)] rounded-xl border-border/70 bg-popover/95 p-1 shadow-[0_18px_46px_-24px_hsl(160_84%_25%_/_0.42),0_8px_24px_-18px_hsl(0_0%_0%_/_0.32)] backdrop-blur-xl"
                   >
                     <div className="max-h-72 overflow-y-auto p-0.5">
                       {createHosts.map((host) => {
@@ -811,11 +798,11 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
                             key={host.id}
                             onSelect={() => selectCreateHost(host.id)}
                             className={cn(
-                              "group/item flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none transition-all focus:translate-x-0.5 focus:bg-emerald-500/10 focus:text-foreground",
+                              "group/item flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none transition-all data-[highlighted]:translate-x-0.5 data-[highlighted]:bg-emerald-500/10 data-[highlighted]:text-foreground",
                               selected && "bg-emerald-500/10 text-foreground",
                             )}
                           >
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 transition-colors group-focus/item:bg-emerald-500/15">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 transition-colors group-data-[highlighted]/item:bg-emerald-500/15">
                               <Server className="h-3.5 w-3.5" />
                             </span>
                             <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -1127,16 +1114,7 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
                           title={t("projectTools.sshTunnelOpenBash")}
                           aria-label={t("projectTools.sshTunnelOpenBash")}
                           disabled={!connected}
-                          onFocus={() => {
-                            void preloadWorkspaceSshTerminalOverlay();
-                          }}
-                          onPointerEnter={() => {
-                            void preloadWorkspaceSshTerminalOverlay();
-                          }}
-                          onClick={() => {
-                            void preloadWorkspaceSshTerminalOverlay();
-                            onOpenSession(session, "bash");
-                          }}
+                          onClick={() => onOpenSession(session, "bash")}
                         >
                           <Terminal className="h-4 w-4" />
                         </button>
@@ -1147,16 +1125,7 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
                             title={t("projectTools.sshTunnelOpenSftp")}
                             aria-label={t("projectTools.sshTunnelOpenSftp")}
                             disabled={!connected}
-                            onFocus={() => {
-                              void preloadWorkspaceSshTerminalOverlay();
-                            }}
-                            onPointerEnter={() => {
-                              void preloadWorkspaceSshTerminalOverlay();
-                            }}
-                            onClick={() => {
-                              void preloadWorkspaceSshTerminalOverlay();
-                              onOpenSession(session, "sftp");
-                            }}
+                            onClick={() => onOpenSession(session, "sftp")}
                           >
                             <FolderTree className="h-4 w-4" />
                           </button>

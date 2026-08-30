@@ -4,3 +4,4 @@
 // lives in the mirrored sidebar state layer; this alias keeps the historical
 // name for the web components that render summaries.
 export type { SidebarConversation as ChatHistorySummary } from "../sidebar/types";
+export type { HistoryShareStatus as ChatHistoryShareStatus } from "../gatewayTypes";

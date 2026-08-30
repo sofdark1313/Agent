@@ -1,4 +1,4 @@
-import { Check, ChevronDown, MessageSquare, Wrench } from "@/components/icons";
+import { Check, ChevronDown, MessageSquare, type Shield, Wrench } from "@/components/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,15 +6,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLocale } from "@/i18n";
-import { type AppSettings, type ExecutionMode, updateSystem } from "@/lib/settings";
+import {
+  type ApprovalPolicy,
+  type AppSettings,
+  type ExecutionMode,
+  updateSystem,
+} from "@/lib/settings";
 import { cn } from "@/lib/shared/utils";
 
 type ChatModeOption = {
   id: "chat" | "agent";
-  executionMode: ExecutionMode;
+  executionMode: "text" | "tools";
   labelKey: string;
   descriptionKey: string;
-  icon: typeof MessageSquare;
+  icon: typeof Shield;
 };
 
 const CHAT_MODE_OPTIONS: ChatModeOption[] = [
@@ -34,33 +39,50 @@ const CHAT_MODE_OPTIONS: ChatModeOption[] = [
   },
 ];
 
+function resolveAgentExecutionMode(approvalPolicy: ApprovalPolicy): ExecutionMode {
+  return approvalPolicy === "full" ? "agent-dev" : "tools";
+}
+
 export function ChatModeSelector(props: {
-  executionMode: ExecutionMode;
-  setSettings: (updater: (prev: AppSettings) => AppSettings) => void;
+  executionMode?: ExecutionMode;
+  approvalPolicy?: ApprovalPolicy;
+  setSettings?: (updater: (prev: AppSettings) => AppSettings) => void;
 }) {
-  const { executionMode, setSettings } = props;
+  const { executionMode = "tools", approvalPolicy = "ask", setSettings } = props;
   const { t } = useLocale();
   const selectedId = executionMode === "text" ? "chat" : "agent";
   const selectedOption =
     CHAT_MODE_OPTIONS.find((option) => option.id === selectedId) ?? CHAT_MODE_OPTIONS[1];
   const SelectedIcon = selectedOption.icon;
 
+  const selectMode = (option: ChatModeOption) => {
+    setSettings?.((current) =>
+      updateSystem(current, {
+        executionMode:
+          option.id === "chat" ? option.executionMode : resolveAgentExecutionMode(approvalPolicy),
+      }),
+    );
+  };
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          data-agent-sidebar-mode={selectedId}
-          type="button"
-          aria-label={t("chat.mode.menuTitle")}
-          className="inline-flex h-9 min-w-0 max-w-full items-center gap-2 rounded-xl px-2.5 text-[calc(14px*var(--zone-font-scale,1))] font-semibold tracking-tight text-foreground transition-colors hover:bg-foreground/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 data-[state=open]:bg-foreground/[0.065]"
-        >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm">
-            <SelectedIcon className="h-3.5 w-3.5" />
-          </span>
-          <span className="truncate">{t(selectedOption.labelKey)}</span>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        </button>
+      <DropdownMenuTrigger
+        render={
+          <button
+            data-agent-sidebar-mode={selectedId}
+            type="button"
+            aria-label={t("chat.mode.menuTitle")}
+            className="inline-flex h-9 min-w-0 max-w-full items-center gap-2 rounded-xl px-2.5 text-[calc(14px*var(--zone-font-scale,1))] font-semibold tracking-tight text-foreground transition-colors hover:bg-foreground/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 data-[popup-open]:bg-foreground/[0.065]"
+          />
+        }
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-foreground text-background shadow-sm">
+          <SelectedIcon className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate">{t(selectedOption.labelKey)}</span>
+        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
+
       <DropdownMenuContent
         side="bottom"
         align="start"
@@ -74,9 +96,7 @@ export function ChatModeSelector(props: {
           return (
             <DropdownMenuItem
               key={option.id}
-              onSelect={() => {
-                setSettings((current) => updateSystem(current, { executionMode: option.executionMode }));
-              }}
+              onClick={() => selectMode(option)}
               className={cn(
                 "items-start gap-3 rounded-[10px] px-2.5 py-2.5 focus:bg-foreground/[0.055]",
                 selected && "bg-foreground/[0.055]",

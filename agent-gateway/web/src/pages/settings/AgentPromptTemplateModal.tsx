@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, Check } from "../../components/icons";
+import { BookOpen, Check } from "@/components/icons";
 
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { useLocale } from "../../i18n";
-import type { AgentPromptTemplate } from "../../lib/settings";
-import { useModalMotion } from "../../lib/shared/modalMotion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useLocale } from "@/i18n";
+import type { AgentPromptTemplate } from "@/lib/settings";
 
 type AgentPromptTemplateModalProps = {
   initialData?: AgentPromptTemplate;
@@ -25,7 +24,6 @@ export function AgentPromptTemplateModal({
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [prompt, setPrompt] = useState(initialData?.prompt ?? "");
-  const { isClosing, modalState, requestClose } = useModalMotion(onClose);
 
   const isEditing = Boolean(initialData);
 
@@ -39,23 +37,19 @@ export function AgentPromptTemplateModal({
       description: description.trim(),
       prompt: trimmedPrompt,
     });
-    requestClose();
   }
 
   return createPortal(
-    <div
-      className="settings-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-      data-state={modalState}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
-        onClick={requestClose}
+        onClick={onClose}
         aria-label={t("settings.cancel")}
       />
 
-      <div className="settings-modal-panel relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
-        <div className="settings-modal-header flex items-center gap-3 border-b px-6 py-4">
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
+        <div className="flex items-center gap-3 border-b px-6 py-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
             <BookOpen className="h-5 w-5" />
           </div>
@@ -67,7 +61,7 @@ export function AgentPromptTemplateModal({
           </div>
         </div>
 
-        <div className="settings-modal-body flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           <div className="space-y-1.5">
             <Label
               htmlFor="agent-template-name"
@@ -116,7 +110,7 @@ export function AgentPromptTemplateModal({
           </div>
         </div>
 
-        <div className="settings-modal-footer flex items-center justify-between border-t px-6 py-4">
+        <div className="flex items-center justify-between border-t px-6 py-4">
           <div className="text-xs text-muted-foreground">
             {name.trim() && prompt.trim() ? (
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
@@ -127,11 +121,11 @@ export function AgentPromptTemplateModal({
               <span>{t("settings.agentsRequired")}</span>
             )}
           </div>
-          <div className="settings-modal-actions flex items-center gap-2">
-            <Button variant="outline" onClick={requestClose}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onClose}>
               {t("settings.cancel")}
             </Button>
-            <Button onClick={handleSave} disabled={!name.trim() || !prompt.trim() || isClosing}>
+            <Button onClick={handleSave} disabled={!name.trim() || !prompt.trim()}>
               {t("settings.save")}
             </Button>
           </div>

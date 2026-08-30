@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { HubBackdrop, HubHeader } from "../../components/hub/HubChrome";
-import { Cable, Cloud, Plug, Plus, Server, Sparkles } from "../../components/icons";
-import { Button } from "../../components/ui/button";
-import { useLocale } from "../../i18n";
-import { type AppSettings, type McpServerConfig, updateMcp } from "../../lib/settings";
-import { cn } from "../../lib/shared/utils";
+import { HubBackdrop, HubHeader } from "@/components/hub/HubChrome";
+import { Cable, Cloud, Plug, Plus, Server, Sparkles } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "@/i18n";
+import { type AppSettings, type McpServerConfig, updateMcp } from "@/lib/settings";
+import { cn } from "@/lib/shared/utils";
 import { McpRegistryBrowser } from "./McpRegistryBrowser";
 import { McpServerEditModal, McpServersForm } from "./McpServersForm";
 

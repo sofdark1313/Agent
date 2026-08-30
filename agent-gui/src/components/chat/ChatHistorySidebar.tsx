@@ -129,8 +129,6 @@ const HISTORY_ROW_OVERSCAN_COUNT = 8;
 const HISTORY_LOAD_MORE_THRESHOLD = 12;
 const PROJECT_ICON_BUTTON_CLASS =
   "h-7 w-7 rounded-lg !bg-transparent text-muted-foreground transition-colors hover:!bg-transparent hover:!text-foreground active:!bg-transparent focus-visible:!bg-transparent data-[state=open]:!bg-transparent data-[state=open]:text-foreground data-[popup-open]:!bg-transparent data-[popup-open]:text-foreground";
-const SIDEBAR_SECTION_ROWS_TRANSITION_CLASS =
-  "transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none";
 const SIDEBAR_PROJECT_MIN_BODY_HEIGHT = 96;
 const SIDEBAR_RECENT_MIN_BODY_HEIGHT = 160;
 const PROJECT_LIST_COLLAPSED_MAX = 30;
@@ -927,8 +925,9 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingProjectRemoveId, setPendingProjectRemoveId] = useState<string | null>(null);
   const [showAllProjects, setShowAllProjects] = useState(false);
-  const [projectSectionHeight, setProjectSectionHeight] = useState<number | null>(null);
-  const [isProjectSectionResizing, setIsProjectSectionResizing] = useState(false);
+  const [collapsedProjectIds, setCollapsedProjectIds] = useState<Set<string>>(() => new Set());
+  const [expandedMoreProjectIds, setExpandedMoreProjectIds] = useState<Set<string>>(() => new Set());
+  const [projectSectionHeight] = useState<number | null>(null);
   const [sidebarSectionMetrics, setSidebarSectionMetrics] = useState({
     containerHeight: 0,
     projectsHeaderHeight: 0,
@@ -946,8 +945,6 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     resizeMinHeight: 0,
     resizeMaxHeight: 0,
   });
-  const projectSectionResizeFrameRef = useRef<number | null>(null);
-  const projectSectionResizeCleanupRef = useRef<(() => void) | null>(null);
   const handleSelectConversation = useStableEvent(onSelectConversation);
   const handleStartRenaming = useStableEvent(onStartRenaming);
   const handleRenameDraftChange = useStableEvent(onRenameDraftChange);
@@ -1059,12 +1056,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
     showProjects,
     sidebarSectionMetrics,
   ]);
-  const canResizeProjectSections =
-    showProjects &&
-    !projectsCollapsed &&
-    !recentCollapsed &&
-    sidebarSectionLayout.resizeMaxHeight > sidebarSectionLayout.resizeMinHeight;
-  sidebarSectionLayoutRef.current = {
+    sidebarSectionLayoutRef.current = {
     projectsBodyHeight: sidebarSectionLayout.projectsBodyHeight,
     resizeMinHeight: sidebarSectionLayout.resizeMinHeight,
     resizeMaxHeight: sidebarSectionLayout.resizeMaxHeight,
@@ -1185,108 +1177,6 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
       resizeObserver.disconnect();
     };
   }, [isOpen, projectsCollapsed, recentCollapsed, showProjects]);
-
-  useEffect(() => {
-    return () => {
-      projectSectionResizeCleanupRef.current?.();
-      if (projectSectionResizeFrameRef.current !== null) {
-        window.cancelAnimationFrame(projectSectionResizeFrameRef.current);
-      }
-    };
-  }, []);
-
-  const handleProjectSectionResizeStart = useCallback(
-    (event: React.PointerEvent<HTMLButtonElement>) => {
-      if (event.button !== 0 || !canResizeProjectSections) {
-        return;
-      }
-
-      event.preventDefault();
-      projectSectionResizeCleanupRef.current?.();
-
-      const pointerId = event.pointerId;
-      const resizeTarget = event.currentTarget;
-      const startY = event.clientY;
-      const layout = sidebarSectionLayoutRef.current;
-      const startHeight = clampSidebarSectionHeight(
-        layout.projectsBodyHeight,
-        layout.resizeMinHeight,
-        layout.resizeMaxHeight,
-      );
-      const previousCursor = document.body.style.cursor;
-      const previousUserSelect = document.body.style.userSelect;
-
-      setIsProjectSectionResizing(true);
-      document.body.style.cursor = "row-resize";
-      document.body.style.userSelect = "none";
-      resizeTarget.setPointerCapture(pointerId);
-
-      const scheduleProjectSectionHeight = (nextHeight: number) => {
-        if (projectSectionResizeFrameRef.current !== null) {
-          return;
-        }
-        projectSectionResizeFrameRef.current = window.requestAnimationFrame(() => {
-          projectSectionResizeFrameRef.current = null;
-          setProjectSectionHeight(nextHeight);
-        });
-      };
-
-      const cleanupResize = () => {
-        window.removeEventListener("pointermove", handleMove);
-        window.removeEventListener("pointerup", handleUp);
-        window.removeEventListener("pointercancel", handleUp);
-        window.removeEventListener("blur", handleBlur);
-        if (resizeTarget.hasPointerCapture(pointerId)) {
-          resizeTarget.releasePointerCapture(pointerId);
-        }
-        document.body.style.cursor = previousCursor;
-        document.body.style.userSelect = previousUserSelect;
-        projectSectionResizeCleanupRef.current = null;
-      };
-
-      const finishResize = () => {
-        cleanupResize();
-        if (projectSectionResizeFrameRef.current !== null) {
-          window.cancelAnimationFrame(projectSectionResizeFrameRef.current);
-          projectSectionResizeFrameRef.current = null;
-        }
-        setIsProjectSectionResizing(false);
-      };
-
-      const handleMove = (moveEvent: globalThis.PointerEvent) => {
-        if (moveEvent.pointerId !== pointerId) {
-          return;
-        }
-        moveEvent.preventDefault();
-        const liveLayout = sidebarSectionLayoutRef.current;
-        scheduleProjectSectionHeight(
-          clampSidebarSectionHeight(
-            startHeight + moveEvent.clientY - startY,
-            liveLayout.resizeMinHeight,
-            liveLayout.resizeMaxHeight,
-          ),
-        );
-      };
-
-      const handleUp = (upEvent: globalThis.PointerEvent) => {
-        if (upEvent.pointerId !== pointerId) {
-          return;
-        }
-        finishResize();
-      };
-
-      const handleBlur = () => {
-        finishResize();
-      };
-
-      projectSectionResizeCleanupRef.current = cleanupResize;
-      window.addEventListener("pointermove", handleMove);
-      window.addEventListener("pointerup", handleUp);
-      window.addEventListener("pointercancel", handleUp);
-      window.addEventListener("blur", handleBlur);
-    },
-    [canResizeProjectSections],
-  );
 
   const renderHistoryRow = useCallback(
     (item: SidebarConversation) => (
@@ -1453,17 +1343,13 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
 
         <div
           ref={sidebarSectionsRef}
-          style={{ gridTemplateRows: sidebarSectionLayout.gridTemplateRows }}
-          className={cn(
-            "grid min-h-0 flex-1 content-start",
-            isProjectSectionResizing ? undefined : SIDEBAR_SECTION_ROWS_TRANSITION_CLASS,
-          )}
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2 pb-3"
         >
           {showProjects ? (
             <>
               <div
                 ref={projectsHeaderRef}
-                className="group/workspace-header flex items-center justify-between px-2 pb-1 pt-2"
+                className="group/workspace-header flex shrink-0 items-center justify-between px-2 pb-1 pt-2"
               >
                 <button
                   type="button"
@@ -1494,44 +1380,91 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <div
-                aria-hidden={projectsCollapsed}
-                inert={projectsCollapsed}
-                className={cn(
-                  "min-h-0 overflow-y-auto overflow-x-hidden transition-opacity duration-300 ease-out motion-reduce:transition-none",
-                  projectsCollapsed ? "opacity-0" : "opacity-100",
-                )}
-              >
-                <div ref={projectsBodyRef} className="space-y-0.5 px-2 pb-0.5">
+              {!projectsCollapsed ? (
+                <div ref={projectsBodyRef} className="space-y-0.5 pb-0.5">
                   {renderedProjects.map((project) => {
                     const pathKey = workspaceProjectPathKey(project.path);
+                    const isActive = activeProjectId === project.id;
+                    const isCollapsed = collapsedProjectIds.has(project.id);
+                    const isExpandedMore = expandedMoreProjectIds.has(project.id);
+
+                    // Filter conversations matching this project
+                    const projectConversations = items.filter((item) => {
+                      if (item.isPinned) return false;
+                      if (!item.cwd) return project.id === "default" || isActive;
+                      return workspaceProjectPathKey(item.cwd) === pathKey;
+                    });
+
+                    const visibleConversations = isExpandedMore
+                      ? projectConversations
+                      : projectConversations.slice(0, 5);
+
+                    const toggleExpandedMore = () => {
+                      setExpandedMoreProjectIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(project.id)) {
+                          next.delete(project.id);
+                        } else {
+                          next.add(project.id);
+                        }
+                        return next;
+                      });
+                    };
+
                     return (
-                      <ProjectRow
-                        key={project.id}
-                        project={project}
-                        isActive={activeProjectId === project.id}
-                        isMissing={missingProjectPathKeys.has(pathKey)}
-                        isRunning={runningProjectPathKeys.has(pathKey)}
-                        isRenaming={projectRenamingId === project.id}
-                        isPendingRemove={pendingProjectRemoveId === project.id}
-                        renameDraft={projectRenameDraft}
-                        onSelectProject={handleSelectProject}
-                        onBrowseProjectInFileTree={
-                          onBrowseProjectInFileTree ? handleBrowseProjectInFileTree : undefined
-                        }
-                        onBrowseProjectInSystemFileManager={
-                          onBrowseProjectInSystemFileManager
-                            ? handleBrowseProjectInSystemFileManager
-                            : undefined
-                        }
-                        onStartRenamingProject={handleStartRenamingProject}
-                        onProjectRenameDraftChange={handleProjectRenameDraftChange}
-                        onCommitProjectRename={handleCommitProjectRename}
-                        onCancelProjectRename={handleCancelProjectRename}
-                        onSetProjectPinned={handleSetProjectPinned}
-                        onRemoveProject={handleRemoveProject}
-                        onSetPendingRemove={setPendingProjectRemoveId}
-                      />
+                      <div key={project.id} className="space-y-0.5">
+                        <ProjectRow
+                          project={project}
+                          isActive={isActive}
+                          isMissing={missingProjectPathKeys.has(pathKey)}
+                          isRunning={runningProjectPathKeys.has(pathKey)}
+                          isRenaming={projectRenamingId === project.id}
+                          isPendingRemove={pendingProjectRemoveId === project.id}
+                          renameDraft={projectRenameDraft}
+                          onSelectProject={(proj) => {
+                            handleSelectProject(proj);
+                            // Ensure selected project is expanded
+                            setCollapsedProjectIds((prev) => {
+                              if (!prev.has(proj.id)) return prev;
+                              const next = new Set(prev);
+                              next.delete(proj.id);
+                              return next;
+                            });
+                          }}
+                          onBrowseProjectInFileTree={
+                            onBrowseProjectInFileTree ? handleBrowseProjectInFileTree : undefined
+                          }
+                          onBrowseProjectInSystemFileManager={
+                            onBrowseProjectInSystemFileManager
+                              ? handleBrowseProjectInSystemFileManager
+                              : undefined
+                          }
+                          onStartRenamingProject={handleStartRenamingProject}
+                          onProjectRenameDraftChange={handleProjectRenameDraftChange}
+                          onCommitProjectRename={handleCommitProjectRename}
+                          onCancelProjectRename={handleCancelProjectRename}
+                          onSetProjectPinned={handleSetProjectPinned}
+                          onRemoveProject={handleRemoveProject}
+                          onSetPendingRemove={setPendingProjectRemoveId}
+                        />
+                        {!isCollapsed && projectConversations.length > 0 ? (
+                          <div className="space-y-0.5 pl-2 pt-0.5">
+                            {visibleConversations.map((item) => renderHistoryRow(item))}
+                            {projectConversations.length > 5 ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleExpandedMore();
+                                }}
+                                className="flex w-full items-center justify-start rounded-md px-2 py-1 text-[calc(11.5px*var(--zone-font-scale,1))] text-muted-foreground/75 transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+                              >
+                                {isExpandedMore ? "收起显示" : "展开显示"}
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                     );
                   })}
                   {hiddenProjectCount > 0 || showAllProjects ? (
@@ -1546,41 +1479,16 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                     </button>
                   ) : null}
                 </div>
-              </div>
-              <button
-                ref={sectionResizeHandleRef}
-                type="button"
-                aria-label={t("chat.resizeSidebarSections")}
-                title={t("chat.resizeSidebarSections")}
-                disabled={!canResizeProjectSections}
-                onPointerDown={handleProjectSectionResizeStart}
-                className={cn(
-                  "group items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none",
-                  canResizeProjectSections
-                    ? "hidden h-2 cursor-row-resize touch-none md:flex"
-                    : "flex h-0 overflow-hidden",
-                )}
-              >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "h-0.5 w-10 rounded-full bg-muted-foreground/25 opacity-70 shadow-sm transition-[width,background-color,opacity]",
-                    "group-hover:w-16 group-hover:bg-primary/60 group-hover:opacity-100 group-focus-visible:w-16 group-focus-visible:bg-primary group-focus-visible:opacity-100",
-                    isProjectSectionResizing && "w-20 bg-primary opacity-100",
-                    !canResizeProjectSections && "hidden",
-                  )}
-                />
-              </button>
+              ) : null}
             </>
           ) : null}
 
-          <div
-            ref={recentHeaderRef}
-            className={cn(
-              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 pb-2",
-              showProjects ? "border-t border-border/35 pt-0.5" : "pt-3",
-            )}
-          >
+          {!showProjects ? (
+            <>
+              <div
+                ref={recentHeaderRef}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 pb-2 pt-3"
+            >
             <button
               type="button"
               aria-expanded={!recentCollapsed}
@@ -1618,10 +1526,10 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
           </div>
 
           <div
-            aria-hidden={recentCollapsed}
-            inert={recentCollapsed}
+            aria-hidden={recentCollapsed || showProjects}
+            inert={recentCollapsed || showProjects}
             className={cn(
-              "flex min-h-0 flex-col transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+              showProjects ? "hidden" : "flex min-h-0 flex-col transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
               recentCollapsed
                 ? "pointer-events-none -translate-y-2 opacity-0"
                 : "translate-y-0 opacity-100",
@@ -1700,6 +1608,8 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
               ) : null}
             </div>
           </div>
+            </>
+          ) : null}
         </div>
         <div className="shrink-0 border-t border-border/50 bg-[hsl(var(--sidebar-bg))] px-2 py-2">
           <AgentAppMenu onOpenSettings={onOpenSettings} />

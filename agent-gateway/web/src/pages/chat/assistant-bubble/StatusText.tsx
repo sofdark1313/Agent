@@ -1,6 +1,6 @@
-import { useLocale } from "../../../i18n";
-import { VIBING_STATUS } from "../../../lib/chat/chatPageHelpers";
-import { cn } from "../../../lib/shared/utils";
+import { useLocale } from "@/i18n";
+import { VIBING_STATUS } from "@/lib/chat/chatPageHelpers";
+import { cn } from "@/lib/shared/utils";
 
 export function VibingText({ className }: { className?: string }) {
   return <AnimatedStatusText text={VIBING_STATUS} className={className} />;

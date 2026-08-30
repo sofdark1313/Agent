@@ -97,9 +97,6 @@ export function RightDockCreateMenu(props: RightDockCreateMenuProps) {
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      {/* Native trigger button styled via buttonVariants: the Base UI (GUI) and
-          Radix (web) triggers both render a plain <button>, so this markup can
-          stay byte-identical on both ends without asChild/render adapters. */}
       <DropdownMenuTrigger
         disabled={!(projectReady || tunnelAvailable) || creating}
         title={t("projectTools.newProjectTool")}
@@ -147,6 +144,7 @@ export function RightDockChooser(props: RightDockChooserProps) {
     onOpenBackgroundTasks,
   } = props;
   const { t } = useLocale();
+
   const tools = [
     {
       key: "terminal",
@@ -178,12 +176,8 @@ export function RightDockChooser(props: RightDockChooserProps) {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-5 py-6">
-      <div className="flex flex-col items-center gap-1">
-        <h3 className="text-sm font-medium text-foreground">{t("projectTools.getStarted")}</h3>
-        <p className="text-xs text-muted-foreground">{t("projectTools.getStartedHint")}</p>
-      </div>
-      <div className="flex w-full max-w-xs flex-col gap-0.5">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-8">
+      <div className="flex w-full max-w-sm flex-col gap-2.5">
         {tools.map((tool) => (
           <button
             key={tool.key}
@@ -191,14 +185,16 @@ export function RightDockChooser(props: RightDockChooserProps) {
             onClick={tool.onClick}
             disabled={tool.disabled}
             title={tool.titleAttr}
-            className="group flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted/50 disabled:pointer-events-none disabled:opacity-40"
+            className="group flex items-center gap-3.5 rounded-xl border border-border/50 bg-foreground/[0.025] px-4 py-3 text-left transition-all hover:bg-foreground/[0.06] hover:border-border/80 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40"
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-muted-foreground transition-colors group-hover:bg-foreground/[0.08] group-hover:text-foreground">
               {tool.icon}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-medium leading-tight">{tool.title}</div>
-              <div className="mt-0.5 text-xs leading-tight text-muted-foreground">
+              <div className="text-[calc(13.5px*var(--zone-font-scale,1))] font-medium leading-tight text-foreground/90 group-hover:text-foreground">
+                {tool.title}
+              </div>
+              <div className="mt-1 text-xs leading-tight text-muted-foreground">
                 {tool.description}
               </div>
             </div>
@@ -206,9 +202,9 @@ export function RightDockChooser(props: RightDockChooserProps) {
         ))}
       </div>
       {loading ? (
-        <div className="text-center text-xs text-muted-foreground">{t("projectTools.loading")}</div>
+        <div className="mt-4 text-center text-xs text-muted-foreground">{t("projectTools.loading")}</div>
       ) : null}
-      {error ? <div className="text-center text-xs text-destructive">{error}</div> : null}
+      {error ? <div className="mt-4 text-center text-xs text-destructive">{error}</div> : null}
     </div>
   );
 }

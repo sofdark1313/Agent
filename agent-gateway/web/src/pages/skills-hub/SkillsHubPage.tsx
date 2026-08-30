@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GlassPanel, HubBackdrop, HubHeader } from "../../components/hub/HubChrome";
+import { GlassPanel, HubBackdrop, HubHeader } from "@/components/hub/HubChrome";
 import {
   AlertTriangle,
   Blend,
@@ -21,13 +21,13 @@ import {
   SkillIcon,
   Trash2,
   X,
-} from "../../components/icons";
-import { Markdown } from "../../components/Markdown";
-import { Button } from "../../components/ui/button";
-import { ConfirmDeletePopover } from "../../components/ui/confirm-action-popover";
-import { useLocale } from "../../i18n";
-import { type AppSettings, updateSkills } from "../../lib/settings";
-import { cn } from "../../lib/shared/utils";
+} from "@/components/icons";
+import { Markdown } from "@/components/Markdown";
+import { Button } from "@/components/ui/button";
+import { ConfirmDeletePopover } from "@/components/ui/confirm-action-popover";
+import { useLocale } from "@/i18n";
+import { type AppSettings, updateSkills } from "@/lib/settings";
+import { cn } from "@/lib/shared/utils";
 import {
   cancelSkillInstallJob,
   discoverSkills,
@@ -43,7 +43,7 @@ import {
   type SkillSummary,
   scanExternalSkills,
   startSkillInstallJob,
-} from "../../lib/skills";
+} from "@/lib/skills";
 import {
   buildClawHubDownloadUrl,
   type ClawHubSkillCard,
@@ -52,7 +52,7 @@ import {
   getClawHubSkillDetail,
   listClawHubSkills,
   searchClawHubSkills,
-} from "../../lib/skills/clawHub";
+} from "@/lib/skills/clawHub";
 
 type SkillsHubView = "installed" | "store" | "import";
 
@@ -1873,7 +1873,6 @@ function InstalledSkillPreviewDrawer(props: {
                       <Markdown
                         content={previewContent}
                         className="text-[12px] leading-5 text-muted-foreground"
-                        readOnly
                       />
                     ) : (
                       <pre className="max-h-[24rem] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-muted/35 p-3 font-mono text-[11px] leading-5 text-muted-foreground">
@@ -2008,7 +2007,7 @@ function SkillsStoreView(props: {
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-hidden">
       <div className="hub-panel-enter flex items-center justify-start">
         <div className="flex shrink-0 items-center gap-1.5">
-          <div className="flex max-w-full shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-border/40 bg-background/60 p-1 backdrop-blur-xl shadow-[0_1px_0_rgba(255,255,255,0.5)_inset] dark:border-white/[0.06] dark:bg-white/[0.04] dark:shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex max-w-full shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-border/40 bg-background/60 p-1 backdrop-blur-xl shadow-[0_1px_0_rgba(255,255,255,0.5)_inset] dark:border-white/[0.06] dark:bg-white/[0.04] dark:shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
             {STORE_SORT_OPTIONS.map((option) => {
               const active = sort === option.value;
               return (
@@ -2550,12 +2549,14 @@ function SkillsStorePreviewDrawer(props: {
               variant="outline"
               size="sm"
               className="h-9 flex-1 gap-1.5 rounded-xl border-border/50 bg-background/70"
-              asChild
+              render={
+                <a href={link} target="_blank" rel="noreferrer">
+                  <span className="sr-only">{t("settings.skillsStoreOpenInClawHub")}</span>
+                </a>
+              }
             >
-              <a href={link} target="_blank" rel="noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" />
-                {t("settings.skillsStoreOpenInClawHub")}
-              </a>
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t("settings.skillsStoreOpenInClawHub")}
             </Button>
           ) : null}
           <Button

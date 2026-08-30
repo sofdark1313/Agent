@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/shared/utils";
+import type { SectionId } from "@/pages/settings/types";
 
 type UserMenuProps = {
   open: boolean;
@@ -18,7 +19,7 @@ type UserMenuProps = {
   userAvatarLabel: string;
   sessionId?: string | null;
   onLogout: () => void;
-  onOpenSettings?: () => void;
+  onOpenSettings?: (section?: SectionId) => void;
   sidebar?: boolean;
 };
 
@@ -36,35 +37,38 @@ export function UserMenu(props: UserMenuProps) {
 
   return (
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn(
-            "h-8 gap-1 rounded-full border border-border/60 bg-background/70 px-1.5 text-foreground shadow-sm hover:bg-muted/70",
-            sidebar &&
-              "gateway-sidebar-account-trigger h-10 w-full justify-start gap-2 rounded-lg border-0 bg-transparent px-2 hover:bg-foreground/[0.07]",
-          )}
-          title="用户菜单"
-        >
-          {sidebar ? (
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
-              <AgentMark className="h-4 w-4" />
-            </span>
-          ) : (
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/90 to-sky-500/90 text-[calc(11px*var(--zone-font-scale,1))] font-semibold text-white">
-              {userAvatarLabel || <User className="h-3.5 w-3.5" />}
-            </span>
-          )}
-          {sidebar ? (
-            <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">Agent</span>
-          ) : null}
-          {sidebar ? (
-            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+              "h-8 gap-1 rounded-full border border-border/60 bg-background/70 px-1.5 text-foreground shadow-sm hover:bg-muted/70",
+              sidebar &&
+                "gateway-sidebar-account-trigger h-10 w-full justify-start gap-2 rounded-lg border-0 bg-transparent px-2 hover:bg-foreground/[0.07]",
+            )}
+            title="用户菜单"
+          >
+            {sidebar ? (
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-foreground text-background">
+                <AgentMark className="h-4 w-4" />
+              </span>
+            ) : (
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/90 to-sky-500/90 text-[calc(11px*var(--zone-font-scale,1))] font-semibold text-white">
+                {userAvatarLabel || <User className="h-3.5 w-3.5" />}
+              </span>
+            )}
+            {sidebar ? (
+              <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">Agent</span>
+            ) : null}
+            {sidebar ? (
+              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </Button>
+        }
+      />
       <DropdownMenuContent
         align={sidebar ? "start" : "end"}
         side={sidebar ? "top" : "bottom"}

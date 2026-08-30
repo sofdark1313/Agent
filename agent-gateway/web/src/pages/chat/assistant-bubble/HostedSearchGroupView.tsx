@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { ChevronRight, Search } from "../../../components/icons";
-import { useLocale } from "../../../i18n";
-import type { HostedSearchBlock } from "../../../lib/chat/hostedSearch";
-import { cn } from "../../../lib/shared/utils";
+
+import { ChevronRight, Search } from "@/components/icons";
+import { useLocale } from "@/i18n";
+import type { HostedSearchBlock } from "@/lib/chat/hostedSearch";
+import { cn } from "@/lib/shared/utils";
 
 function getHostedSearchStatusLabel(
   t: (key: string) => string,
@@ -13,7 +14,6 @@ function getHostedSearchStatusLabel(
       return t("chat.search.failed");
     case "completed":
       return t("chat.search.completed");
-    case "searching":
     default:
       return t("chat.search.searching");
   }
@@ -78,13 +78,7 @@ function getHostedSearchCountLabel(count: number, t: (key: string) => string) {
   return count <= 1 ? t("chat.search.oneSearch") : `${count} ${t("chat.search.searches")}`;
 }
 
-export function HostedSearchGroupView({
-  items,
-  readOnly = false,
-}: {
-  items: HostedSearchBlock[];
-  readOnly?: boolean;
-}) {
+export function HostedSearchGroupView({ items }: { items: HostedSearchBlock[] }) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const queries = useMemo(() => getUniqueHostedSearchQueries(items), [items]);
@@ -109,21 +103,12 @@ export function HostedSearchGroupView({
         : "bg-[hsl(var(--chat-success))]";
 
   return (
-    <div
-      className={cn(
-        "tool-card-enter min-w-0 max-w-full overflow-hidden rounded-[12px] border border-black/[0.06] bg-white/[0.72] shadow-[0_0_0_0.5px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl backdrop-saturate-[1.8] transition-shadow duration-200 dark:border-white/[0.1] dark:bg-white/[0.06] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.12)] dark:backdrop-saturate-[1.4]",
-        !readOnly &&
-          "hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.05),0_4px_14px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_0_0_0.5px_rgba(255,255,255,0.06),0_1px_3px_rgba(0,0,0,0.25),0_4px_14px_rgba(0,0,0,0.18)]",
-      )}
-    >
+    <div className="tool-card-enter min-w-0 max-w-full overflow-hidden rounded-[12px] border border-black/[0.06] bg-white/[0.72] shadow-[0_0_0_0.5px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.02)] backdrop-blur-xl backdrop-saturate-[1.8] transition-shadow duration-200 hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.05),0_4px_14px_rgba(0,0,0,0.04)] dark:border-white/[0.1] dark:bg-white/[0.06] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.2),0_3px_8px_rgba(0,0,0,0.12)] dark:backdrop-saturate-[1.4] dark:hover:shadow-[0_0_0_0.5px_rgba(255,255,255,0.06),0_1px_3px_rgba(0,0,0,0.25),0_4px_14px_rgba(0,0,0,0.18)]">
       <button
         type="button"
         aria-expanded={open}
         aria-label={open ? t("chat.search.collapseActivity") : t("chat.search.expandActivity")}
-        className={cn(
-          "grid w-full select-none grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-2 text-left transition-colors sm:items-center",
-          "cursor-pointer hover:bg-black/[0.018] active:bg-black/[0.035] dark:hover:bg-white/[0.025] dark:active:bg-white/[0.045]",
-        )}
+        className="grid w-full cursor-pointer select-none grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-2.5 py-2 text-left transition-colors hover:bg-black/[0.018] active:bg-black/[0.035] dark:hover:bg-white/[0.025] dark:active:bg-white/[0.045] sm:items-center"
         onClick={() => setOpen((prev) => !prev)}
       >
         <div

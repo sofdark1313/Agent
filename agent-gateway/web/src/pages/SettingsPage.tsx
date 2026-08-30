@@ -3,18 +3,18 @@ import {
   ArrowLeft,
   BookOpen,
   Brain,
-  Clock3,
   Cloud,
   Cpu,
   Key,
   Settings2,
   Wrench,
   Zap,
-} from "../components/icons";
+} from "@/components/icons";
+const isMacOsTauri = () => false; const MacOsTitleBarSpacer = (props: any) => null;
 
-import { useLocale } from "../i18n";
+import { useLocale } from "@/i18n";
+const AboutSection = (props: any) => null;
 import { AgentsSection } from "./settings/AgentsSection";
-import { CronSection } from "./settings/CronSection";
 import { HooksSection } from "./settings/HooksSection";
 import { MemoryPanel } from "./settings/memory/MemoryPanel";
 import { ProvidersSection } from "./settings/ProvidersSection";
@@ -38,8 +38,6 @@ function getSaveIndicator(state: SettingsPageProps["saveState"], t: (key: string
         text: t("settings.saveError"),
         title: state.message,
       };
-    case "saved":
-    case "idle":
     default:
       return {
         dotClass: "bg-emerald-500",
@@ -61,24 +59,18 @@ function NavItem({ icon, label, active, onClick }: NavItemProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`settings-nav-item group relative w-full rounded-lg px-3 py-2 text-left transition-all duration-150 ${
+      className={`settings-nav-item agent-nav-item group relative flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] transition-colors duration-150 ${
         active
-          ? "settings-nav-item-active bg-primary/10 font-medium text-primary"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          ? "settings-nav-item-active bg-foreground/[0.07] font-medium text-foreground"
+          : "text-muted-foreground hover:bg-foreground/[0.045] hover:text-foreground"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <div
-          className={`settings-nav-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
-            active
-              ? "bg-primary/15 text-primary"
-              : "bg-muted/60 text-muted-foreground group-hover:bg-accent group-hover:text-foreground"
-          }`}
-        >
-          {icon}
-        </div>
-        <div className="settings-nav-label min-w-0 truncate text-sm leading-none">{label}</div>
-      </div>
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center transition-colors ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+      >
+        {icon}
+      </span>
+      <span className="truncate leading-none">{label}</span>
     </button>
   );
 }
@@ -90,32 +82,21 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    labelKey: "settings.groupGeneral",
+    labelKey: "settings.groupPersonal",
     items: [
-      { id: "system", icon: <Settings2 className="h-4 w-4" /> },
-      { id: "providers", icon: <Cpu className="h-4 w-4" /> },
-      { id: "agents", icon: <BookOpen className="h-4 w-4" /> },
+      { id: "system", icon: <Settings2 className="h-3.5 w-3.5" /> },
+      { id: "providers", icon: <Cpu className="h-3.5 w-3.5" /> },
+      { id: "agents", icon: <BookOpen className="h-3.5 w-3.5" /> },
     ],
   },
   {
-    labelKey: "settings.groupIntelligence",
+    labelKey: "settings.groupIntegrationsCoding",
     items: [
-      { id: "memory", icon: <Brain className="h-4 w-4" /> },
-      { id: "systemTools", icon: <Wrench className="h-4 w-4" /> },
-    ],
-  },
-  {
-    labelKey: "settings.groupAutomation",
-    items: [
-      { id: "hooks", icon: <Zap className="h-4 w-4" /> },
-      { id: "cron", icon: <Clock3 className="h-4 w-4" /> },
-    ],
-  },
-  {
-    labelKey: "settings.groupConnectivity",
-    items: [
-      { id: "ssh", icon: <Key className="h-4 w-4" /> },
-      { id: "remote", icon: <Cloud className="h-4 w-4" /> },
+      { id: "memory", icon: <Brain className="h-3.5 w-3.5" /> },
+      { id: "systemTools", icon: <Wrench className="h-3.5 w-3.5" /> },
+      { id: "hooks", icon: <Zap className="h-3.5 w-3.5" /> },
+      { id: "ssh", icon: <Key className="h-3.5 w-3.5" /> },
+      { id: "remote", icon: <Cloud className="h-3.5 w-3.5" /> },
     ],
   },
 ];
@@ -128,21 +109,25 @@ export function SettingsPage(props: SettingsPageProps) {
     onBack,
     initialSection = "system",
     hiddenSections = [],
+    appUpdate,
   } = props;
   const { t } = useLocale();
   const [section, setSection] = useState<SectionId>(initialSection);
 
-  const sectionLabels: Record<SectionId, string> = {
-    system: t("settings.navSystem"),
-    systemTools: t("settings.navSystemTools"),
-    providers: t("settings.navProviders"),
-    agents: t("settings.navAgents"),
-    ssh: t("settings.navSsh"),
-    memory: t("settings.navMemory"),
-    hooks: t("settings.navHooks"),
-    cron: t("settings.navCron"),
-    remote: t("settings.navRemote"),
-  };
+  const sectionLabels = useMemo<Record<SectionId, string>>(
+    () => ({
+      system: t("settings.navSystem"),
+      systemTools: t("settings.navSystemTools"),
+      providers: t("settings.navProviders"),
+      agents: t("settings.navAgents"),
+      ssh: t("settings.navSsh"),
+      memory: t("settings.navMemory"),
+      hooks: t("settings.navHooks"),
+      remote: t("settings.navRemote"),
+      about: t("settings.navAbout"),
+    }),
+    [t],
+  );
 
   const hiddenSectionSet = useMemo(() => new Set(hiddenSections), [hiddenSections]);
   const navGroups = useMemo(
@@ -162,7 +147,7 @@ export function SettingsPage(props: SettingsPageProps) {
   }, [initialSection]);
 
   useEffect(() => {
-    if (allNavItems.some((item) => item.id === section)) {
+    if (section === "about" || allNavItems.some((item) => item.id === section)) {
       return;
     }
     setSection(allNavItems[0]?.id ?? "system");
@@ -179,8 +164,6 @@ export function SettingsPage(props: SettingsPageProps) {
         return <SystemToolsSection settings={settings} setSettings={setSettings} />;
       case "hooks":
         return <HooksSection settings={settings} setSettings={setSettings} />;
-      case "cron":
-        return <CronSection settings={settings} setSettings={setSettings} />;
       case "agents":
         return <AgentsSection settings={settings} setSettings={setSettings} />;
       case "ssh":
@@ -195,6 +178,8 @@ export function SettingsPage(props: SettingsPageProps) {
             setSettings={setSettings}
           />
         );
+      case "about":
+        return <AboutSection settings={settings} setSettings={setSettings} appUpdate={appUpdate} />;
       default: {
         const unreachable: never = section;
         return unreachable;
@@ -202,98 +187,100 @@ export function SettingsPage(props: SettingsPageProps) {
     }
   })();
 
+  const onMac = isMacOsTauri();
+
   return (
-    <div className="settings-page-shell flex h-full bg-background">
-      <aside className="settings-sidebar flex w-60 shrink-0 flex-col border-r border-border/60 bg-muted/20">
-        <div className="settings-back-bar">
-          <button
-            type="button"
-            onClick={onBack}
-            className="settings-back-button flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
-            <span>{t("settings.backToChat")}</span>
-          </button>
-        </div>
-
-        <div className="settings-sidebar-header border-b border-border/60 px-3 pb-3 pt-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="settings-back-button flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>{t("settings.backToChat")}</span>
-          </button>
-
-          <div className="mt-3 flex items-center gap-2.5 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Settings2 className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-tight">{t("settings.title")}</div>
-              <div className="text-[11px] text-muted-foreground">Agent</div>
-            </div>
-          </div>
-        </div>
-
-        <nav className="settings-nav flex-1 overflow-y-auto px-3 py-3">
-          {navGroups.map((group, gi) => (
-            <div key={group.label} className={`settings-nav-group ${gi > 0 ? "mt-4" : ""}`}>
-              <div className="settings-nav-group-label mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                {group.label}
-              </div>
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <NavItem
-                    key={item.id}
-                    icon={item.icon}
-                    label={item.label}
-                    active={section === item.id}
-                    onClick={() => setSection(item.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <main className="settings-main flex min-w-0 flex-1 flex-col">
-        <header className="settings-main-header flex items-center justify-between border-b px-6 py-4">
-          <div className="settings-main-title overflow-hidden">
-            <div key={section} className="settings-section-title-enter text-base font-semibold">
-              {sectionLabels[section]}
-            </div>
-          </div>
-          <div
-            className="settings-save-indicator flex items-center gap-1.5 text-xs text-muted-foreground"
-            title={saveIndicator.title}
-          >
-            <div className={`h-1.5 w-1.5 rounded-full ${saveIndicator.dotClass}`} />
-            {saveIndicator.text}
-          </div>
-        </header>
-
-        <div
-          key={section}
-          className={`settings-content settings-content-${section} settings-section-enter flex-1 px-6 py-5 ${
-            section === "hooks" || section === "providers" || section === "memory"
-              ? "flex min-h-0 flex-col overflow-hidden"
-              : "overflow-auto"
-          }`}
+    <div data-agent-settings className="flex h-full flex-col bg-background">
+      <div className="flex min-h-0 flex-1">
+        <aside
+          data-agent-settings-nav
+          className="settings-sidebar flex w-[236px] shrink-0 flex-col border-r border-border/60 bg-[hsl(var(--agent-sidebar))]"
         >
+          {onMac && <div data-tauri-drag-region className="h-[38px] shrink-0" />}
+          <div className="px-3 pb-2 pt-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="settings-back-button flex h-8 w-full items-center gap-2 rounded-md px-2 text-[13px] text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+              <span>{t("settings.backToChat")}</span>
+            </button>
+
+            <div className="mt-3 flex h-8 items-center px-2">
+              <span className="text-[15px] font-semibold tracking-[-0.01em]">
+                {t("settings.title")}
+              </span>
+            </div>
+          </div>
+
+          <nav className="settings-nav flex-1 overflow-y-auto px-3 pb-3 pt-1">
+            {navGroups.map((group, gi) => (
+              <div key={group.label} className={gi > 0 ? "mt-4" : ""}>
+                <div className="mb-1 px-2 text-[10px] font-medium tracking-wide text-muted-foreground/55">
+                  {group.label}
+                </div>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <NavItem
+                      key={item.id}
+                      icon={item.icon}
+                      label={item.label}
+                      active={section === item.id}
+                      onClick={() => setSection(item.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          <div className="border-t border-border/60 px-3 py-2.5">
+            <div
+              className="flex items-center gap-1.5 px-2.5 text-[11px] text-muted-foreground"
+              title={saveIndicator.title}
+            >
+              <div className={`h-1.5 w-1.5 rounded-full ${saveIndicator.dotClass}`} />
+              {saveIndicator.text}
+            </div>
+          </div>
+        </aside>
+
+        <main data-agent-settings-content className="flex min-w-0 flex-1 flex-col">
+          <MacOsTitleBarSpacer />
           <div
-            className={`settings-section-shell settings-section-shell-${section} ${
+            data-agent-settings-header
+            className="flex h-[52px] shrink-0 items-center border-b border-border/60 px-8"
+          >
+            <div key={section} className="settings-section-title-enter min-w-0">
+              <div className="truncate text-[15px] font-semibold tracking-[-0.01em]">
+                {sectionLabels[section]}
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">{t("settings.title")}</div>
+            </div>
+          </div>
+
+          <div
+            data-agent-settings-body
+            key={section}
+            className={`settings-section-enter flex-1 px-8 py-7 ${
               section === "hooks" || section === "providers" || section === "memory"
-                ? "flex min-h-0 flex-1 flex-col"
-                : "min-h-full"
+                ? "flex min-h-0 flex-col overflow-hidden"
+                : "overflow-auto"
             }`}
           >
-            {sectionContent}
+            <div
+              className={`settings-section-shell w-full ${
+                section === "hooks" || section === "providers" || section === "memory"
+                  ? "flex min-h-0 flex-1 flex-col"
+                  : "min-h-full"
+              }`}
+            >
+              {sectionContent}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

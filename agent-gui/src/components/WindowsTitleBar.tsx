@@ -7,7 +7,7 @@ import { dispatchAppCommand } from "../lib/appCommands";
 import { cn } from "../lib/shared/utils";
 import type { SectionId } from "../pages/settings/types";
 import { AgentMark } from "./brand/AgentMark";
-import { Maximize2, Minimize2, Minus, X } from "./icons";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -523,34 +523,34 @@ export function WindowsTitleBar(props: {
       >
         <button
           type="button"
-          className="group flex h-full w-[38px] items-center justify-center text-foreground/55 transition-colors duration-150 hover:bg-black/[0.05] hover:text-foreground/90 focus-visible:outline-hidden focus-visible:bg-black/[0.05] focus-visible:text-foreground/90 dark:hover:bg-white/[0.07] dark:focus-visible:bg-white/[0.07]"
+          className="group flex h-full w-[46px] items-center justify-center text-foreground/60 transition-colors duration-150 hover:bg-black/[0.08] hover:text-foreground focus-visible:outline-hidden focus-visible:bg-black/[0.08] focus-visible:text-foreground dark:hover:bg-white/[0.10] dark:focus-visible:bg-white/[0.10]"
           aria-label={t("window.minimize")}
           title={t("window.minimize")}
           onClick={minimizeWindow}
         >
-          <Minus className="h-[13px] w-[13px]" strokeWidth={1.4} />
+          <span className="text-[13px] font-light leading-none select-none">─</span>
         </button>
         <button
           type="button"
-          className="group flex h-full w-[38px] items-center justify-center text-foreground/55 transition-colors duration-150 hover:bg-black/[0.05] hover:text-foreground/90 focus-visible:outline-hidden focus-visible:bg-black/[0.05] focus-visible:text-foreground/90 dark:hover:bg-white/[0.07] dark:focus-visible:bg-white/[0.07]"
+          className="group flex h-full w-[46px] items-center justify-center text-foreground/60 transition-colors duration-150 hover:bg-black/[0.08] hover:text-foreground focus-visible:outline-hidden focus-visible:bg-black/[0.08] focus-visible:text-foreground dark:hover:bg-white/[0.10] dark:focus-visible:bg-white/[0.10]"
           aria-label={maximizeLabel}
           title={maximizeLabel}
           onClick={toggleMaximize}
         >
           {isMaximized ? (
-            <Minimize2 className="h-[12px] w-[12px]" strokeWidth={1.4} />
+            <span className="text-[18px] font-light leading-none select-none">⧉</span>
           ) : (
-            <Maximize2 className="h-[12px] w-[12px]" strokeWidth={1.4} />
+            <span className="text-[18px] font-light leading-none select-none">□</span>
           )}
         </button>
         <button
           type="button"
-          className="group flex h-full w-[42px] items-center justify-center text-foreground/55 transition-colors duration-150 hover:bg-[#e81123] hover:text-white focus-visible:outline-hidden focus-visible:bg-[#e81123] focus-visible:text-white"
+          className="group flex h-full w-[46px] items-center justify-center text-foreground/60 transition-colors duration-150 hover:bg-[#e81123] hover:text-white focus-visible:outline-hidden focus-visible:bg-[#e81123] focus-visible:text-white"
           aria-label={t("window.close")}
           title={t("window.close")}
           onClick={closeWindow}
         >
-          <X className="h-[13px] w-[13px]" strokeWidth={1.5} />
+          <span className="text-[14px] font-light leading-none select-none">✕</span>
         </button>
       </fieldset>
     </header>

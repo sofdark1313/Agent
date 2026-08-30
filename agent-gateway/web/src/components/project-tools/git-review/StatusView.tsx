@@ -416,9 +416,9 @@ export function GitReviewStatusView(props: {
       <div
         key={`${section}:${entry.kind}:${entry.oldPath ?? ""}:${entry.path}`}
         className={cn(
-          "select-none border-b border-l-2 border-border/60 border-l-transparent px-3 py-2 transition-colors hover:bg-muted/40",
-          selected && "border-l-emerald-500 bg-emerald-500/10",
-          contextMenuOpen && "border-l-primary bg-primary/10 ring-1 ring-inset ring-primary/35",
+          "group flex select-none items-center gap-2 rounded-md mx-1 my-0.5 px-2 py-1.5 transition-colors hover:bg-muted/40",
+          selected && "bg-muted/80 text-foreground font-medium dark:bg-white/[0.08]",
+          contextMenuOpen && "ring-1 ring-inset ring-primary/40",
         )}
         onMouseDown={(event) => {
           if (event.button === 2) {
@@ -429,32 +429,34 @@ export function GitReviewStatusView(props: {
       >
         <button
           type="button"
-          className="flex w-full select-none items-start gap-2 rounded-sm bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex w-full select-none items-center gap-2 bg-transparent p-0 text-left focus-visible:outline-none"
           onClick={() => selectEntry(entry)}
           title={entry.path}
         >
-          <TypeIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="min-w-0 flex-1 select-none">
+          <TypeIcon className="h-3.5 w-3.5 shrink-0 opacity-80 group-hover:opacity-100" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate text-xs select-none">
             <span
               className={cn(
-                "block truncate text-xs font-medium text-foreground",
-                deleted && "line-through",
+                "font-medium text-foreground",
+                deleted && "line-through opacity-70",
               )}
             >
               {fileName}
             </span>
-            <span
-              className={cn(
-                "block truncate text-[calc(11px*var(--zone-font-scale,1))] leading-4 text-muted-foreground",
-                deleted && "line-through",
-              )}
-            >
-              {filePath}
-            </span>
+            {filePath ? (
+              <span
+                className={cn(
+                  "ml-1.5 text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground/60",
+                  deleted && "line-through opacity-70",
+                )}
+              >
+                {filePath}
+              </span>
+            ) : null}
           </span>
           <span
             className={cn(
-              "mt-0.5 shrink-0 text-[calc(10px*var(--zone-font-scale,1))] font-semibold",
+              "shrink-0 rounded px-1 py-0.2 text-[calc(10px*var(--zone-font-scale,1))] font-semibold uppercase tracking-wider",
               statusTone(entry),
             )}
           >
@@ -476,26 +478,26 @@ export function GitReviewStatusView(props: {
     collapsed: boolean,
     onToggle: () => void,
   ) => (
-    <section className="relative border-b border-border/60 bg-background last:border-b-0">
-      <div className="sticky top-0 z-20 grid h-7 w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 border-b border-border/60 bg-muted px-3">
+    <section className="relative bg-background">
+      <div className="sticky top-0 z-20 flex h-7 w-full items-center justify-between gap-2 bg-background px-2 py-0.5">
         <button
           type="button"
-          className="flex min-w-0 items-center gap-1.5 rounded-sm bg-transparent p-0 text-left hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex min-w-0 items-center gap-1.5 rounded-sm bg-transparent p-0 text-left hover:text-foreground focus-visible:outline-none"
           aria-expanded={!collapsed}
           onClick={onToggle}
         >
           <ChevronRight
             className={cn(
-              "h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-200 ease-out motion-reduce:transition-none",
-              !collapsed && "rotate-90",
+              "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform duration-150",
+              !collapsed && "rotate-90 text-foreground",
             )}
             aria-hidden="true"
           />
-          <span className="min-w-0 truncate text-[calc(11px*var(--zone-font-scale,1))] font-semibold text-muted-foreground">
+          <span className="min-w-0 truncate text-xs font-semibold text-foreground/80">
             {title}
           </span>
         </button>
-        <span className="inline-flex h-4 min-w-6 shrink-0 items-center justify-center justify-self-end rounded bg-background/70 px-1.5 text-center text-[calc(10px*var(--zone-font-scale,1))] font-medium tabular-nums text-muted-foreground">
+        <span className="inline-flex h-4 min-w-5 shrink-0 items-center justify-center rounded-full bg-muted/60 px-1.5 text-center text-[calc(10px*var(--zone-font-scale,1))] font-medium tabular-nums text-muted-foreground">
           {sectionEntries.length}
         </span>
         <Button

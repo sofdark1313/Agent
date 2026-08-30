@@ -920,52 +920,47 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
       </div>
 
       <div className={listPageClassName} aria-hidden={!listActive} inert={!listActive}>
-        <div className="shrink-0 border-b border-border/60 bg-background/80 px-4 pb-3 pt-3.5 backdrop-blur-xl">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/80 text-foreground/70 shadow-[inset_0_1px_0_hsl(0_0%_100%_/_0.6),0_1px_2px_hsl(0_0%_0%_/_0.05)] dark:shadow-none">
-              <Key className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold tracking-tight text-foreground">
+        <div className="shrink-0 border-b border-border/30 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Key className="h-4 w-4 shrink-0 text-emerald-500" />
+              <span className="truncate text-xs font-semibold text-foreground">
                 {t("projectTools.sshTunnelTitle")}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">{statusText}</div>
+              </span>
+              <span className="truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground/60">
+                • {statusText}
+              </span>
             </div>
-            {canShowCreateButton ? (
-              <button
-                type="button"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                title={t("projectTools.newSshTunnel")}
-                aria-label={t("projectTools.newSshTunnel")}
-                onClick={openCreateView}
-              >
-                <ConnectionIcon height="1em" />
-              </button>
-            ) : null}
-            {scope === "project" ? (
-              <button
-                type="button"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-transparent text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                title={t("projectTools.sshTunnelSettings")}
-                aria-label={t("projectTools.sshTunnelSettings")}
-                onClick={() => setView("settings")}
-              >
-                <Settings className="h-4 w-4" />
-              </button>
-            ) : null}
+            <div className="flex shrink-0 items-center gap-1">
+              {canShowCreateButton ? (
+                <button
+                  type="button"
+                  className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                  title={t("projectTools.newSshTunnel")}
+                  aria-label={t("projectTools.newSshTunnel")}
+                  onClick={openCreateView}
+                >
+                  <ConnectionIcon height="1.1em" />
+                </button>
+              ) : null}
+              {scope === "project" ? (
+                <button
+                  type="button"
+                  className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+                  title={t("projectTools.sshTunnelSettings")}
+                  aria-label={t("projectTools.sshTunnelSettings")}
+                  onClick={() => setView("settings")}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <fieldset
             aria-label={t("projectTools.sshTunnelScopeGroup")}
-            className="relative m-0 mt-3 grid min-w-0 grid-cols-2 gap-0.5 rounded-lg border-0 bg-muted/70 p-0.5"
+            className="mt-2 flex items-center gap-1 border-0 p-0 text-xs"
           >
-            <div
-              aria-hidden="true"
-              className={cn(
-                "pointer-events-none absolute inset-y-0 left-0 z-0 w-1/2 transform-gpu rounded-[7px] bg-background shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none",
-                scope === "all" ? "translate-x-full" : "translate-x-0",
-              )}
-            />
             {(["project", "all"] as const).map((option) => {
               const selected = scope === option;
               const Icon = option === "project" ? Server : Globe;
@@ -978,8 +973,8 @@ export function SshTunnelPanel(props: SshTunnelPanelProps) {
                   key={option}
                   type="button"
                   className={cn(
-                    "relative z-10 flex h-7 min-w-0 transform-gpu items-center justify-center gap-1.5 rounded-[7px] px-2 text-xs text-muted-foreground transition-[color,transform] duration-200 ease-out hover:text-foreground active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:active:scale-100",
-                    selected && "font-medium text-foreground",
+                    "inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium text-muted-foreground/70 transition-colors hover:text-foreground",
+                    selected && "bg-muted/50 font-semibold text-foreground",
                   )}
                   title={label}
                   aria-label={label}

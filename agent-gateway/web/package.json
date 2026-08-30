@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
+    "@iconify-json/fluent": "^1.2.57",
     "@iconify-json/logos": "^1.2.11",
     "@iconify-json/lucide": "^1.2.108",
     "@iconify-json/material-icon-theme": "1.2.67",

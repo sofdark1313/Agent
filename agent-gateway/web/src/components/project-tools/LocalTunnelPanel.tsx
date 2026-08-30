@@ -77,7 +77,7 @@ const TUNNEL_SCOPE_OPTIONS: Array<{
 ];
 
 const TUNNEL_INPUT_CLASS =
-  "h-8 min-w-0 rounded-lg border-border/60 bg-background/80 text-[calc(11px*var(--zone-font-scale,1))] placeholder:text-[calc(11px*var(--zone-font-scale,1))] transition-[border-color,box-shadow,background-color] focus-visible:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-muted-foreground/15 focus-visible:ring-offset-0";
+  "h-8 min-w-0 rounded-md border-border/40 bg-muted/20 hover:bg-muted/30 focus:bg-background text-xs placeholder:text-muted-foreground/50 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 function ttlLabelKey(value: TunnelTtlSeconds) {
   if (value === 900) return "projectTools.tunnelTtl15m";
@@ -97,7 +97,7 @@ function TtlSegmented({
 }) {
   const { t } = useLocale();
   return (
-    <div className="grid min-w-0 grid-cols-4 gap-0.5 rounded-lg bg-muted/70 p-0.5">
+    <div className="grid min-w-0 grid-cols-4 gap-1 rounded-md bg-muted/30 p-1 text-xs">
       {TUNNEL_TTL_OPTIONS.map((option) => {
         const active = value === option;
         return (
@@ -108,8 +108,8 @@ function TtlSegmented({
             onClick={() => onChange(option)}
             disabled={disabled}
             className={cn(
-              "h-7 min-w-0 truncate rounded-[7px] px-1 text-xs text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-              active && "bg-background font-medium text-foreground shadow-sm",
+              "h-7 min-w-0 truncate rounded px-1.5 text-xs text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-40",
+              active && "bg-background font-medium text-foreground shadow-2xs",
             )}
           >
             {t(ttlLabelKey(option))}
@@ -944,62 +944,48 @@ export function LocalTunnelPanel({
   const createFieldsDisabled = !showCreateForm || !createOpen || !mutationsEnabled || creating;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-muted/40 via-muted/15 to-background">
-      <div className="shrink-0 border-b border-border/60 bg-background/70 px-4 pb-3 pt-3.5 backdrop-blur-xl">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/80 text-foreground/70 shadow-[inset_0_1px_0_hsl(0_0%_100%_/_0.6),0_1px_2px_hsl(0_0%_0%_/_0.05)] dark:shadow-none">
-            <Globe className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold tracking-tight text-foreground">
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="shrink-0 border-b border-border/30 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <Globe className="h-4 w-4 shrink-0 text-emerald-500" />
+            <span className="truncate text-xs font-semibold text-foreground">
               {t("projectTools.tunnelTitle")}
-            </div>
-            <div className="truncate text-xs text-muted-foreground">
-              {t("projectTools.tunnelDescription")}
+            </span>
+            <div className="flex items-center gap-1.5 ml-1">
+              <HealthBadge
+                label={t("projectTools.tunnelLinkLabel")}
+                status={linkStatus}
+                title={`${t("projectTools.tunnelLinkLabel")} · ${t(healthStatusLabelKey(linkStatus))}`}
+              />
+              <HealthBadge
+                label={t("projectTools.tunnelRelayLabel")}
+                status={relayStatus}
+                title={`${t("projectTools.tunnelRelayLabel")} · ${healthTitle(snapshot?.relay ?? null)}`}
+              />
             </div>
           </div>
-        </div>
-        <div className="mt-2.5 flex min-w-0 items-center gap-1.5">
-          <HealthBadge
-            label={t("projectTools.tunnelLinkLabel")}
-            status={linkStatus}
-            title={`${t("projectTools.tunnelLinkLabel")} · ${t(healthStatusLabelKey(linkStatus))}`}
-          />
-          <HealthBadge
-            label={t("projectTools.tunnelRelayLabel")}
-            status={relayStatus}
-            title={`${t("projectTools.tunnelRelayLabel")} · ${healthTitle(snapshot?.relay ?? null)}`}
-          />
-          <span className="min-w-0 flex-1" />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 shrink-0 gap-1 rounded-lg px-2 text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 shrink-0 px-0 text-muted-foreground hover:text-foreground"
             disabled={!mutationsEnabled || checkingAll}
             onClick={checkAllTunnels}
             title={!enabled ? disabledMessage : t("projectTools.tunnelCheckAction")}
           >
             {checkingAll ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className="h-3.5 w-3.5" />
             )}
-            {t("projectTools.tunnelCheckAction")}
           </Button>
         </div>
         <div
           role="group"
           aria-label={t("projectTools.tunnelScopeGroup")}
-          className="relative mt-3 grid grid-cols-2 gap-0.5 rounded-lg bg-muted/70 p-0.5"
+          className="mt-2 flex items-center gap-1 text-xs"
         >
-          <div
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute inset-y-0 left-0 z-0 w-1/2 transform-gpu rounded-[7px] bg-background shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none",
-              scope === "global" ? "translate-x-full" : "translate-x-0",
-            )}
-          />
           {TUNNEL_SCOPE_OPTIONS.map((option) => {
             const active = scope === option.scope;
             const disabled = option.scope === "project" && !normalizedProjectPathKey;
@@ -1016,8 +1002,8 @@ export function LocalTunnelPanel({
                   setCreateError(null);
                 }}
                 className={cn(
-                  "relative z-10 flex h-7 min-w-0 transform-gpu items-center justify-center gap-1.5 rounded-[7px] px-2 text-xs text-muted-foreground transition-[color,transform] duration-200 ease-out hover:text-foreground active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none motion-reduce:active:scale-100",
-                  active && "font-medium text-foreground",
+                  "inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium text-muted-foreground/70 transition-colors hover:text-foreground disabled:opacity-40",
+                  active && "bg-muted/50 font-semibold text-foreground",
                 )}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />

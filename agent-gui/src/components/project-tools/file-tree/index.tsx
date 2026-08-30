@@ -451,24 +451,24 @@ export function FileTreePanel(props: { active: boolean }) {
 
   return (
     <div ref={panelRef} className="relative flex h-full min-h-0 select-none flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+      <div className="flex shrink-0 items-center gap-1.5 border-b border-border/30 px-2.5 py-1.5">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
             placeholder={t("projectTools.fileTree.searchPlaceholder")}
-            className="h-8 pl-7 text-[calc(11px*var(--zone-font-scale,1))] placeholder:text-[calc(11px*var(--zone-font-scale,1))]"
+            className="h-7 border-border/40 bg-muted/30 pl-7 text-[calc(11px*var(--zone-font-scale,1))] transition-colors placeholder:text-[calc(11px*var(--zone-font-scale,1))] hover:bg-muted/50 focus:bg-background"
           />
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-lg"
+          className="h-7 w-7 rounded-md text-muted-foreground/70 hover:text-foreground"
           title={t("projectTools.fileTree.refresh")}
           onClick={() => refreshVisible()}
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-3.5 w-3.5" />
         </Button>
       </div>
 

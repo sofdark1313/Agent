@@ -106,10 +106,8 @@ export function RightDockContent(props: RightDockContentProps) {
           </div>
         </div>
       ) : currentActiveTab === "terminal" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/80">
-            <Terminal className="h-6 w-6 text-muted-foreground" />
-          </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+          <Terminal className="h-8 w-8 text-muted-foreground/40" />
           <div className="flex flex-col gap-1">
             <div className="text-sm font-medium text-foreground">
               {t("projectTools.newTerminal")}
@@ -126,7 +124,7 @@ export function RightDockContent(props: RightDockContentProps) {
               </div>
             )}
           </div>
-          <Button onClick={onCreateTerminal} disabled={!terminalReady || creating} size="sm">
+          <Button onClick={onCreateTerminal} disabled={!terminalReady || creating} size="sm" variant="outline">
             {t("projectTools.newTerminal")}
           </Button>
           {loading ? (

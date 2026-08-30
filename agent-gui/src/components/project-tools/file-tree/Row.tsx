@@ -46,6 +46,7 @@ export const FileTreeRow = memo(function FileTreeRow(props: FileTreeRowProps) {
   } = props;
   const { t } = useLocale();
   const TypeIcon = getFileTypeIcon(path, kind, { expanded });
+
   return (
     <div
       role="treeitem"
@@ -53,8 +54,8 @@ export const FileTreeRow = memo(function FileTreeRow(props: FileTreeRowProps) {
       aria-expanded={kind === "dir" ? expanded : undefined}
       tabIndex={-1}
       className={cn(
-        "group flex select-none items-center gap-1 rounded-md pr-2 text-xs leading-5 text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-        selected && "bg-muted text-foreground",
+        "group flex select-none items-center gap-1.5 rounded-md px-1.5 text-xs leading-5 text-muted-foreground/80 transition-colors hover:bg-muted/40 hover:text-foreground",
+        selected && "bg-muted/80 text-foreground font-medium dark:bg-white/[0.08]",
       )}
       style={{ height: FILE_TREE_ROW_HEIGHT, paddingLeft: 6 + depth * 14 }}
       onContextMenu={(event) => onContextMenu(event, path)}
@@ -62,26 +63,28 @@ export const FileTreeRow = memo(function FileTreeRow(props: FileTreeRowProps) {
       {kind === "dir" ? (
         <button
           type="button"
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-background"
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:text-foreground"
           onClick={() => onToggle(path, expanded)}
           title={expanded ? t("projectTools.fileTree.collapse") : t("projectTools.fileTree.expand")}
         >
           {loading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           ) : (
             <ChevronRight
-              className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-90")}
+              className={cn("h-3.5 w-3.5 transition-transform duration-150", expanded && "rotate-90 text-foreground")}
             />
           )}
         </button>
       ) : (
-        <span className="h-5 w-5 shrink-0" />
+        <div className="flex h-4 w-4 shrink-0 items-center justify-center">
+          <TypeIcon className="h-3.5 w-3.5 shrink-0" />
+        </div>
       )}
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-1.5 bg-transparent p-0 text-left text-inherit leading-5"
+        className="flex min-w-0 flex-1 items-center bg-transparent p-0 text-left text-inherit leading-5"
         title={title}
-        onClick={() => onSelect(path)}
+        onClick={() => (kind === "dir" ? onToggle(path, expanded) : onSelect(path))}
         onDoubleClick={() => {
           if (kind === "dir") {
             onToggle(path, expanded);
@@ -90,7 +93,6 @@ export const FileTreeRow = memo(function FileTreeRow(props: FileTreeRowProps) {
           onOpen(path);
         }}
       >
-        <TypeIcon className="h-3.5 w-3.5 shrink-0" />
         <span className="min-w-0 truncate">{name}</span>
       </button>
     </div>

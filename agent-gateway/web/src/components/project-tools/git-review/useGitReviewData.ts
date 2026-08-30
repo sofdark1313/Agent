@@ -1118,6 +1118,7 @@ export function useGitReviewData(options: UseGitReviewDataOptions) {
     setRemoteSetupUrl,
     setReviewMode,
     state,
+    workspaceActivityClient,
     worktreeDiff,
   };
 }

@@ -535,11 +535,13 @@ export function GitBranchSelector(props: {
   const [initializing, setInitializing] = useState(false);
   const refreshInFlightRef = useRef(false);
   const refreshRequestIdRef = useRef(0);
-  // Mirrors actionError so the delete flow can inspect the latest failure
-  // message synchronously (state updates lag behind the await).
   const actionErrorRef = useRef("");
   const copyResetTimerRef = useRef(0);
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
+  const onStateChangeRef = useRef(onStateChange);
+  useEffect(() => {
+    onStateChangeRef.current = onStateChange;
+  }, [onStateChange]);
 
   const refresh = useCallback(
     async (options: GitBranchRefreshOptions = {}) => {
@@ -547,7 +549,7 @@ export function GitBranchSelector(props: {
         const next = emptyGitRepositoryState(workdir);
         setState(next);
         setBranches([]);
-        onStateChange?.(next);
+        onStateChangeRef.current?.(next);
         return;
       }
       if (refreshInFlightRef.current && options.silent && !options.force) return;
@@ -565,13 +567,13 @@ export function GitBranchSelector(props: {
         if (refreshRequestIdRef.current !== requestId) return;
         setState(response.state);
         setBranches(response.branches);
-        onStateChange?.(response.state);
+        onStateChangeRef.current?.(response.state);
       } catch (err) {
         if (refreshRequestIdRef.current !== requestId) return;
         setError(err instanceof Error ? err.message : String(err));
         const next = emptyGitRepositoryState(workdir);
         setState(next);
-        onStateChange?.(next);
+        onStateChangeRef.current?.(next);
       } finally {
         if (refreshRequestIdRef.current === requestId) {
           refreshInFlightRef.current = false;
@@ -581,7 +583,7 @@ export function GitBranchSelector(props: {
         }
       }
     },
-    [gitClient, onStateChange, workdir],
+    [gitClient, workdir],
   );
 
   useEffect(() => {

@@ -50,10 +50,10 @@ type DockTabDescriptor = {
 // NOTE: `transform` is deliberately absent from the transition list — drag
 // positioning drives `transform` via inline styles with its own transitions.
 const TAB_BASE_CLASS =
-  "project-tools-panel-tab group relative flex h-8 max-w-[12rem] shrink-0 select-none items-center gap-1 rounded-md border border-transparent px-1.5 text-xs text-muted-foreground transition-[background-color,border-color,color,opacity,box-shadow] hover:bg-muted/80 hover:text-foreground";
+  "project-tools-panel-tab group relative flex h-8 max-w-[12rem] shrink-0 select-none items-center gap-1 px-2 text-xs text-muted-foreground/70 transition-[color,opacity] after:absolute after:bottom-0 after:left-1 after:right-1 after:h-[2px] after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:text-foreground";
 
 const CLOSE_BUTTON_CLASS =
-  "relative z-10 ml-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-background hover:text-foreground focus-visible:bg-background focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+  "relative z-10 ml-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/50 transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
 
 export function RightDockTabStrip(props: RightDockTabStripProps) {
   const {
@@ -82,10 +82,10 @@ export function RightDockTabStrip(props: RightDockTabStripProps) {
       data-project-tools-tab-id={tab.id}
       className={cn(
         TAB_BASE_CLASS,
-        tab.isActive && "border-border bg-muted text-foreground shadow-sm",
-        tab.isPendingClose && "bg-destructive/10 text-destructive hover:bg-destructive/15",
+        tab.isActive && "text-foreground after:opacity-100",
+        tab.isPendingClose && "text-destructive hover:text-destructive/80",
         draggingTabId === tab.id &&
-          "z-10 scale-[0.98] cursor-grabbing opacity-80 shadow-md ring-1 ring-ring",
+          "z-10 scale-[0.98] cursor-grabbing opacity-80 shadow-md ring-1 ring-ring rounded-md",
       )}
       title={tab.label}
       style={getTabDragStyle(tab.id)}

@@ -733,7 +733,7 @@ export const RightDockPanel = memo(function RightDockPanel(props: RightDockPanel
                   )}
                 />
               </button>
-              <div className="project-tools-panel-header flex h-11 shrink-0 items-center gap-2 border-b border-border/60 px-2.5">
+              <div className="project-tools-panel-header flex h-9 shrink-0 items-center gap-1.5 border-b border-border/30 px-2">
                 <div className="project-tools-panel-tabs-shell flex min-w-0 flex-1 flex-col justify-center gap-1">
                   <div
                     ref={tabsScrollRef}
@@ -787,7 +787,7 @@ export const RightDockPanel = memo(function RightDockPanel(props: RightDockPanel
               </div>
 
               {pendingCloseSession ? (
-                <div className="flex shrink-0 items-center gap-2 border-b border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                <div className="flex shrink-0 items-center gap-2 border-b border-border/30 bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
                   <span className="min-w-0 flex-1 truncate">
                     {t("projectTools.closeRunningTerminal").replace(
                       "{title}",
@@ -797,25 +797,21 @@ export const RightDockPanel = memo(function RightDockPanel(props: RightDockPanel
                       ),
                     )}
                   </span>
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 shrink-0 px-2.5 text-xs"
+                    className="shrink-0 rounded px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     onClick={clearPendingCloseSession}
                   >
                     {t("settings.cancel")}
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="h-7 shrink-0 px-2.5 text-xs"
+                    className="shrink-0 rounded px-2 py-0.5 text-xs text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
                     disabled={closingSessionIds.has(pendingCloseSession.id)}
                     onClick={() => closeSession(pendingCloseSession)}
                   >
                     {t("projectTools.close")}
-                  </Button>
+                  </button>
                 </div>
               ) : null}
 

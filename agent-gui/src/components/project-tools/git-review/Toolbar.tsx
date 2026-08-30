@@ -7,9 +7,10 @@
 // agent-gateway/web/src). Keep changes in sync on both ends; only
 // relative or @tauri-apps/* imports are allowed here.
 
-import { useEffect, useId } from "react";
+import { useCallback, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "../../../i18n";
+import { GitBranchSelector } from "../../git/GitBranchSelector";
 import { cn } from "../../../lib/shared/utils";
 import {
   AlertTriangle,
@@ -395,7 +396,6 @@ export function GitReviewToolbar(props: {
     writeDisabled,
   } = props;
   const {
-    branchDiff,
     busy,
     canWrite,
     cwd,
@@ -409,155 +409,106 @@ export function GitReviewToolbar(props: {
     runOperation,
     setReviewMode,
     state,
+    workspaceActivityClient,
   } = data;
   const { t } = useLocale();
   const operationBusy = busy !== "";
+  const handleBranchStateChange = useCallback(() => {
+    void refresh();
+  }, [refresh]);
 
   return (
-    <div className="shrink-0 border-b border-border px-3 py-3">
-      <div className="flex items-center gap-2">
-        <GitBranch className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">
-            {state.head || t("projectTools.gitReviewTitle")}
+    <div className="shrink-0 border-b border-border/30 px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <GitBranchSelector
+              workdir={cwd}
+              gitClient={gitClient}
+              workspaceActivityClient={workspaceActivityClient}
+              disabled={writeDisabled}
+              canWrite={canWrite}
+              disabledMessage={disabledMessage}
+              onStateChange={handleBranchStateChange}
+            />
           </div>
-          <div className="truncate text-[calc(11px*var(--zone-font-scale,1))] text-muted-foreground">
-            {state.repoRoot || disabledMessage || t("projectTools.gitReview.noRepository")}
+          <div className="truncate text-[calc(10px*var(--zone-font-scale,1))] text-muted-foreground/60 px-0.5">
+            {state.repoRoot || disabledMessage || cwd}
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={loading || historyLoading || operationBusy}
-          className="h-7 w-7 px-0"
-          title={t("projectTools.gitReview.refresh")}
-          aria-label={t("projectTools.gitReview.refresh")}
-          onClick={() => {
-            if (data.isBusy()) return;
-            if (reviewMode === "history") {
-              void loadHistory();
-            } else {
-              void refresh();
-            }
-          }}
-        >
-          <RefreshCw className={cn("h-3.5 w-3.5", (loading || historyLoading) && "animate-spin")} />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={writeDisabled || operationBusy}
-          title={t("projectTools.gitReview.fetch")}
-          aria-label={t("projectTools.gitReview.fetch")}
-          className="h-7 w-7 px-0"
-          onClick={() => void runOperation("fetch", () => gitClient!.fetch(cwd), "fetch")}
-        >
-          {busy === "fetch" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Cloud className="h-3.5 w-3.5" />
-          )}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={writeDisabled || operationBusy}
-          title={t("projectTools.gitReview.pull")}
-          aria-label={t("projectTools.gitReview.pull")}
-          className="h-7 w-7 px-0"
-          onClick={() => void runOperation("pull", () => gitClient!.pull(cwd), "pull")}
-        >
-          {busy === "pull" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Download className="h-3.5 w-3.5" />
-          )}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={writeDisabled || operationBusy}
-          title={t("projectTools.gitReview.push")}
-          aria-label={t("projectTools.gitReview.push")}
-          className="h-7 w-7 px-0"
-          onClick={() => void runOperation("push", () => gitClient!.push(cwd), "push")}
-        >
-          {busy === "push" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Upload className="h-3.5 w-3.5" />
-          )}
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={loading || historyLoading || operationBusy}
+            className="h-7 w-7 px-0 text-muted-foreground hover:text-foreground"
+            title={t("projectTools.gitReview.refresh")}
+            aria-label={t("projectTools.gitReview.refresh")}
+            onClick={() => {
+              if (data.isBusy()) return;
+              if (reviewMode === "history") {
+                void loadHistory();
+              } else {
+                void refresh();
+              }
+            }}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", (loading || historyLoading) && "animate-spin")} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={writeDisabled || operationBusy}
+            title={t("projectTools.gitReview.fetch")}
+            aria-label={t("projectTools.gitReview.fetch")}
+            className="h-7 w-7 px-0 text-muted-foreground hover:text-foreground"
+            onClick={() => void runOperation("fetch", () => gitClient!.fetch(cwd), "fetch")}
+          >
+            {busy === "fetch" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Cloud className="h-3.5 w-3.5" />
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={writeDisabled || operationBusy}
+            title={t("projectTools.gitReview.pull")}
+            aria-label={t("projectTools.gitReview.pull")}
+            className="h-7 w-7 px-0 text-muted-foreground hover:text-foreground"
+            onClick={() => void runOperation("pull", () => gitClient!.pull(cwd), "pull")}
+          >
+            {busy === "pull" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={writeDisabled || operationBusy}
+            title={t("projectTools.gitReview.push")}
+            aria-label={t("projectTools.gitReview.push")}
+            className="h-7 w-7 px-0 text-muted-foreground hover:text-foreground"
+            onClick={() => void runOperation("push", () => gitClient!.push(cwd), "push")}
+          >
+            {busy === "push" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Upload className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
       </div>
-      {state.status === "ready" ? (
-        <div className="mt-2.5 overflow-hidden rounded-xl border border-white/20 bg-white/50 shadow-sm backdrop-blur-xl dark:border-white/[0.08] dark:bg-white/[0.03]">
-          <div className="flex items-center gap-2 border-b border-black/[0.04] px-3 py-2 dark:border-white/[0.06]">
-            <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-            <span className="min-w-0 truncate text-[calc(11px*var(--zone-font-scale,1))] font-medium text-foreground/80">
-              {branchDiff?.baseRef || state.upstream || t("projectTools.gitReview.unresolved")}
-            </span>
-            <span className="ml-auto shrink-0 text-[calc(10px*var(--zone-font-scale,1))] text-muted-foreground/60">
-              {t("projectTools.gitReview.labelBase")}
-            </span>
-          </div>
-          <div className="grid grid-cols-5">
-            {[
-              {
-                count: state.ahead,
-                label: t("projectTools.gitReview.labelAhead"),
-                tone: "text-sky-600 dark:text-sky-400",
-              },
-              {
-                count: state.behind,
-                label: t("projectTools.gitReview.labelBehind"),
-                tone: "text-orange-600 dark:text-orange-400",
-              },
-              {
-                count: state.dirtyCounts.staged,
-                label: t("projectTools.gitReview.labelStaged"),
-                tone: "text-emerald-600 dark:text-emerald-400",
-              },
-              {
-                count: state.dirtyCounts.unstaged,
-                label: t("projectTools.gitReview.labelUnstaged"),
-                tone: "text-amber-600 dark:text-amber-400",
-              },
-              {
-                count: state.dirtyCounts.untracked,
-                label: t("projectTools.gitReview.labelUntracked"),
-                tone: "text-violet-600 dark:text-violet-400",
-              },
-            ].map((item, index) => (
-              <div
-                key={item.label}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 py-2",
-                  index > 0 && "border-l border-black/[0.04] dark:border-white/[0.06]",
-                )}
-              >
-                <span
-                  className={cn(
-                    "text-sm font-semibold tabular-nums leading-none",
-                    item.count > 0 ? item.tone : "text-muted-foreground/40",
-                  )}
-                >
-                  {item.count}
-                </span>
-                <span className="text-[calc(9px*var(--zone-font-scale,1))] leading-none text-muted-foreground/60">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      <div className="mt-3 flex items-center gap-2">
-        <div className="inline-flex shrink-0 rounded-md border border-border bg-muted/25 p-0.5 text-xs">
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="inline-flex shrink-0 items-center gap-1 text-xs">
           <button
             type="button"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground",
-              reviewMode === "changes" && "bg-background text-foreground shadow-sm",
+              "inline-flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground/70 transition-colors hover:text-foreground",
+              reviewMode === "changes" && "text-foreground font-semibold bg-muted/50",
             )}
             onClick={() => setReviewMode("changes")}
           >
@@ -567,8 +518,8 @@ export function GitReviewToolbar(props: {
           <button
             type="button"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground",
-              reviewMode === "history" && "bg-background text-foreground shadow-sm",
+              "inline-flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground/70 transition-colors hover:text-foreground",
+              reviewMode === "history" && "text-foreground font-semibold bg-muted/50",
             )}
             onClick={() => setReviewMode("history")}
           >
@@ -577,7 +528,7 @@ export function GitReviewToolbar(props: {
           </button>
         </div>
         {!useSplitReviewLayout ? (
-          <div className="ml-auto inline-flex shrink-0 rounded-md border border-border bg-muted/25 p-0.5">
+          <div className="ml-auto inline-flex shrink-0 items-center gap-0.5">
             <button
               type="button"
               aria-label={t("projectTools.gitReview.listPane")}
@@ -585,7 +536,7 @@ export function GitReviewToolbar(props: {
               title={t("projectTools.gitReview.listPane")}
               className={cn(
                 GIT_REVIEW_STACKED_PANE_BUTTON_CLASS,
-                stackedPane === "list" && "bg-background text-foreground shadow-sm",
+                stackedPane === "list" && "bg-muted text-foreground",
               )}
               onClick={() => onStackedPaneChange("list", "back")}
             >
@@ -602,7 +553,7 @@ export function GitReviewToolbar(props: {
               title={t("projectTools.gitReview.detailPane")}
               className={cn(
                 GIT_REVIEW_STACKED_PANE_BUTTON_CLASS,
-                stackedPane === "detail" && "bg-background text-foreground shadow-sm",
+                stackedPane === "detail" && "bg-muted text-foreground",
               )}
               onClick={() => onStackedPaneChange("detail", "forward")}
             >

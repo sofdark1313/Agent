@@ -183,7 +183,7 @@ export function RightDockChooser(props: RightDockChooserProps) {
         <h3 className="text-sm font-medium text-foreground">{t("projectTools.getStarted")}</h3>
         <p className="text-xs text-muted-foreground">{t("projectTools.getStartedHint")}</p>
       </div>
-      <div className="flex w-full max-w-xs flex-col gap-2">
+      <div className="flex w-full max-w-xs flex-col gap-0.5">
         {tools.map((tool) => (
           <button
             key={tool.key}
@@ -191,9 +191,9 @@ export function RightDockChooser(props: RightDockChooserProps) {
             onClick={tool.onClick}
             disabled={tool.disabled}
             title={tool.titleAttr}
-            className="group flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3.5 py-3 text-left text-sm text-foreground transition-all hover:border-border hover:bg-muted/60 hover:shadow-sm disabled:pointer-events-none disabled:opacity-50"
+            className="group flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-muted/50 disabled:pointer-events-none disabled:opacity-40"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted/80 text-muted-foreground transition-colors group-hover:bg-muted group-hover:text-foreground">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground">
               {tool.icon}
             </div>
             <div className="min-w-0 flex-1">

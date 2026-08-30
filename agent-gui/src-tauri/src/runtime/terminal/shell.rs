@@ -179,7 +179,6 @@ pub(crate) fn resolve_shell(shell: Option<String>) -> Result<ShellSpec, String> 
 
     if cfg!(windows) {
         let powershell_args = vec![
-            "-NoLogo".to_string(),
             "-ExecutionPolicy".to_string(),
             "Bypass".to_string(),
         ];

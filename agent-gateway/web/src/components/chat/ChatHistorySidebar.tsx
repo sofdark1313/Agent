@@ -1814,7 +1814,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
               title={t("sidebar.closeSidebar")}
               className="h-9 w-9 shrink-0 rounded-2xl text-muted-foreground hover:text-foreground"
             >
-              <PanelLeftClose className="h-4 w-4" />
+              <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={1.65} />
             </Button>
           </div>
 
@@ -1830,7 +1830,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                   : "text-foreground/80 hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]",
               )}
             >
-              <CirclePlus className="h-4 w-4 shrink-0 text-foreground/85" />
+              <CirclePlus className="h-[19px] w-[19px] shrink-0 text-foreground/85" strokeWidth={1.7} />
               <span className="chat-history-new-conversation-label">
                 {t("chat.newConversation")}
               </span>
@@ -1849,9 +1849,10 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
             >
               <Blend
                 className={cn(
-                  "h-4 w-4 shrink-0",
+                  "h-[18px] w-[18px] shrink-0",
                   activeView === "skills-hub" ? "text-amber-500" : "text-foreground/85",
                 )}
+                strokeWidth={1.7}
               />
               <span className="truncate">Skills</span>
             </Button>
@@ -1869,9 +1870,10 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
             >
               <Cable
                 className={cn(
-                  "h-4 w-4 shrink-0",
+                  "h-[18px] w-[18px] shrink-0",
                   activeView === "mcp-hub" ? "text-violet-500" : "text-foreground/85",
                 )}
+                strokeWidth={1.7}
               />
               <span className="truncate">MCP</span>
             </Button>
@@ -1882,7 +1884,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
               className="agent-nav-item sidebar-hub-menu-item h-[30px] w-full justify-start gap-3 rounded-lg px-3 text-[calc(14px*var(--zone-font-scale,1))] font-normal leading-5 shadow-none text-foreground/80 transition-colors hover:bg-foreground/[0.08] hover:text-foreground focus-visible:bg-foreground/[0.08]"
               title={t("settings.cronTitle")}
             >
-              <Clock3 className="h-4 w-4 shrink-0 text-foreground/85" />
+              <Clock3 className="h-[18px] w-[18px] shrink-0 text-foreground/85" strokeWidth={1.7} />
               <span className="truncate">{t("settings.cronTitle")}</span>
             </Button>
           </div>
@@ -2086,7 +2088,7 @@ export const ChatHistorySidebar = memo(function ChatHistorySidebar(props: ChatHi
                     String(sharedConversationCount),
                   )}
                 >
-                  <Share2 className="h-3.5 w-3.5" />
+                  <Share2 className="h-[17px] w-[17px]" strokeWidth={1.7} />
                 </Button>
               ) : null}
             </div>

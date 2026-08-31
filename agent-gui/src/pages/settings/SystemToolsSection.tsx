@@ -300,9 +300,9 @@ export function SystemToolsSection(props: SettingsSectionProps) {
   }
 
   return (
-    <div className="settings-tools-section space-y-4">
-      <section className="overflow-hidden rounded-xl border border-border/65 bg-card/45">
-        <div className="flex flex-wrap items-start justify-between gap-3 px-4 pb-3 pt-4">
+    <div className="settings-tools-section space-y-6 pb-6">
+      <section className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-5 shadow-xs">
+        <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold">{t("settings.approval.title")}</h3>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -317,7 +317,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
           </span>
         </div>
 
-        <div className="grid gap-1 border-y border-border/55 bg-muted/20 p-1.5 sm:grid-cols-4">
+        <div className="grid gap-2 rounded-xl border border-border/50 bg-muted/40 p-1.5 sm:grid-cols-4">
           {APPROVAL_POLICY_OPTIONS.map((option) => {
             const Icon = option.icon;
             const active = settings.system.approvalPolicy === option.id;
@@ -341,7 +341,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
         </div>
 
         {settings.system.approvalPolicy === "custom" ? (
-          <div className="divide-y divide-border/50 px-4">
+          <div className="mt-3 divide-y divide-border/50 rounded-xl border border-border/50 bg-background/50 px-4">
             {CUSTOM_APPROVAL_RULE_OPTIONS.map((rule) => (
               <div key={rule.id} className="flex items-center gap-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -571,10 +571,10 @@ function ToolRow(props: {
 
   return (
     <div
-      className={`settings-tools-row group relative flex items-center gap-3 overflow-hidden rounded-xl border p-3 pl-4 transition-all ${
+      className={`settings-tools-row group relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5 pl-4.5 transition-all shadow-2xs ${
         props.highlighted
           ? `${accent.chipBorder} ${accent.chipBg}`
-          : "border-border/60 bg-background/80 hover:border-border hover:bg-muted/35"
+          : "border-border/60 bg-card hover:border-primary/40 hover:bg-card/90 hover:shadow-xs"
       }`}
     >
       <span

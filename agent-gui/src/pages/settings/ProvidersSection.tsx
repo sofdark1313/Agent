@@ -1201,7 +1201,8 @@ function ProviderList(props: {
   onOpenCcsImport: () => void;
   onOpenCherryImport: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const isEn = locale !== "zh-CN";
   const {
     type,
     isActive,
@@ -1244,26 +1245,26 @@ function ProviderList(props: {
 
   const scanned = ccsProviders !== null;
   const ccsSubtitle = ccsImporting
-    ? "正在导入供应商、获取并激活模型…"
+    ? (isEn ? "Importing providers, fetching & activating models…" : "正在导入供应商、获取并激活模型…")
     : ccsLoading
-      ? "正在扫描本地配置…"
+      ? (isEn ? "Scanning local configurations…" : "正在扫描本地配置…")
       : ccsAll.length
-        ? `发现 ${ccsBreakdown
-            .map((entry) => `${getProviderLabel(entry.type)} ${entry.count}`)
-            .join(" · ")}`
+        ? (isEn
+            ? `Found ${ccsBreakdown.map((entry) => `${getProviderLabel(entry.type)} ${entry.count}`).join(" · ")}`
+            : `发现 ${ccsBreakdown.map((entry) => `${getProviderLabel(entry.type)} ${entry.count}`).join(" · ")}`)
         : scanned
-          ? ccsMessage || "未发现可导入的供应商"
-          : "点击扫描本地配置";
+          ? ccsMessage || (isEn ? "No importable providers found" : "未发现可导入的供应商")
+          : (isEn ? "Click to scan local configurations" : "点击扫描本地配置");
   // The import modal shows every provider type, so the badge and fallback
   // subtitle must count across all of them — not just the current tab.
   const cherryReady = cherryAll.filter((provider) => provider.importable).length;
   const cherrySubtitle = cherryImporting
-    ? "正在同步供应商、获取并激活模型…"
+    ? (isEn ? "Syncing providers, fetching & activating models…" : "正在同步供应商、获取并激活模型…")
     : cherryLoading
-      ? "正在扫描本地配置…"
+      ? (isEn ? "Scanning local configurations…" : "正在扫描本地配置…")
       : cherryProviders
-        ? cherryMessage || `发现 ${cherryReady} 个可同步配置`
-        : cherryMessage || "点击扫描本地配置";
+        ? cherryMessage || (isEn ? `Found ${cherryReady} syncable configurations` : `发现 ${cherryReady} 个可同步配置`)
+        : cherryMessage || (isEn ? "Click to scan local configurations" : "点击扫描本地配置");
   const thirdPartyLoading = ccsLoading || cherryLoading;
   const thirdPartyImporting = ccsImporting || cherryImporting;
 
@@ -1296,7 +1297,7 @@ function ProviderList(props: {
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              从第三方同步
+              {isEn ? "Sync from 3rd Party" : "从第三方同步"}
               <ChevronDown
                 className={cn(
                   "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ease-out",
@@ -1312,15 +1313,15 @@ function ProviderList(props: {
             >
               <div className="flex items-center justify-between gap-2 px-3 py-1.5">
                 <DropdownMenuLabel className="p-0 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
-                  导入来源
+                  {isEn ? "Import Sources" : "导入来源"}
                 </DropdownMenuLabel>
                 <DropdownMenuItem
                   closeOnClick={false}
                   className="h-7 w-7 cursor-pointer justify-center rounded-md p-0 text-muted-foreground"
                   disabled={thirdPartyLoading || thirdPartyImporting}
                   onSelect={onRefreshThirdPartyProviders}
-                  aria-label="重新扫描本地配置"
-                  title="重新扫描本地配置"
+                  aria-label={isEn ? "Rescan local configuration" : "重新扫描本地配置"}
+                  title={isEn ? "Rescan local configuration" : "重新扫描本地配置"}
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5", thirdPartyLoading && "animate-spin")} />
                 </DropdownMenuItem>

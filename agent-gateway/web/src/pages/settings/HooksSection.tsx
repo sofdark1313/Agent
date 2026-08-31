@@ -195,7 +195,7 @@ export function HooksSection(_props: SettingsSectionProps) {
 
   return (
     <div className="settings-hooks-section flex h-full flex-col gap-5">
-      <div className="settings-section-hero shrink-0 flex flex-col gap-4 rounded-2xl border border-border/60 bg-card p-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="settings-section-hero shrink-0 relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-6 shadow-xs flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="settings-section-title-group flex items-start gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
             <Zap className="h-5 w-5" />
@@ -247,7 +247,7 @@ export function HooksSection(_props: SettingsSectionProps) {
         </div>
       ) : null}
 
-      <div className="settings-hooks-grid grid min-h-0 flex-1 gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <div className="settings-hooks-grid grid min-h-[500px] flex-1 gap-5 xl:grid-cols-[310px_minmax(0,1fr)]">
         <aside className="settings-hooks-lifecycle flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="settings-hooks-lifecycle-header shrink-0 border-b border-border/40 px-4 py-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

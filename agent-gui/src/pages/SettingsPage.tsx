@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  Globe,
+  Terminal,
   BookOpen,
   Brain,
   Cloud,
@@ -19,6 +21,8 @@ import { HooksSection } from "./settings/HooksSection";
 import { MemoryPanel } from "./settings/memory/MemoryPanel";
 import { ProvidersSection } from "./settings/ProvidersSection";
 import { RemoteSection } from "./settings/RemoteSection";
+import { TunnelSection } from "./settings/TunnelSection";
+import { BackgroundTasksSection } from "./settings/BackgroundTasksSection";
 import { SshSection } from "./settings/SshSection";
 import { SystemSettingsForm } from "./settings/SystemSettingsForm";
 import { SystemToolsSection } from "./settings/SystemToolsSection";
@@ -97,6 +101,8 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "hooks", icon: <Zap className="h-3.5 w-3.5" /> },
       { id: "ssh", icon: <Key className="h-3.5 w-3.5" /> },
       { id: "remote", icon: <Cloud className="h-3.5 w-3.5" /> },
+      { id: "tunnel", icon: <Globe className="h-3.5 w-3.5" /> },
+      { id: "backgroundTasks", icon: <Terminal className="h-3.5 w-3.5" /> },
     ],
   },
 ];
@@ -124,6 +130,8 @@ export function SettingsPage(props: SettingsPageProps) {
       memory: t("settings.navMemory"),
       hooks: t("settings.navHooks"),
       remote: t("settings.navRemote"),
+      tunnel: t("settings.navTunnel"),
+      backgroundTasks: t("settings.navBackgroundTasks"),
       about: t("settings.navAbout"),
     }),
     [t],
@@ -170,6 +178,10 @@ export function SettingsPage(props: SettingsPageProps) {
         return <SshSection settings={settings} setSettings={setSettings} />;
       case "remote":
         return <RemoteSection settings={settings} setSettings={setSettings} />;
+      case "tunnel":
+        return <TunnelSection settings={settings} setSettings={setSettings} />;
+      case "backgroundTasks":
+        return <BackgroundTasksSection />;
       case "memory":
         return (
           <MemoryPanel

@@ -222,7 +222,7 @@ export function MemoryPanel(props: {
   return (
     <>
       <div className="settings-memory-panel flex min-h-0 flex-1 flex-col gap-4">
-        <div className="settings-memory-summary-card shrink-0 rounded-xl border border-border/60 bg-card p-4">
+        <div className="settings-memory-summary-card shrink-0 relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-6 shadow-xs">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 text-sm font-semibold">

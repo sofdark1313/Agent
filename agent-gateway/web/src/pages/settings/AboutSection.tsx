@@ -1,5 +1,3 @@
-import appLogoUrl from "../../../src-tauri/icons/icon-simple.png";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   AlertTriangle,
   Bot,
@@ -18,14 +16,41 @@ import {
 import { Markdown } from "../../components/Markdown";
 import { Button } from "../../components/ui/button";
 import { useLocale } from "../../i18n";
-import type { AppUpdateCheckResult, AppUpdateController } from "../../lib/appUpdates";
 import { updateUpdateSettings } from "../../lib/settings";
 import { formatReleaseDate } from "./aboutDate";
 import { AgentActivationSwitch } from "./shared";
 import type { SettingsSectionProps } from "./types";
 
+type AppUpdateCheckResult = {
+  version?: string;
+  currentVersion?: string;
+  releaseTag?: string;
+  releaseName?: string;
+  date?: string | null;
+  body?: string | null;
+  channel?: "stable" | "prerelease";
+  available?: boolean;
+  manualDownload?: boolean;
+  configured?: boolean;
+  releaseUrl?: string;
+  repository?: string;
+  message?: string;
+};
+
+type AppUpdateController = {
+  state: {
+    status: "idle" | "checking" | "available" | "downloading" | "downloaded" | "installing" | "installed" | "restarting" | "error";
+  };
+  result?: AppUpdateCheckResult;
+  message?: string;
+  canInstall?: boolean;
+  runCheck?: () => Promise<void>;
+  installOnly?: () => Promise<void>;
+  restart?: () => Promise<void>;
+};
+
 type AboutSectionProps = SettingsSectionProps & {
-  appUpdate: AppUpdateController;
+  appUpdate?: AppUpdateController;
 };
 
 function releaseTitle(result?: AppUpdateCheckResult) {
@@ -68,7 +93,7 @@ export function AboutSection(props: AboutSectionProps) {
   const { t, locale } = useLocale();
   const isEn = locale !== "zh-CN";
   const includePrereleases = settings.updates.includePrereleases;
-  const checkState = appUpdate?.state || { status: "ready" };
+  const checkState = appUpdate?.state || { status: "idle" };
 
   async function handleInstallUpdate() {
     await appUpdate?.installOnly?.().catch(() => undefined);
@@ -85,7 +110,7 @@ export function AboutSection(props: AboutSectionProps) {
     latestResult?.channel === "prerelease"
       ? t("settings.aboutChannelPrerelease")
       : t("settings.aboutChannelStable");
-  const currentVersion = latestResult?.currentVersion || "0.0.0-dev";
+  const currentVersion = latestResult?.currentVersion || "0.0.0-web";
   const nextVersion = latestResult?.version || latestResult?.releaseTag || "";
   const releaseDate = formatReleaseDate(latestResult?.date);
   const checking = checkState.status === "checking";
@@ -137,11 +162,7 @@ export function AboutSection(props: AboutSectionProps) {
 
   function openExternal(url: string) {
     if (!url) return;
-    try {
-      openUrl(url);
-    } catch {
-      window.open(url, "_blank");
-    }
+    window.open(url, "_blank");
   }
 
   return (
@@ -156,7 +177,7 @@ export function AboutSection(props: AboutSectionProps) {
           <div className="flex items-start gap-4 sm:items-center sm:gap-5">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/80 p-2.5 shadow-md ring-1 ring-border/50">
               <img
-                src={appLogoUrl}
+                src="/icon-simple.png"
                 alt="Agent Logo"
                 className="h-full w-full object-contain"
                 draggable={false}
@@ -332,8 +353,8 @@ export function AboutSection(props: AboutSectionProps) {
               <Cpu className="h-3.5 w-3.5" />
             </div>
             <div>
-              <div className="text-xs font-semibold text-foreground">{isEn ? "Native Desktop Core" : "原生桌面核心"}</div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Tauri v2 + Rust + Tokio</p>
+              <div className="text-xs font-semibold text-foreground">{isEn ? "Cloud Native Gateway" : "原生云端网关"}</div>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Go + gRPC + WebSocket</p>
             </div>
           </div>
 
@@ -353,7 +374,7 @@ export function AboutSection(props: AboutSectionProps) {
             </div>
             <div>
               <div className="text-xs font-semibold text-foreground">{isEn ? "Agents & Protocols" : "智能体与协议"}</div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">MCP Bridge + Go Gateway</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">MCP Bridge + Remote Sync</p>
             </div>
           </div>
 

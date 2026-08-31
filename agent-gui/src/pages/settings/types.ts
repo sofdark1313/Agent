@@ -13,6 +13,8 @@ export type SectionId =
   | "memory"
   | "hooks"
   | "remote"
+  | "tunnel"
+  | "backgroundTasks"
   | "about";
 
 export type SettingsPageProps = {

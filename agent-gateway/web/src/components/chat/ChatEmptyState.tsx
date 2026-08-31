@@ -14,8 +14,8 @@ const SUGGESTION_CARDS = [
     icon: Sparkles,
     accent: "199 89% 48%",
     chipClassName: "bg-sky-500/10 text-sky-500 group-hover:bg-sky-500/15",
-    title: "探索并理解代码",
-    hint: "梳理架构与核心模块职责",
+    titleKey: "chat.suggestExploreTitle",
+    hintKey: "chat.suggestExploreHint",
     promptKey: "chat.suggestExplorePrompt",
   },
   {
@@ -23,8 +23,8 @@ const SUGGESTION_CARDS = [
     icon: Wrench,
     accent: "38 92% 50%",
     chipClassName: "bg-amber-500/10 text-amber-500 group-hover:bg-amber-500/15",
-    title: "修复问题",
-    hint: "描述问题，一起修复",
+    titleKey: "chat.suggestFixTitle",
+    hintKey: "chat.suggestFixHint",
     promptKey: "chat.suggestFixPrompt",
   },
   {
@@ -32,8 +32,8 @@ const SUGGESTION_CARDS = [
     icon: Lightbulb,
     accent: "160 84% 39%",
     chipClassName: "bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500/15",
-    title: "头脑风暴",
-    hint: "从想法到落地方案",
+    titleKey: "chat.suggestIdeateTitle",
+    hintKey: "chat.suggestIdeateHint",
     promptKey: "chat.suggestIdeatePrompt",
   },
 ] as const;
@@ -54,7 +54,8 @@ export function ChatEmptyState({
   onSuggestionSelect,
   suggestionsDisabled = false,
 }: ChatEmptyStateProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const isEn = locale !== "zh-CN";
 
   const handleCardPointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     const card = event.currentTarget;
@@ -94,11 +95,23 @@ export function ChatEmptyState({
       ) : (
         <>
           <div className="mb-8 text-center text-[calc(26px*var(--zone-font-scale,1))] font-semibold leading-tight tracking-[-0.02em] text-foreground">
-            你想让我们在{" "}
-            <span className="underline decoration-muted-foreground/40 underline-offset-8">
-              {projectName}
-            </span>{" "}
-            中构建什么？
+            {isEn ? (
+              <>
+                What would you like us to build in{" "}
+                <span className="underline decoration-muted-foreground/40 underline-offset-8">
+                  {projectName}
+                </span>
+                ?
+              </>
+            ) : (
+              <>
+                你想让我们在{" "}
+                <span className="underline decoration-muted-foreground/40 underline-offset-8">
+                  {projectName}
+                </span>{" "}
+                中构建什么？
+              </>
+            )}
           </div>
           {onSuggestionSelect ? (
             <div className="grid w-full max-w-[640px] grid-cols-1 gap-2.5 px-6 sm:grid-cols-3 sm:px-4">
@@ -124,10 +137,10 @@ export function ChatEmptyState({
                   </span>
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate text-[calc(13px*var(--zone-font-scale,1))] font-medium leading-tight text-foreground/90 group-hover:text-foreground">
-                      {card.title}
+                      {t(card.titleKey)}
                     </span>
                     <span className="truncate text-xs leading-tight text-muted-foreground">
-                      {card.hint}
+                      {t(card.hintKey)}
                     </span>
                   </span>
                 </button>

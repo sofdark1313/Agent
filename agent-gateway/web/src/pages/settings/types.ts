@@ -1,12 +1,5 @@
+import type { AppSettings } from "../../lib/settings";
 
-import type { AppSettings } from "@/lib/settings";
-
-export type SettingsSaveState = {
-  status: "idle" | "saving" | "saved" | "error";
-  message?: string;
-};
-
-export type AppUpdateController = any;
 export type SetSettingsFn = (updater: (prev: AppSettings) => AppSettings) => void;
 
 export type SectionId =
@@ -18,23 +11,26 @@ export type SectionId =
   | "memory"
   | "hooks"
   | "remote"
+  | "tunnel"
+  | "backgroundTasks"
   | "about";
+
+export type WebSettingsSaveState = {
+  status: "idle" | "saving" | "saved" | "error";
+  message?: string;
+};
 
 export type SettingsPageProps = {
   settings: AppSettings;
   setSettings: SetSettingsFn;
-  saveState: SettingsSaveState;
+  saveState: WebSettingsSaveState;
   onBack: () => void;
   initialSection?: SectionId;
   hiddenSections?: SectionId[];
-  appUpdate?: AppUpdateController;
+  appUpdate?: any;
 };
 
 export type SettingsSectionProps = {
   settings: AppSettings;
   setSettings: SetSettingsFn;
-  appUpdate?: AppUpdateController;
-  saveIndicator?: { title: string; dotClass: string; text: string };
-  onOpenSkillsHub?: () => void;
-  onOpenMcpHub?: () => void;
 };

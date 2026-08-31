@@ -92,54 +92,54 @@ type CategoryAccent = {
  * detail modal badge — purely presentational, no bearing on tool behavior. */
 const CATEGORY_ACCENTS: Record<BuiltinToolCategoryId, CategoryAccent> = {
   fs: {
-    chipBorder: "border-sky-500/40",
-    chipBg: "bg-sky-500/10",
-    chipText: "text-sky-500",
-    iconBg: "bg-sky-500/10",
-    icon: "text-sky-500",
-    bar: "bg-sky-500",
+    chipBorder: "border-border/60",
+    chipBg: "bg-muted/40",
+    chipText: "text-foreground",
+    iconBg: "bg-muted text-foreground",
+    icon: "text-muted-foreground",
+    bar: "bg-border",
   },
   process: {
-    chipBorder: "border-orange-500/40",
-    chipBg: "bg-orange-500/10",
-    chipText: "text-orange-500",
-    iconBg: "bg-orange-500/10",
-    icon: "text-orange-500",
-    bar: "bg-orange-500",
+    chipBorder: "border-border/60",
+    chipBg: "bg-muted/40",
+    chipText: "text-foreground",
+    iconBg: "bg-muted text-foreground",
+    icon: "text-muted-foreground",
+    bar: "bg-border",
   },
   intelligence: {
-    chipBorder: "border-fuchsia-500/40",
-    chipBg: "bg-fuchsia-500/10",
-    chipText: "text-fuchsia-500",
-    iconBg: "bg-fuchsia-500/10",
-    icon: "text-fuchsia-500",
-    bar: "bg-fuchsia-500",
+    chipBorder: "border-border/60",
+    chipBg: "bg-muted/40",
+    chipText: "text-foreground",
+    iconBg: "bg-muted text-foreground",
+    icon: "text-muted-foreground",
+    bar: "bg-border",
   },
   automation: {
-    chipBorder: "border-amber-500/40",
-    chipBg: "bg-amber-500/10",
-    chipText: "text-amber-500",
-    iconBg: "bg-amber-500/10",
-    icon: "text-amber-500",
-    bar: "bg-amber-500",
+    chipBorder: "border-border/60",
+    chipBg: "bg-muted/40",
+    chipText: "text-foreground",
+    iconBg: "bg-muted text-foreground",
+    icon: "text-muted-foreground",
+    bar: "bg-border",
   },
   connectivity: {
-    chipBorder: "border-emerald-500/40",
-    chipBg: "bg-emerald-500/10",
-    chipText: "text-emerald-500",
-    iconBg: "bg-emerald-500/10",
-    icon: "text-emerald-500",
-    bar: "bg-emerald-500",
+    chipBorder: "border-border/60",
+    chipBg: "bg-muted/40",
+    chipText: "text-foreground",
+    iconBg: "bg-muted text-foreground",
+    icon: "text-muted-foreground",
+    bar: "bg-border",
   },
 };
 
 const CUSTOM_TOOL_ACCENT: CategoryAccent = {
-  chipBorder: "border-violet-500/40",
-  chipBg: "bg-violet-500/10",
-  chipText: "text-violet-500",
-  iconBg: "bg-violet-500/10",
-  icon: "text-violet-500",
-  bar: "bg-violet-500",
+  chipBorder: "border-border/60",
+  chipBg: "bg-muted/40",
+  chipText: "text-foreground",
+  iconBg: "bg-muted text-foreground",
+  icon: "text-muted-foreground",
+  bar: "bg-border",
 };
 
 type ToolsTab = "builtin" | "custom";
@@ -301,7 +301,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
 
   return (
     <div className="settings-tools-section space-y-6 pb-6">
-      <section className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-5 shadow-xs">
+      <section className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-6 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold">{t("settings.approval.title")}</h3>
@@ -317,7 +317,7 @@ export function SystemToolsSection(props: SettingsSectionProps) {
           </span>
         </div>
 
-        <div className="grid gap-2 rounded-xl border border-border/50 bg-muted/40 p-1.5 sm:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {APPROVAL_POLICY_OPTIONS.map((option) => {
             const Icon = option.icon;
             const active = settings.system.approvalPolicy === option.id;
@@ -327,14 +327,32 @@ export function SystemToolsSection(props: SettingsSectionProps) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectApprovalPolicy(option.id)}
-                className={`flex h-9 items-center justify-center gap-2 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 ${
+                className={`group relative flex flex-col items-start gap-2.5 rounded-2xl border p-4 text-left transition-all duration-200 ${
                   active
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/55"
-                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    ? "border-primary/60 bg-primary/5 shadow-xs ring-2 ring-primary/20"
+                    : "border-border/60 bg-background/70 hover:border-border hover:bg-muted/30"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
-                {t(option.labelKey)}
+                <div className="flex w-full items-center justify-between">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
+                      active ? "bg-primary text-primary-foreground shadow-xs" : "bg-muted text-muted-foreground group-hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </div>
+                  <div
+                    className={`h-2 w-2 rounded-full transition-all ${
+                      active ? "bg-primary scale-125 ring-4 ring-primary/20" : "bg-muted-foreground/30"
+                    }`}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold text-foreground">{t(option.labelKey)}</div>
+                  <div className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground line-clamp-2">
+                    {t(`settings.approval.mode.${option.id}`)}
+                  </div>
+                </div>
               </button>
             );
           })}

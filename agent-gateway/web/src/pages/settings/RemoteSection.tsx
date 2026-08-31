@@ -114,7 +114,7 @@ function ToggleOptionCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/30 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/40 bg-muted/20 px-4 py-3 hover:border-border/60 transition-colors">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -313,50 +313,54 @@ export function RemoteSection(props: SettingsSectionProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10">
-            <Cloud className="h-[18px] w-[18px] text-sky-500" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold">{t("settings.remoteTitle")}</h3>
-            <p className="text-xs text-muted-foreground">{t("settings.remoteDesc")}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex max-w-[260px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium ${
-              isConnected
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "bg-muted/50 text-muted-foreground"
-            }`}
-            title={status.lastError ?? undefined}
-          >
-            {isConnected ? (
-              <Wifi className="h-3.5 w-3.5 shrink-0" />
-            ) : (
-              <WifiOff className="h-3.5 w-3.5 shrink-0" />
-            )}
-            <span className="truncate">{statusText}</span>
+      <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-6 shadow-xs">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-muted blur-3xl" aria-hidden="true" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-muted text-foreground shadow-xs">
+              <Cloud className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">{t("settings.remoteTitle")}</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.remoteDesc")}</p>
+            </div>
           </div>
 
-          <AgentActivationSwitch
-            checked={settings.remote.enabled}
-            title={
-              settings.remote.enabled ? t("settings.remoteDisable") : t("settings.remoteEnable")
-            }
-            onToggle={() =>
-              updateRemoteSettings(setSettings, {
-                enabled: !settings.remote.enabled,
-              })
-            }
-          />
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex max-w-[260px] items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium shadow-2xs ${
+                isConnected
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-border/50 bg-background/80 text-muted-foreground"
+              }`}
+              title={status.lastError ?? undefined}
+            >
+              {isConnected ? (
+                <Wifi className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              )}
+              <span className="truncate">{statusText}</span>
+            </div>
+
+            <AgentActivationSwitch
+              checked={settings.remote.enabled}
+              title={
+                settings.remote.enabled ? t("settings.remoteDisable") : t("settings.remoteEnable")
+              }
+              onToggle={() =>
+                updateRemoteSettings(setSettings, {
+                  enabled: !settings.remote.enabled,
+                })
+              }
+            />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 bg-card p-5">
-        <SectionCardHeader icon={Server} title={t("settings.remoteGatewayConnection")} />
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-2xs">
+          <SectionCardHeader icon={Server} title={t("settings.remoteGatewayConnection")} />
 
         <div className="space-y-1.5">
           <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -409,7 +413,7 @@ export function RemoteSection(props: SettingsSectionProps) {
         ) : null}
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 bg-card p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-2xs">
         <SectionCardHeader icon={Shield} title={t("settings.remoteAuth")} />
 
         <div className="space-y-1.5">
@@ -452,8 +456,9 @@ export function RemoteSection(props: SettingsSectionProps) {
           </p>
         </div>
       </div>
+      </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 bg-card p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-2xs">
         <SectionCardHeader icon={Globe} title={t("settings.remoteAdvanced")} />
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -545,7 +550,7 @@ export function RemoteSection(props: SettingsSectionProps) {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 bg-card p-5">
+      <div className="space-y-4 rounded-2xl border border-border/60 bg-card p-5 shadow-2xs">
         <SectionCardHeader icon={Clock3} title={t("settings.remoteConnectionStatus")} />
 
         <div className="grid gap-3 sm:grid-cols-2">

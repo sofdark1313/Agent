@@ -180,29 +180,46 @@ export function MemoryPanel(props: {
 
   function renderEntryButton(entry: MemoryMeta, nested = false) {
     const active = activeEntryKey === entryKey(entry);
+    const typeBadgeColor =
+      entry.memoryType === "user"
+        ? "bg-foreground/10 text-sky-600 dark:text-sky-400 border-sky-500/20"
+        : entry.memoryType === "feedback"
+          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+          : entry.memoryType === "project"
+            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+            : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+
     return (
       <button
         key={entryKey(entry)}
         type="button"
         onClick={() => openEntry(entry)}
-        className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
-          nested ? "ml-3 w-[calc(100%-0.75rem)]" : ""
+        className={`group relative w-full rounded-xl border p-3 text-left transition-all duration-150 ${
+          nested ? "ml-2.5 w-[calc(100%-0.625rem)]" : ""
         } ${
           active
-            ? "border-primary/50 bg-primary/5 shadow-xs"
+            ? "border-primary/60 bg-primary/[0.06] shadow-xs ring-1 ring-primary/25"
             : entry.unreviewed
-              ? "border-amber-500/20 bg-amber-500/[0.05] hover:bg-amber-500/[0.08]"
-              : "border-border/50 bg-background/70 hover:bg-muted/35"
+              ? "border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-500/50 hover:bg-amber-500/[0.07]"
+              : "border-border/60 bg-card hover:border-border hover:bg-muted/30 hover:shadow-2xs"
         }`}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 truncate text-xs font-semibold">{entryTitle(entry)}</div>
-          <div className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            {memoryTypeLabel(entry.memoryType, t)}
+          <div className="flex min-w-0 items-center gap-1.5">
+            {entry.unreviewed ? (
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" title={t("settings.memoryAwaitingReview")} />
+            ) : null}
+            <span className="truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+              {entryTitle(entry)}
+            </span>
           </div>
+          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${typeBadgeColor}`}>
+            {memoryTypeLabel(entry.memoryType, t)}
+          </span>
         </div>
-        <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground/70">
-          id: {entry.slug}
+        <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground/80">
+          <span className="truncate font-mono text-[10px]">#{entry.slug}</span>
+          <span className="shrink-0 text-[10px] opacity-70">{formatTime(entry.updatedAt)}</span>
         </div>
       </button>
     );
@@ -222,90 +239,101 @@ export function MemoryPanel(props: {
   return (
     <>
       <div className="settings-memory-panel flex min-h-0 flex-1 flex-col gap-4">
-        <div className="settings-memory-summary-card shrink-0 relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-6 shadow-xs">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Brain className="h-4 w-4 text-muted-foreground" />
-                {t("settings.memoryTitle")}
+        <div className="space-y-3 shrink-0">
+        {/* Top 3 KPI Bento Dashboard */}
+        <div className="grid gap-3 sm:grid-cols-3">
+          {/* Bento 1: Storage Engine */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground">
+                <Brain className="h-5 w-5" />
               </div>
-              <div className="break-all text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => reload()} disabled={loading} title={t("settings.memoryRefresh")}>
+                  <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setSettingsDrawerOpen(true)} title={t("settings.memoryOpenSettings")}>
+                  <Settings2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-xs font-semibold text-foreground">{t("settings.memoryTitle")}</div>
+              <div className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground" title={pathsInfo?.root ?? "~/.agent/memory"}>
                 {pathsInfo?.root ?? "~/.agent/memory"}
               </div>
             </div>
-            <div className="settings-memory-summary-actions flex flex-wrap items-center gap-2">
-              {quotaItems.map((item) => {
-                const level = quotaLevel(item);
-                const label =
-                  item.scope === "global"
-                    ? t("settings.memoryQuotaGlobal")
-                    : t("settings.memoryQuotaProject");
-                return (
-                  <div
-                    key={`${item.scope}:${item.workdirHash}`}
-                    className={`rounded-md border px-2.5 py-1.5 text-xs ${quotaPillClass(level)}`}
-                  >
-                    {label} {item.used} / {item.limit}
-                  </div>
-                );
-              })}
-              <div
-                className={`rounded-md border px-2.5 py-1.5 text-xs ${quotaStatusClass(quotaStatus)}`}
-              >
-                {t(quotaStatusLabelKey(quotaStatus))}
+          </div>
+
+          {/* Bento 2: Global Quota Meter */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground">
+                <Globe2 className="h-5 w-5" />
               </div>
-              <Button variant="outline" size="sm" onClick={() => reload()} disabled={loading}>
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                {t("settings.memoryRefresh")}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                title={t("settings.memoryOpenSettings")}
-                aria-label={t("settings.memoryOpenSettings")}
-                onClick={() => setSettingsDrawerOpen(true)}
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-              </Button>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${quotaPillClass(quotaLevel(quotaItems.find(q => q.scope === "global") ?? quotaItems[0]))}`}>
+                {quotaItems.find(q => q.scope === "global")?.used ?? 0} / {quotaItems.find(q => q.scope === "global")?.limit ?? 50}
+              </span>
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                <span>{t("settings.memoryQuotaGlobal")}</span>
+                <span className="text-[11px] text-muted-foreground font-normal">{globalEntryCount} {t("settings.memoryMetaUnit")}</span>
+              </div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-foreground transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.round(((quotaItems.find(q => q.scope === "global")?.used ?? 0) / (quotaItems.find(q => q.scope === "global")?.limit ?? 50)) * 100))}%` }}
+                />
+              </div>
             </div>
           </div>
 
-          {unreviewedCount > 0 ? (
-            <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-              {unreviewedCount} {t("settings.memoryAwaitingReview")}
+          {/* Bento 3: Project Quota & Health Meter */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-muted/20 p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground">
+                <Folder className="h-5 w-5" />
+              </div>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${quotaStatusClass(quotaStatus)}`}>
+                {t(quotaStatusLabelKey(quotaStatus))}
+              </span>
             </div>
-          ) : null}
-          {pathsInfo?.isInCloud ? (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {t("settings.memoryCloudWarningPrefix")}{" "}
-              {pathsInfo.cloudProvider ?? t("settings.memoryCloudSyncFolder")}
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+                <span>{t("settings.memoryQuotaProject")}</span>
+                <span className="text-[11px] text-muted-foreground font-normal">{projectEntryCount} {t("settings.memoryMetaUnit")}</span>
+              </div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-foreground transition-all duration-300"
+                  style={{ width: `${Math.min(100, Math.round(((quotaItems.find(q => q.scope === "project")?.used ?? 0) / (quotaItems.find(q => q.scope === "project")?.limit ?? 50)) * 100))}%` }}
+                />
+              </div>
             </div>
-          ) : null}
-          {quotaStatus === "full" || quotaStatus === "danger" ? (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/[0.06] px-3 py-2 text-xs text-red-700 dark:text-red-300">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {t(
-                quotaStatus === "full"
-                  ? "settings.memoryQuotaFullMessage"
-                  : "settings.memoryQuotaNearLimitMessage",
-              )}
-            </div>
-          ) : quotaStatus === "warning" ? (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              {t("settings.memoryQuotaWarningMessage")}
-            </div>
-          ) : null}
-          {error ? (
-            <div className="mt-3 whitespace-pre-wrap rounded-lg border border-destructive/20 bg-destructive/[0.05] px-3 py-2 text-xs text-destructive">
-              {error}
-            </div>
-          ) : null}
+          </div>
         </div>
 
-        <div className="settings-memory-layout grid min-h-0 flex-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
+        {unreviewedCount > 0 ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-2.5 text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            {unreviewedCount} {t("settings.memoryAwaitingReview")}
+          </div>
+        ) : null}
+        {pathsInfo?.isInCloud ? (
+          <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {t("settings.memoryCloudWarningPrefix")}{" "}
+            {pathsInfo.cloudProvider ?? t("settings.memoryCloudSyncFolder")}
+          </div>
+        ) : null}
+        {error ? (
+          <div className="whitespace-pre-wrap rounded-xl border border-destructive/30 bg-destructive/[0.05] px-4 py-2.5 text-xs text-destructive">
+            {error}
+          </div>
+        ) : null}
+      </div>
+            <div className="settings-memory-layout grid min-h-0 flex-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
           <section className="settings-memory-list-section flex min-h-0 flex-col rounded-xl border border-border/60 bg-card">
             <div className="shrink-0 space-y-3 border-b border-border/40 p-3">
               <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/50 p-1">

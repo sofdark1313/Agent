@@ -2,13 +2,72 @@
 
 > 一款专为软件研发与自动化打造的高性能、跨平台 AI 智能体应用平台（提供原生桌面端、远程 Web 控制台及云端网关服务）。
 
+[![GitHub Release](https://img.shields.io/github/v/release/sofdark1313/Agent?color=blue&logo=github)](https://github.com/sofdark1313/Agent/releases)
+[![Docker Image](https://img.shields.io/badge/Docker-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/sofdark1313/Agent/pkgs/container/agent-gateway)
+[![Platform Support](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-brightgreen)](#-支持平台与安装包下载)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+---
+
+## 📥 支持平台与安装包下载
+
+前往 [**GitHub Releases 页面**](https://github.com/sofdark1313/Agent/releases) 获取各平台最新版本安装包：
+
+| 操作系统 / 平台 | 推荐下载格式 | 适用环境 / 说明 |
+| :--- | :--- | :--- |
+| 🪟 **Windows** | `Agent_x.x.x_x64-setup.exe` | Windows 10 / 11 推荐，双击即装 |
+| 🪟 **Windows (MSI)** | `Agent_x.x.x_x64_en-US.msi` | Windows 企业级静默部署 / MSI 安装包 |
+| 🍏 **macOS (Apple Silicon)** | `Agent_x.x.x_aarch64.dmg` | 苹果 M1 / M2 / M3 / M4 芯片 Mac |
+| 🍎 **macOS (Intel)** | `Agent_x.x.x_x64.dmg` | 传统 Intel 芯片 Mac |
+| 🐧 **Ubuntu / Debian** | `Agent_x.x.x_amd64.deb` | `sudo apt install ./Agent_x.x.x_amd64.deb` |
+| 🐧 **Fedora / CentOS** | `Agent-x.x.x-1.x86_64.rpm` | `sudo dnf install ./Agent-x.x.x-1.x86_64.rpm` |
+| 🐧 **Linux 通用免安装** | `Agent_x.x.x_amd64.AppImage` | `chmod +x` 后直接双击运行 |
+
+---
+
+## 🐳 Docker 一键部署云端网关服务 (Gateway & WebUI)
+
+无需安装 Go 或 Node.js 环境，直接通过 Docker 镜像一键启动云端网关和内嵌的完整 Web 控制台：
+
+### 1. 一行命令直接运行
+```bash
+docker run -d \
+  --name agent-gateway \
+  --restart unless-stopped \
+  -p 50052:8080 \
+  -p 50051:50051 \
+  ghcr.io/sofdark1313/agent-gateway:latest \
+  --token "your-access-token"
+```
+
+### 2. 使用 Docker Compose 运行
+创建 `docker-compose.yml`：
+```yaml
+services:
+  agent-gateway:
+    image: ghcr.io/sofdark1313/agent-gateway:latest
+    container_name: agent-gateway
+    restart: unless-stopped
+    ports:
+      - "50052:8080"   # WebUI 网页控制台访问端口
+      - "50051:50051"  # gRPC 远程中继通信端口
+    command: ["--token", "your-access-token"]
+```
+
+启动服务：
+```bash
+docker compose up -d
+```
+
+> 🌐 **访问控制台**：启动后，在浏览器访问 `http://服务器IP:50052` 即可直接进入与桌面端完全一致的高保真 Web 控制台界面！
+
 ---
 
 ## 🌟 核心特性
 
 ### 1. 现代化智能体对话与执行引擎 (Smart Chat & Execution Engine)
 - **多模型无缝接入**：原生支持 OpenAI、Anthropic (Claude)、Google (Gemini)、Mistral、DeepSeek 及各类自定义/代理供应商模型。
-- **深度思维与推理展示**：流式展示思考链（Thinking/Reasoning）、Token 统计、结构化工具调用（Tool Calls）与执行结果（Tool Results）。
+- **深度思维与推理展示**：流式展示思考链（Thinking/Reasoning）、Token 消耗统计、结构化工具调用（Tool Calls）与执行结果（Tool Results）。
 - **富文本与代码渲染**：集成 Streamdown、Monaco 代码编辑器、LaTeX 数学公式（KaTeX）、Mermaid 架构流程图渲染与文档文件预览（Word、Excel 等）。
 - **项目工作区多层级管理**：支持多项目（Projects）并行展开与独立会话管理、双击重命名、置顶收藏与模糊检索。
 
@@ -83,17 +142,19 @@
 │   ├── proto/                 # gRPC Protobuf 协议定义
 │   ├── web/                   # 独立 WebUI 前端源码 (与桌面端共享高保真 UI)
 │   └── go.mod
-├── scripts/                   # 自动化构建与镜像检查脚本
+├── .github/workflows/         # CI/CD 自动化多平台发布与 Docker 镜像推送
+├── scripts/                   # 代码镜像校验与版本发布工具集
 ├── Cargo.toml                 # Rust Workspace 配置
+├── Dockerfile                 # 多阶段构建轻量 Docker 镜像
 └── Makefile                   # 便捷构建指令集合
 ```
 
 ---
 
-## 🚀 快速上手与本地开发
+## 🚀 本地开发与手动构建
 
 ### 环境要求
-- **Node.js** >= 18.x
+- **Node.js** >= 20.x
 - **pnpm** >= 9.x
 - **Rust & Cargo** >= 1.80 (构建桌面端必需)
 - **Go** >= 1.22 (运行或构建网关必需)
@@ -144,4 +205,3 @@ go run ./cmd/gateway --token "your-access-token"
 ## 📄 许可证 (License)
 
 本项目采用 [MIT 许可证](LICENSE) 开源。
-

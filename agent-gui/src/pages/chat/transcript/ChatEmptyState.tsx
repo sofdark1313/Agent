@@ -4,7 +4,7 @@ import {
   useCallback,
 } from "react";
 
-import { Cloud, Lightbulb, Settings, Sparkles, Wrench } from "../../../components/icons";
+import { Lightbulb, Settings, Sparkles, Wrench } from "../../../components/icons";
 import { useLocale } from "../../../i18n";
 import type { SectionId } from "../../settings/types";
 
@@ -66,8 +66,8 @@ export function ChatEmptyState({
 
   return (
     <div data-agent-empty-state className="relative flex w-full flex-col items-center">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-foreground/[0.03] text-foreground shadow-xs">
-        <Cloud className="h-7 w-7 text-foreground/80" />
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/40 text-foreground shadow-xs">
+        <span className="font-mono text-2xl font-bold tracking-tight text-foreground">A</span>
       </div>
 
       {variant === "no-models" ? (

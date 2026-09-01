@@ -374,8 +374,8 @@ fn configure_system_tray(
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
-fn configure_windows_window_chrome(app: &tauri::App) -> tauri::Result<()> {
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+fn configure_desktop_window_chrome(app: &tauri::App) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
         window.set_decorations(false)?;
     }
@@ -385,6 +385,10 @@ fn configure_windows_window_chrome(app: &tauri::App) -> tauri::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "linux")]
+    if std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
     let automation_store = Arc::new(
         services::automation::AutomationStore::open()
             .expect("failed to initialize Agent automation store"),
@@ -431,8 +435,8 @@ pub fn run() {
                     Arc::clone(&allow_exit),
                     Arc::clone(&terminal_registry),
                 )?;
-                #[cfg(target_os = "windows")]
-                configure_windows_window_chrome(app)?;
+                #[cfg(any(target_os = "windows", target_os = "linux"))]
+                configure_desktop_window_chrome(app)?;
                 app.manage(services::proxy::start_proxy_server()?);
                 if let Err(error) = services::skills::ensure_builtin_agent_skills_sync() {
                     eprintln!("failed to seed builtin skills: {error}");

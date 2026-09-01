@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # 1. Build and release Desktop App for Windows, macOS (ARM & Intel), and Linux
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            config: src-tauri/tauri.windows.release.conf.json
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            config: src-tauri/tauri.macos.release.conf.json
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            config: src-tauri/tauri.macos.release.conf.json
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            config: src-tauri/tauri.linux.release.conf.json
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './agent-gui/src-tauri -> target'
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
+      - name: Install dependencies
+        run: pnpm --dir agent-gui install --frozen-lockfile
+
+      - name: Build Tauri App & Publish to GitHub Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: './agent-gui'
+          tagName: ${{ github.ref_name || inputs.tag }}
+          releaseName: 'Agent ${{ github.ref_name || inputs.tag }}'
+          releaseBody: 'See the assets below to download and install for your platform.'
+          releaseDraft: false
+          prerelease: false
+          args: --config ${{ matrix.config }} --target ${{ matrix.target }}
+
+  # 2. Build and attach Go Agent Gateway Server binaries
+  build-gateway:
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build Gateway WebUI SPA
+        run: |
+          pnpm --dir agent-gateway/web install --frozen-lockfile
+          pnpm --dir agent-gateway/web build
+
+      - name: Compile Cross-Platform Gateway Binaries
+        working-directory: agent-gateway
+        run: |
+          mkdir -p ../dist-gateway
+          
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../dist-gateway/agent-gateway-linux-amd64 ./cmd/gateway
+          tar -czf ../dist-gateway/agent-gateway-linux-amd64.tar.gz -C ../dist-gateway agent-gateway-linux-amd64
+          
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o ../dist-gateway/agent-gateway-linux-arm64 ./cmd/gateway
+          tar -czf ../dist-gateway/agent-gateway-linux-arm64.tar.gz -C ../dist-gateway agent-gateway-linux-arm64
+          
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../dist-gateway/agent-gateway-windows-amd64.exe ./cmd/gateway
+          zip -j ../dist-gateway/agent-gateway-windows-amd64.zip ../dist-gateway/agent-gateway-windows-amd64.exe
+          
+          # macOS ARM64
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o ../dist-gateway/agent-gateway-darwin-arm64 ./cmd/gateway
+          tar -czf ../dist-gateway/agent-gateway-darwin-arm64.tar.gz -C ../dist-gateway agent-gateway-darwin-arm64
+          
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o ../dist-gateway/agent-gateway-darwin-amd64 ./cmd/gateway
+          tar -czf ../dist-gateway/agent-gateway-darwin-amd64.tar.gz -C ../dist-gateway agent-gateway-darwin-amd64
+
+      - name: Upload Gateway Artifacts to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name || inputs.tag }}
+          files: |
+            dist-gateway/*.tar.gz
+            dist-gateway/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -102,7 +102,7 @@ function collectContext() {
   const releaseCommit = runGit(["rev-list", "-n", "1", releaseVersion.releaseTag]);
   const previousTag = previousTagFor(releaseCommit);
   const range = previousTag ? `${previousTag}..${releaseCommit}` : releaseCommit;
-  const repository = process.env.GITHUB_REPOSITORY?.trim() || "Stack-Cairn/Agent";
+  const repository = process.env.GITHUB_REPOSITORY?.trim() || "sofdark1313/Agent";
 
   const commitLog = runGit([
     "log",

@@ -8,7 +8,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Url};
 use tauri_plugin_updater::UpdaterExt;
 
-const DEFAULT_UPDATE_REPOSITORY: &str = "Stack-Cairn/Agent";
+const DEFAULT_UPDATE_REPOSITORY: &str = "sofdark1313/Agent";
 const UPDATE_MANIFEST_ASSET: &str = "latest.json";
 
 #[derive(Debug, Clone, Serialize)]
@@ -586,7 +586,7 @@ mod tests {
             tag_name: tag_name.to_string(),
             title: Some(format!("Agent {tag_name}")),
             html_url: Some(format!(
-                "https://github.com/Stack-Cairn/Agent/releases/tag/{tag_name}"
+                "https://github.com/sofdark1313/Agent/releases/tag/{tag_name}"
             )),
             updated: Some("2026-05-25T12:27:41Z".to_string()),
         }
@@ -599,7 +599,7 @@ mod tests {
 <feed xmlns="http://www.w3.org/2005/Atom">
   <entry>
     <updated>2026-05-25T16:00:34Z</updated>
-    <link rel="alternate" type="text/html" href="https://github.com/Stack-Cairn/Agent/releases/tag/v0.1.2"/>
+    <link rel="alternate" type="text/html" href="https://github.com/sofdark1313/Agent/releases/tag/v0.1.2"/>
     <title>Agent v0.1.2</title>
   </entry>
 </feed>"#,
@@ -612,7 +612,7 @@ mod tests {
                 tag_name: "v0.1.2".to_string(),
                 title: Some("Agent v0.1.2".to_string()),
                 html_url: Some(
-                    "https://github.com/Stack-Cairn/Agent/releases/tag/v0.1.2".to_string()
+                    "https://github.com/sofdark1313/Agent/releases/tag/v0.1.2".to_string()
                 ),
                 updated: Some("2026-05-25T16:00:34Z".to_string()),
             }]
@@ -643,7 +643,7 @@ mod tests {
         assert_eq!(selected[0].tag_name, "v0.1.2-beta.1");
         assert_eq!(
             selected[0].manifest_url,
-            "https://github.com/Stack-Cairn/Agent/releases/download/v0.1.2-beta.1/latest.json"
+            "https://github.com/sofdark1313/Agent/releases/download/v0.1.2-beta.1/latest.json"
         );
         assert!(selected[0].prerelease);
     }

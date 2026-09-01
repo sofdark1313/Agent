@@ -85,7 +85,7 @@ export function AboutSection(props: AboutSectionProps) {
     latestResult?.channel === "prerelease"
       ? t("settings.aboutChannelPrerelease")
       : t("settings.aboutChannelStable");
-  const currentVersion = latestResult?.currentVersion || "0.0.0-dev";
+  const currentVersion = latestResult?.currentVersion || "1.0.0";
   const nextVersion = latestResult?.version || latestResult?.releaseTag || "";
   const releaseDate = formatReleaseDate(latestResult?.date);
   const checking = checkState.status === "checking";
@@ -314,7 +314,7 @@ export function AboutSection(props: AboutSectionProps) {
             <div className="rounded-xl bg-muted/40 p-2.5">
               <span className="text-[11px] text-muted-foreground">代码仓库</span>
               <div className="mt-0.5 truncate font-medium text-foreground">
-                {latestResult?.repository || "Stack-Cairn/Agent"}
+                {latestResult?.repository || "sofdark1313/Agent"}
               </div>
             </div>
           </div>
@@ -460,7 +460,7 @@ export function AboutSection(props: AboutSectionProps) {
                 : "所有 API 密钥、会话记录、项目工作区及系统配置均采用本地加密存储，绝不上传至任何未经授权的第三方服务器。"}
             </p>
             <div className="pt-1 text-[11px] text-muted-foreground/70">
-              MIT License · Stack-Cairn / Agent
+              MIT License · sofdark1313 / Agent
             </div>
           </section>
         </aside>

@@ -8,7 +8,10 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
+## UI界面
+<img width="2100" height="1200" alt="image" src="https://github.com/user-attachments/assets/71f5a5b8-d119-4723-af9e-09e095258124" />
 
+---
 ## 📥 支持平台与安装包下载
 
 前往 [**GitHub Releases 页面**](https://github.com/sofdark1313/Agent/releases) 获取各平台最新版本安装包：
